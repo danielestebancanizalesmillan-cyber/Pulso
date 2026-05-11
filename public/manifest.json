@@ -1,0 +1,21 @@
+{
+  "name": "Pulso",
+  "short_name": "Pulso",
+  "description": "Premium Social Network",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#1d9bf0",
+  "icons": [
+    {
+      "src": "/pulso-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/pulso-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

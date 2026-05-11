@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌀 Pulso - Red Social Inteligente
 
-## Getting Started
+Bienvenido a **Pulso**, una plataforma de red social moderna diseñada para conectar personas y potenciar la interacción mediante inteligencia artificial avanzada.
 
-First, run the development server:
+## 🤖 PulsAI: Tu Asistente de Inteligencia Social
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Pulso integra **PulsAI**, una capa de inteligencia artificial diseñada para:
+- **Analizar Tendencias**: Descubre qué está pasando en tiempo real con análisis profundo.
+- **Asistencia en Contenido**: Ayuda a redactar y optimizar tus publicaciones para mayor impacto.
+- **Moderación Inteligente**: Mantiene la comunidad segura y libre de spam.
+- **Búsqueda Avanzada**: Encuentra información relevante mediante procesamiento de lenguaje natural.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Características Principales
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Feed Dinámico**: Interacción en tiempo real con un diseño fluido y moderno.
+- **Mensajería Instantánea**: Conexión directa con tus amigos y seguidores.
+- **Perfiles Personalizables**: Expresa tu identidad con herramientas de personalización premium.
+- **Integración de Medios**: Comparte imágenes, videos y GIFs de forma sencilla.
+- **Arquitectura Escalable**: Construido con las tecnologías más modernas para garantizar velocidad y estabilidad.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠️ Stack Tecnológico
 
-## Learn More
+- **Framework**: [Next.js 15+](https://nextjs.org/)
+- **Lenguaje**: [TypeScript](https://www.typescriptlang.org/)
+- **Estilos**: [Tailwind CSS](https://tailwindcss.com/) / Vanilla CSS
+- **Base de Datos**: [Prisma](https://www.prisma.io/) (PostgreSQL/MySQL)
+- **Autenticación**: [NextAuth.js](https://next-auth.js.org/)
+- **IA**: Modelos LLM integrados mediante servicios de vanguardia.
 
-To learn more about Next.js, take a look at the following resources:
+## 📦 Instalación y Configuración
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Sigue estos pasos para ejecutar el proyecto localmente:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Clonar el repositorio:**
+   ```bash
+   git clone https://github.com/danielestebancanizalesmillan-cyber/Pulso.git
+   cd Pulso
+   ```
 
-## Deploy on Vercel
+2. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. **Configurar variables de entorno:**
+   Crea un archivo `.env` en la raíz del proyecto basándote en `.env.example` (si existe) y añade tus credenciales.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. **Ejecutar migraciones de base de datos:**
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
+
+5. **Iniciar el servidor de desarrollo:**
+   ```bash
+   npm run dev
+   ```
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
+
+---
+Desarrollado con ❤️ por el equipo de Pulso.

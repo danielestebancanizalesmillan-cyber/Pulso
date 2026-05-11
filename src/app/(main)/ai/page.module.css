@@ -1,0 +1,70 @@
+.animatedBg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(29, 155, 240, 0.15) 0%, transparent 60%), 
+                radial-gradient(circle at 10% 90%, rgba(29, 155, 240, 0.08) 0%, transparent 40%);
+    opacity: 1;
+    pointer-events: none;
+}
+
+@keyframes pulseMesh {
+    0% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.1); }
+    100% { opacity: 0.3; transform: scale(1); }
+}
+
+.animatedBg::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.62 10l.38.38L55.38 10h-.76zM5 10L4.62 10.38 4.24 10H5zm49.62 40l.38.38.38-.38h-.76zM5 50l-.38.38L4.24 50H5zM10 5.38L10.38 5 10 4.62V5.38zM50 5.38L50.38 5 50 4.62V5.38zM10 54.62L10.38 55 10 55.38v-.76zM50 54.62L50.38 55 50 55.38v-.76z' fill='%231d9bf0' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+    animation: pulseMesh 15s infinite alternate ease-in-out;
+    z-index: -1;
+}
+
+.pulsAiLayout {
+    display: flex;
+    height: calc(100vh - 65px);
+    background: var(--bg-main);
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
+    border-left: 1px solid var(--border);
+}
+
+.glass {
+    background: rgba(10, 10, 10, 0.95);
+    backdrop-filter: blur(20px);
+}
+
+.chatItem {
+    transition: all 0.3s;
+}
+
+.hoverCard {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hoverGlow:hover {
+    box-shadow: 0 0 15px rgba(29, 155, 240, 0.3);
+}
+
+.aiMarkdownReply {
+    transition: all 0.3s ease;
+}
+
+.premiumInput {
+    transition: all 0.3s;
+}
+
+.premiumInput:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px var(--blue-faint);
+}
