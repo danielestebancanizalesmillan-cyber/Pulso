@@ -1,8 +1,8 @@
-# 🌀 Pulso - Red Social Inteligente
+# Pulso - Red Social Inteligente
 
 Bienvenido a **Pulso**, una plataforma de red social moderna diseñada para conectar personas y potenciar la interacción mediante inteligencia artificial avanzada.
 
-## 🤖 PulsAI: Tu Asistente de Inteligencia Social
+## PulsAI: Tu Asistente de Inteligencia Social
 
 Pulso integra **PulsAI**, una capa de inteligencia artificial diseñada para:
 - **Analizar Tendencias**: Descubre qué está pasando en tiempo real con análisis profundo.
@@ -10,7 +10,7 @@ Pulso integra **PulsAI**, una capa de inteligencia artificial diseñada para:
 - **Moderación Inteligente**: Mantiene la comunidad segura y libre de spam.
 - **Búsqueda Avanzada**: Encuentra información relevante mediante procesamiento de lenguaje natural.
 
-## 🚀 Características Principales
+## Características Principales
 
 - **Feed Dinámico**: Interacción en tiempo real con un diseño fluido y moderno.
 - **Mensajería Instantánea**: Conexión directa con tus amigos y seguidores.
@@ -18,7 +18,7 @@ Pulso integra **PulsAI**, una capa de inteligencia artificial diseñada para:
 - **Integración de Medios**: Comparte imágenes, videos y GIFs de forma sencilla.
 - **Arquitectura Escalable**: Construido con las tecnologías más modernas para garantizar velocidad y estabilidad.
 
-## 🛠️ Stack Tecnológico
+## Stack Tecnológico
 
 - **Framework**: [Next.js 15+](https://nextjs.org/)
 - **Lenguaje**: [TypeScript](https://www.typescriptlang.org/)
@@ -27,7 +27,7 @@ Pulso integra **PulsAI**, una capa de inteligencia artificial diseñada para:
 - **Autenticación**: [NextAuth.js](https://next-auth.js.org/)
 - **IA**: Modelos LLM integrados mediante servicios de vanguardia.
 
-## 📦 Instalación y Configuración
+## Instalación y Configuración
 
 Sigue estos pasos para ejecutar el proyecto localmente:
 
@@ -56,7 +56,7 @@ Sigue estos pasos para ejecutar el proyecto localmente:
    npm run dev
    ```
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
 
