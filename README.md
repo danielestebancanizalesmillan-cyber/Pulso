@@ -1,6 +1,6 @@
-# Pulso - Red Social Inteligente
+# Pulso - Red Social
 
-Bienvenido a **Pulso**, una plataforma de red social moderna diseñada para conectar personas y potenciar la interacción mediante inteligencia artificial avanzada.
+Bienvenido a **Pulso**, una plataforma de red social moderna diseñada para conectar personas y potenciar la interacción.
 
 ## PulsAI: Tu Asistente de Inteligencia Social
 
