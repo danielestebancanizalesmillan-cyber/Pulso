@@ -79,7 +79,7 @@ export default async function ProfilePage({ params, searchParams }: { params: Pr
 
     if (!user) notFound();
 
-    const [isFollowing, isBlocked, isMuted, isBlockingMe, isPendingRequest] = currentUserId !== user.id
+    const [isFollowing, isBlocked, isMuted, isBlockingMe, isPendingRequest] = (currentUserId && currentUserId !== user.id)
         ? await Promise.all([
             prisma.follow.findUnique({
                 where: { followerId_followingId: { followerId: currentUserId, followingId: user.id } },
