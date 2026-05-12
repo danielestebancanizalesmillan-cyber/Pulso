@@ -111,6 +111,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                             const data = await res.json();
                             if (res.ok && data.localId) {
                                 passwordMatch = true;
+
+                                // Sync Firebase verification status to Prisma
+                                if (data.idToken) {
+                                    try {
+                                        const lookupRes = await fetch(
+                                            `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
+                                            {
+                                                method: "POST",
+                                                headers: { "Content-Type": "application/json" },
+                                                body: JSON.stringify({ idToken: data.idToken }),
+                                            }
+                                        );
+                                        const lookupData = await lookupRes.json();
+                                        const firebaseUser = lookupData.users?.[0];
+                                        
+                                        if (firebaseUser?.emailVerified && !user.emailVerified) {
+                                            await prisma.user.update({
+                                                where: { id: user.id },
+                                                data: { emailVerified: new Date() }
+                                            });
+                                            // Update local object for the current session
+                                            (user as any).emailVerified = new Date();
+                                        }
+                                    } catch (e) {
+                                        console.error("Firebase Sync Error:", e);
+                                    }
+                                }
                             }
                         } catch (e) {
                             console.error("Firebase Auth Error:", e);

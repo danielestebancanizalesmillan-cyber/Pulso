@@ -85,7 +85,10 @@ export default function RegisterPage() {
                 const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
                 const user = userCredential.user;
 
-                // 2. Sync with Prisma & Send Verification (Handled in registerUser action)
+                // 2. Send Verification Email
+                await sendEmailVerification(user);
+
+                // 3. Sync with Prisma
                 await registerUser({
                     name: form.name,
                     username: form.username,

@@ -40,20 +40,6 @@ export async function registerUser(data: {
         },
     });
 
-    // Generate Verification Token
-    const token = uuidv4();
-    const expires = new Date(new Date().getTime() + 3600 * 1000);
-
-    await prisma.emailVerification.create({
-        data: {
-            email: emailLower,
-            token,
-            expires,
-        },
-    });
-
-    await sendVerificationEmail(emailLower, token);
-
     return user;
 }
 
