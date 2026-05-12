@@ -14,7 +14,7 @@ export function ReportList({ initialReports }: { initialReports: any[] }) {
         setLoading(id);
         try {
             await resolveReport(id, status);
-            setRequests(prev => prev.filter(r => r.id !== id));
+            setReports(prev => prev.filter(r => r.id !== id));
         } catch (e) { console.error(e); }
         finally { setLoading(null); }
     };
