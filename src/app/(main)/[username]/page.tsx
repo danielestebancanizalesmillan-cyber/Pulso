@@ -68,7 +68,7 @@ export default async function ProfilePage({ params, searchParams }: { params: Pr
     const tab = (resolvedSearchParams.tab as string) || "posts";
 
     const session = await auth();
-    const currentUserId = session?.user?.id!;
+    const currentUserId = session?.user?.id;
 
     const user = await prisma.user.findUnique({
         where: { username: resolvedParams.username },
