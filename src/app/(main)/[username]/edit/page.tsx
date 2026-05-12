@@ -7,6 +7,7 @@ import { updateProfile } from "@/app/actions/user";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
 import { REGIONS } from "@/lib/constants";
+import { MapPin, Globe, Loader2 } from "lucide-react";
 
 export default function EditProfilePage() {
     const { data: session, update } = useSession();
@@ -15,6 +16,7 @@ export default function EditProfilePage() {
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
+    const [isLocating, setIsLocating] = useState(false);
     const user = session?.user as any;
 
     const [form, setForm] = useState({
@@ -37,46 +39,58 @@ export default function EditProfilePage() {
     const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setForm((f) => ({ ...f, [k]: e.target.value }));
 
+    // Map ISO 3166-1 alpha-2 to REGIONS codes
+    const isoToRegion = (iso: string): string => {
+        const map: Record<string, string> = {
+            ES: "ES", MX: "MX", AR: "AR", CO: "CO", US: "US",
+        };
+        return map[iso.toUpperCase()] ?? "GLOBAL";
+    };
 
     const handleDetectLocation = () => {
         if (!navigator.geolocation) return alert("Geolocation not supported");
+        setIsLocating(true);
 
         navigator.geolocation.getCurrentPosition(async (position) => {
             const { latitude, longitude } = position.coords;
-            
             try {
-                // Usando Nominatim (OpenStreetMap) en lugar de Google Geocoding
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
+                );
                 const data = await res.json();
-                
+
                 const country = data.address.country || "";
                 const city = data.address.city || data.address.town || data.address.village || "";
-                const countryCode = data.address.country_code?.toUpperCase() || "GLOBAL";
+                const isoCode = data.address.country_code?.toUpperCase() || "GLOBAL";
+                const regionCode = isoToRegion(isoCode);
 
                 setForm(f => ({
                     ...f,
                     location: city ? `${city}, ${country}` : country,
-                    countryCode: countryCode
+                    countryCode: regionCode,
                 }));
             } catch (err) {
                 console.error("Geocoding error:", err);
-                alert("No se pudo obtener el nombre de la ubicación");
+                alert("No se pudo obtener la ubicación");
+            } finally {
+                setIsLocating(false);
             }
+        }, () => {
+            alert("No se pudo acceder a la ubicación");
+            setIsLocating(false);
         });
     };
 
-    const handleFile = (type: 'avatar' | 'cover') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFile = (type: "avatar" | "cover") => (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
         if (file.size > 2 * 1024 * 1024) {
             setError(t("imageLimit").replace("{type}", t(type)));
             return;
         }
-
         const reader = new FileReader();
         reader.onload = (evt) => {
-            if (type === 'avatar') {
+            if (type === "avatar") {
                 setAvatarFile(file);
                 setAvatarPreview(evt.target?.result as string);
             } else {
@@ -94,35 +108,17 @@ export default function EditProfilePage() {
 
         startTransition(async () => {
             try {
-                let avatarUrl = undefined;
-                let coverUrl = undefined;
-
-                const { upload } = await import('@vercel/blob/client');
+                let avatarUrl: string | undefined;
+                let coverUrl: string | undefined;
+                const { upload } = await import("@vercel/blob/client");
 
                 if (avatarFile) {
-                    try {
-                        const newBlob = await upload(avatarFile.name, avatarFile, {
-                            access: 'public',
-                            handleUploadUrl: '/api/upload',
-                        });
-                        avatarUrl = newBlob.url;
-                    } catch (uploadErr: any) {
-                        console.error("Avatar Upload Error:", uploadErr);
-                        throw new Error(t("failedUploadAvatar"));
-                    }
+                    const blob = await upload(avatarFile.name, avatarFile, { access: "public", handleUploadUrl: "/api/upload" });
+                    avatarUrl = blob.url;
                 }
-
                 if (coverFile) {
-                    try {
-                        const newBlob = await upload(coverFile.name, coverFile, {
-                            access: 'public',
-                            handleUploadUrl: '/api/upload',
-                        });
-                        coverUrl = newBlob.url;
-                    } catch (uploadErr: any) {
-                        console.error("Cover Upload Error:", uploadErr);
-                        throw new Error(t("failedUploadCover"));
-                    }
+                    const blob = await upload(coverFile.name, coverFile, { access: "public", handleUploadUrl: "/api/upload" });
+                    coverUrl = blob.url;
                 }
 
                 await updateProfile({
@@ -138,12 +134,14 @@ export default function EditProfilePage() {
 
                 await update();
                 setSuccess(true);
-                setTimeout(() => router.push(`/${user?.username}`), 1000);
+                setTimeout(() => router.push(`/${form.username || user?.username}`), 1200);
             } catch (e: any) {
                 setError(e.message || t("failedSaveProfile"));
             }
         });
     };
+
+    const currentRegion = REGIONS.find(r => r.code === form.countryCode);
 
     return (
         <div style={{ paddingBottom: 100 }}>
@@ -154,18 +152,13 @@ export default function EditProfilePage() {
                     </svg>
                 </Link>
                 <h1>{t("editProfile")}</h1>
-                <button
-                    className="btn btn-primary"
-                    style={{ marginLeft: "auto" }}
-                    onClick={handleSubmit}
-                    disabled={isPending}
-                >
+                <button className="btn btn-primary" style={{ marginLeft: "auto" }} onClick={handleSubmit} disabled={isPending}>
                     {isPending ? t("saving") : t("save")}
                 </button>
             </div>
 
             <form onSubmit={handleSubmit}>
-                {/* Cover Upload */}
+                {/* Cover */}
                 <div
                     className="profile-cover edit-mode"
                     style={{ cursor: "pointer", position: "relative", background: "var(--bg-hover)", height: 200 }}
@@ -178,18 +171,18 @@ export default function EditProfilePage() {
                             <circle cx="12" cy="13" r="4" />
                         </svg>
                     </div>
-                    <input type="file" accept="image/*,image/gif" ref={coverInputRef} style={{ display: "none" }} onChange={handleFile('cover')} />
+                    <input type="file" accept="image/*,image/gif" ref={coverInputRef} style={{ display: "none" }} onChange={handleFile("cover")} />
                 </div>
 
                 <div style={{ padding: "0 24px" }}>
-                    {/* Avatar Upload */}
+                    {/* Avatar */}
                     <div
                         className="avatar-placeholder avatar-2xl avatar-ring"
                         style={{ cursor: "pointer", position: "relative", marginTop: -60, background: "var(--bg-main)", overflow: "hidden" }}
                         onClick={() => avatarInputRef.current?.click()}
                     >
                         {avatarPreview ? (
-                            <img src={avatarPreview} alt="Avatar preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            <img src={avatarPreview} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         ) : (
                             <div style={{ fontSize: "2rem" }}>{user?.name?.[0]?.toUpperCase()}</div>
                         )}
@@ -199,7 +192,7 @@ export default function EditProfilePage() {
                                 <circle cx="12" cy="13" r="4" />
                             </svg>
                         </div>
-                        <input type="file" accept="image/*,image/gif" ref={avatarInputRef} style={{ display: "none" }} onChange={handleFile('avatar')} />
+                        <input type="file" accept="image/*,image/gif" ref={avatarInputRef} style={{ display: "none" }} onChange={handleFile("avatar")} />
                     </div>
 
                     <div style={{ marginTop: 24 }}>
@@ -209,28 +202,29 @@ export default function EditProfilePage() {
                             </div>
                         )}
 
+                        {/* Nombre */}
                         <div className="form-group">
                             <label className="form-label">{t("displayName")}</label>
                             <input className="form-input" type="text" value={form.name} onChange={set("name")} required maxLength={50} />
                         </div>
 
+                        {/* Username */}
                         <div className="form-group">
                             <label className="form-label">Nombre de usuario (@)</label>
                             <div style={{ position: "relative" }}>
                                 <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "var(--text-secondary)" }}>@</span>
-                                <input 
-                                    className="form-input" 
-                                    type="text" 
-                                    value={form.username} 
-                                    onChange={(e) => setForm(f => ({ ...f, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") }))} 
-                                    required 
-                                    minLength={4}
-                                    maxLength={15} 
+                                <input
+                                    className="form-input"
+                                    type="text"
+                                    value={form.username}
+                                    onChange={(e) => setForm(f => ({ ...f, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") }))}
+                                    required minLength={4} maxLength={15}
                                     style={{ paddingLeft: 32 }}
                                 />
                             </div>
                         </div>
 
+                        {/* Bio */}
                         <div className="form-group">
                             <label className="form-label">{t("bio")}</label>
                             <textarea
@@ -247,31 +241,90 @@ export default function EditProfilePage() {
                             </div>
                         </div>
 
+                        {/* Ubicación + Región del feed */}
                         <div className="form-group">
-                            <label className="form-label">{t("location")}</label>
-                            <div style={{ display: "flex", gap: 8 }}>
-                                <input 
-                                    className="form-input" 
-                                    type="text" 
-                                    value={form.location} 
-                                    onChange={set("location")} 
-                                    maxLength={100} 
-                                    placeholder={t("whereAreYou")} 
+                            <label className="form-label" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <MapPin size={14} />
+                                Ubicación y región del feed
+                            </label>
+
+                            {/* Campo de texto libre */}
+                            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                                <input
+                                    className="form-input"
+                                    type="text"
+                                    value={form.location}
+                                    onChange={set("location")}
+                                    maxLength={100}
+                                    placeholder={t("whereAreYou")}
                                     style={{ flex: 1 }}
                                 />
-                                <button 
-                                    type="button" 
-                                    onClick={handleDetectLocation} 
+                                <button
+                                    type="button"
+                                    onClick={handleDetectLocation}
                                     className="btn btn-secondary"
-                                    style={{ padding: "8px 12px", display: "flex", alignItems: "center", gap: 4, height: "42px" }}
-                                    title="Detectar Ubicación"
+                                    disabled={isLocating}
+                                    style={{ padding: "8px 14px", display: "flex", alignItems: "center", gap: 6, height: "42px", whiteSpace: "nowrap" }}
+                                    title="Detectar con GPS"
                                 >
-                                     📍
+                                    {isLocating
+                                        ? <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+                                        : <MapPin size={16} />}
+                                    {isLocating ? "Detectando..." : "Detectar"}
                                 </button>
+                            </div>
+
+                            {/* Selector de región — conectado al filtro global/local del inicio */}
+                            <div style={{
+                                background: "var(--bg-secondary)",
+                                borderRadius: 12,
+                                padding: "14px",
+                                border: "1px solid var(--border)"
+                            }}>
+                                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                                    <Globe size={13} />
+                                    <span>
+                                        Región del feed — define qué ves al elegir{" "}
+                                        <strong style={{ color: "var(--blue)" }}>📍 Local</strong>{" "}
+                                        en el inicio
+                                    </span>
+                                </div>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                                    {REGIONS.map(region => {
+                                        const isSelected = form.countryCode === region.code;
+                                        return (
+                                            <button
+                                                key={region.code}
+                                                type="button"
+                                                onClick={() => setForm(f => ({ ...f, countryCode: region.code }))}
+                                                style={{
+                                                    padding: "6px 16px",
+                                                    borderRadius: "20px",
+                                                    border: isSelected ? "2px solid var(--blue)" : "1px solid var(--border)",
+                                                    background: isSelected ? "rgba(29,155,240,0.12)" : "var(--bg-main)",
+                                                    color: isSelected ? "var(--blue)" : "var(--text-secondary)",
+                                                    fontWeight: isSelected ? 700 : 400,
+                                                    cursor: "pointer",
+                                                    fontSize: "0.85rem",
+                                                    transition: "all 0.15s ease",
+                                                }}
+                                            >
+                                                {region.code === "GLOBAL" ? "🌐" : "📍"} {region.name}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                {currentRegion && (
+                                    <p style={{ marginTop: 10, fontSize: "0.78rem", color: "var(--text-secondary)", margin: "10px 0 0" }}>
+                                        {form.countryCode === "GLOBAL"
+                                            ? "Verás publicaciones de todo el mundo al seleccionar Local."
+                                            : `Verás publicaciones de ${currentRegion.name} al seleccionar 📍 Local en el inicio.`}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
-
+                        {/* Website */}
                         <div className="form-group">
                             <label className="form-label">{t("website")}</label>
                             <input className="form-input" type="url" value={form.website} onChange={set("website")} maxLength={100} placeholder="https://example.com" />
