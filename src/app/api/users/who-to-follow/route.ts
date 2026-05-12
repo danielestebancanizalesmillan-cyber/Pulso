@@ -30,6 +30,7 @@ export async function GET(request: Request) {
                 name: true,
                 username: true,
                 image: true,
+                avatar: true,
                 isVerified: true,
             }
         });

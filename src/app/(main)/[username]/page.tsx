@@ -60,6 +60,8 @@ const TWEET_INCLUDE = {
     _count: { select: { likes: true, replies: true, retweets: true, bookmarks: true } },
 };
 
+export const dynamic = 'force-dynamic';
+
 import { ProfileContent } from "@/components/ProfileContent";
 
 export default async function ProfilePage({ params, searchParams }: { params: Promise<{ username: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
