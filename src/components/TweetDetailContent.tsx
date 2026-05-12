@@ -13,7 +13,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { pusherClient } from "@/lib/pusher-client";
 
-function SubRepliesList({ replies, userId }: { replies: any[], userId: string }) {
+function SubRepliesList({ replies, userId }: { replies: any[], userId?: string }) {
     const [limit, setLimit] = useState(3);
     const visibleReplies = replies.slice(0, limit);
     const hasMore = replies.length > limit;

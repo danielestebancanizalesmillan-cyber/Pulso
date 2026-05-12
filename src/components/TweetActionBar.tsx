@@ -9,7 +9,7 @@ import { ComposeTweet } from "./ComposeTweet";
 
 interface TweetActionBarProps {
     tweet: any;
-    userId: string;
+    userId?: string;
     onLikeChange?: (liked: boolean, count: number) => void;
     onRetweetChange?: (retweeted: boolean, count: number) => void;
     onBookmarkChange?: (bookmarked: boolean, count: number) => void;
