@@ -228,15 +228,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 try {
                     const dbUser = await prisma.user.findUnique({
                         where: { id: token.id as string },
-                        select: { avatar: true, image: true, accountLabel: true, birthDate: true, showSensitiveContent: true, countryCode: true }
+                        select: { 
+                            name: true,
+                            username: true,
+                            avatar: true, 
+                            image: true, 
+                            accountLabel: true, 
+                            birthDate: true, 
+                            showSensitiveContent: true, 
+                            countryCode: true 
+                        }
                     });
                     if (dbUser) {
-                        token.avatar = (dbUser as any).avatar;
-                        token.image = (dbUser as any).avatar || (dbUser as any).image;
-                        token.accountLabel = (dbUser as any).accountLabel;
-                        token.birthDate = (dbUser as any).birthDate;
-                        token.showSensitiveContent = (dbUser as any).showSensitiveContent;
-                        token.countryCode = (dbUser as any).countryCode;
+                        token.name = dbUser.name;
+                        token.username = dbUser.username;
+                        token.avatar = dbUser.avatar;
+                        token.image = dbUser.avatar || dbUser.image;
+                        token.accountLabel = dbUser.accountLabel;
+                        token.birthDate = dbUser.birthDate;
+                        token.showSensitiveContent = dbUser.showSensitiveContent;
+                        token.countryCode = dbUser.countryCode;
                     }
                 } catch (e) {
                     console.error("JWT sync error:", e);

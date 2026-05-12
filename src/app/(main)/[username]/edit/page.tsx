@@ -20,6 +20,7 @@ export default function EditProfilePage() {
 
     const [form, setForm] = useState({
         name: user?.name || "",
+        username: user?.username || "",
         bio: user?.bio || "",
         location: user?.location || "",
         website: user?.website || "",
@@ -164,6 +165,7 @@ export default function EditProfilePage() {
 
                 await updateProfile({
                     name: form.name,
+                    username: form.username,
                     bio: form.bio,
                     location: form.location,
                     website: form.website,
@@ -248,6 +250,23 @@ export default function EditProfilePage() {
                         <div className="form-group">
                             <label className="form-label">{t("displayName")}</label>
                             <input className="form-input" type="text" value={form.name} onChange={set("name")} required maxLength={50} />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Nombre de usuario (@)</label>
+                            <div style={{ position: "relative" }}>
+                                <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "var(--text-secondary)" }}>@</span>
+                                <input 
+                                    className="form-input" 
+                                    type="text" 
+                                    value={form.username} 
+                                    onChange={(e) => setForm(f => ({ ...f, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") }))} 
+                                    required 
+                                    minLength={4}
+                                    maxLength={15} 
+                                    style={{ paddingLeft: 32 }}
+                                />
+                            </div>
                         </div>
 
                         <div className="form-group">

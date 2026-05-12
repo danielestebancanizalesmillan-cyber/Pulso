@@ -159,6 +159,7 @@ export async function updateProfile(data: {
     avatar?: string;
     coverImage?: string;
     countryCode?: string;
+    username?: string;
 }) {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
@@ -166,10 +167,26 @@ export async function updateProfile(data: {
     if (data.name.length > 50) throw new Error("Name is too long (max 50 characters)");
     if (data.bio && data.bio.length > 160) throw new Error("Bio is too long (max 160 characters)");
 
+    if (data.username) {
+        const usernameLower = data.username.toLowerCase();
+        if (!/^[a-zA-Z0-9_]{4,15}$/.test(usernameLower)) {
+            throw new Error("Username must be between 4 and 15 characters and contain only letters, numbers, and underscores");
+        }
+
+        const existing = await prisma.user.findFirst({
+            where: { 
+                username: usernameLower,
+                NOT: { id: session.user.id }
+            }
+        });
+        if (existing) throw new Error("Username already taken");
+    }
+
     await prisma.user.update({
         where: { id: session.user.id },
         data: {
             name: data.name,
+            username: data.username?.toLowerCase(),
             bio: data.bio,
             location: data.location,
             website: data.website,
@@ -393,4 +410,13 @@ export async function updateSensitiveToggle(show: boolean) {
     });
 
     revalidatePath("/");
+}
+
+export async function deleteAccount() {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+
+    await prisma.user.delete({
+        where: { id: session.user.id }
+    });
 }
