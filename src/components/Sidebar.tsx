@@ -131,6 +131,7 @@ export function Sidebar() {
         {
             href: "/ai",
             label: "PulsAI",
+            badge: "Coming Soon",
             icon: (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 3C12 3 12 8 7 8C12 8 12 13 12 13C12 13 12 8 17 8C12 8 12 3 12 3Z" />
@@ -203,6 +204,21 @@ export function Sidebar() {
                     >
                         {link.icon}
                         <span className="nav-label">{link.label}</span>
+                        {(link as any).badge && (
+                            <span className="nav-label" style={{ 
+                                marginLeft: "8px", 
+                                fontSize: "0.6rem", 
+                                background: "var(--blue)", 
+                                color: "white", 
+                                padding: "2px 6px", 
+                                borderRadius: "8px", 
+                                fontWeight: 800,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.5px"
+                            }}>
+                                {(link as any).badge}
+                            </span>
+                        )}
                     </Link>
                 );
             })}
