@@ -11,12 +11,14 @@ import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 
 
 
+import { UsernameGuard } from "@/components/UsernameGuard";
+
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
     const session = await auth();
     if (!session) redirect("/login");
 
     return (
-        <>
+        <UsernameGuard>
             <VerificationBanner />
             <div className="app-layout">
                 <Sidebar />
@@ -31,6 +33,6 @@ export default async function MainLayout({ children }: { children: React.ReactNo
             <GlobalCompose />
             <MobileTweetFAB />
             <KeyboardShortcuts />
-        </>
+        </UsernameGuard>
     );
 }
