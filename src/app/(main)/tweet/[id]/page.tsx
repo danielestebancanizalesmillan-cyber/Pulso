@@ -115,7 +115,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function TweetPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = await params;
     const session = await auth();
-    const userId = session?.user?.id!;
+    const userId = session?.user?.id;
 
     const tweet = await prisma.tweet.findUnique({
         where: { id: resolvedParams.id },
