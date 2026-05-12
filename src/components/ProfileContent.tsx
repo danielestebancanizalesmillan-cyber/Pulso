@@ -37,7 +37,7 @@ export function ProfileContent({
     isBlocked: boolean,
     isMuted: boolean,
     isBlockingMe: boolean,
-    currentUserId: string 
+    currentUserId?: string 
 }) {
     const { t, locale } = useTranslation();
     const [showMoreMenu, setShowMoreMenu] = useState(false);

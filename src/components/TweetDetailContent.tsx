@@ -51,7 +51,7 @@ function SubRepliesList({ replies, userId }: { replies: any[], userId: string })
     );
 }
 
-export function TweetDetailContent({ tweet: initialTweet, userId }: { tweet: any, userId: string }) {
+export function TweetDetailContent({ tweet: initialTweet, userId }: { tweet: any, userId?: string }) {
     const { t, locale } = useTranslation();
     const [lightboxMedia, setLightboxMedia] = useState<{ images: any[], index: number } | null>(null);
     const [showViews, setShowViews] = useState(true);
