@@ -2,7 +2,9 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { Shield, Users, Award, AlertTriangle, LayoutDashboard, ArrowLeft } from "lucide-react";
+import AdminLoginPage from "./login/page"; // Importamos el componente de login para mostrarlo inline si está bloqueado
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
     const session = await auth();
@@ -15,6 +17,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
     if (user?.role !== "ADMIN") {
         redirect("/home");
+    }
+
+    // Doble Seguridad: Verificar si el panel está desbloqueado con el PIN
+    const cookieStore = await cookies();
+    const isUnlocked = cookieStore.get("admin_unlocked")?.value === "true";
+
+    // Si NO está desbloqueado, mostramos la pantalla de login en lugar del dashboard
+    // Esto evita bucles de redirección infinitos.
+    if (!isUnlocked) {
+        return <AdminLoginPage />;
     }
 
     return (
