@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
-    "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 next build",
+    "build": "prisma generate && cross-env NODE_OPTIONS=--max-old-space-size=8192 next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -33,7 +33,8 @@
     "remark-gfm": "^4.0.1",
     "resend": "^6.9.3",
     "uuid": "^13.0.0",
-    "validator": "^13.15.26"
+    "validator": "^13.15.26",
+    "prisma": "^6.19.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -46,7 +47,6 @@
     "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "prisma": "^6.19.2",
     "typescript": "^5"
   }
 }
