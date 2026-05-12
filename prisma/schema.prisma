@@ -8,83 +8,74 @@ datasource db {
 }
 
 model User {
-  id               String   @id @default(cuid())
-  name             String
-  username         String?   @unique
-  email            String?   @unique
-  password         String?
-  bio              String?
-  avatar           String?
-  coverImage       String?
-  createdAt        DateTime @default(now())
-  isVerified       Boolean  @default(false)
-  verificationType String   @default("NONE") // "BLUE" | "GOLD" | "NONE"
-  accountLabel     String?  // "PARODIA" | "BOT" | "OFICIAL"
-  emailVerified    DateTime?
-  twoFactorSecret  String?
-  twoFactorEnabled Boolean  @default(false)
-  location         String?
-  website          String?
-  image            String?
-  pinnedTweetId    String?
-  birthDate        DateTime?
-  showSensitiveContent Boolean @default(false)
-  
-  accounts      Account[]
-  highlights    Highlight[]
-  tweets        Tweet[]
-  likes         Like[]
-  bookmarks     Bookmark[]
-  bookmarkFolders BookmarkFolder[]
-  
-  followers     Follow[] @relation("following")
-  following     Follow[] @relation("follower")
-  
-  notifications Notification[] @relation("notifReceiver")
-  actedNotifs   Notification[] @relation("notifActor")
-
-  conversations Conversation[] @relation("ConversationParticipants")
-  messages      Message[]
-  messageReactions MessageReaction[]
-  
-  blockedBy     Block[] @relation("blocked")
-  blocking      Block[] @relation("blocker")
-  mutedBy       Mute[]  @relation("muted")
-  muting        Mute[]  @relation("muter")
-
-  createdLists  TweetList[]
-  listMembers   TweetListMember[]
-
-  createdCommunities Community[] @relation("CommunityCreator")
-  communityMemberships CommunityMember[]
-  interests UserInterest[]
-  deletedMessages DeletedMessage[]
-  deletedConversations DeletedConversation[]
-  settings      UserSetting[]
-  backupCodes   BackupCode[]
-  role             String   @default("USER") // "USER" | "ADMIN"
-  reports       Report[] @relation("reporter")
-  verificationRequest VerificationRequest?
-  countryCode      String?  @default("GLOBAL")
-  isPrivate        Boolean  @default(false)
-  publicKey        String?
-  privateKey       String?
-  receivedFollowRequests FollowRequest[] @relation("requestReceiver")
-
-
-  sentFollowRequests     FollowRequest[] @relation("requestSender")
-  statuses               Status[]
+  id                     String                @id @default(cuid())
+  name                   String
+  username               String?               @unique
+  email                  String?               @unique
+  password               String?
+  bio                    String?
+  avatar                 String?
+  coverImage             String?
+  createdAt              DateTime              @default(now())
+  isVerified             Boolean               @default(false)
+  verificationType       String                @default("NONE")
+  accountLabel           String?
+  emailVerified          DateTime?
+  twoFactorSecret        String?
+  twoFactorEnabled       Boolean               @default(false)
+  location               String?
+  website                String?
+  image                  String?
+  pinnedTweetId          String?
+  birthDate              DateTime?
+  showSensitiveContent   Boolean               @default(false)
+  role                   String                @default("USER")
+  countryCode            String?               @default("GLOBAL")
+  isPrivate              Boolean               @default(false)
+  publicKey              String?
+  privateKey             String?
   aiChats                AIChat[]
+  accounts               Account[]
+  backupCodes            BackupCode[]
+  blockedBy              Block[]               @relation("blocked")
+  blocking               Block[]               @relation("blocker")
+  bookmarks              Bookmark[]
+  bookmarkFolders        BookmarkFolder[]
+  createdCommunities     Community[]           @relation("CommunityCreator")
+  communityMemberships   CommunityMember[]
+  deletedConversations   DeletedConversation[]
+  deletedMessages        DeletedMessage[]
+  following              Follow[]              @relation("follower")
+  followers              Follow[]              @relation("following")
+  receivedFollowRequests FollowRequest[]       @relation("requestReceiver")
+  sentFollowRequests     FollowRequest[]       @relation("requestSender")
+  highlights             Highlight[]
+  likes                  Like[]
+  messages               Message[]
+  messageReactions       MessageReaction[]
+  mutedBy                Mute[]                @relation("muted")
+  muting                 Mute[]                @relation("muter")
+  actedNotifs            Notification[]        @relation("notifActor")
+  notifications          Notification[]        @relation("notifReceiver")
+  reports                Report[]              @relation("reporter")
+  statuses               Status[]
+  tweets                 Tweet[]
+  createdLists           TweetList[]
+  listMembers            TweetListMember[]
+  interests              UserInterest[]
+  settings               UserSetting[]
+  verificationRequest    VerificationRequest?
+  conversations          Conversation[]        @relation("ConversationParticipants")
 }
 
 model AIChat {
   id        String      @id @default(cuid())
   title     String      @default("Nueva conversación")
   userId    String
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages  AIMessage[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  AIMessage[]
 
   @@index([userId])
 }
@@ -92,127 +83,114 @@ model AIChat {
 model AIMessage {
   id        String   @id @default(cuid())
   content   String
-  role      String   // "user" | "assistant"
+  role      String
   chatId    String
-  chat      AIChat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  chat      AIChat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   @@index([chatId])
 }
 
 model FollowRequest {
-  id          String   @id @default(cuid())
-  senderId    String
-  sender      User     @relation("requestSender", fields: [senderId], references: [id], onDelete: Cascade)
-  receiverId  String
-  receiver    User     @relation("requestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
-  status      String   @default("PENDING") // "PENDING" | "APPROVED" | "DENIED"
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now())
+  receiver   User     @relation("requestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender     User     @relation("requestSender", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@unique([senderId, receiverId])
   @@index([receiverId])
 }
 
 model UserSetting {
-  id        String @id @default(cuid())
-  key       String
-  value     String
-  userId    String
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  key    String
+  value  String
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, key])
 }
 
 model Tweet {
-  id        String   @id @default(cuid())
-  content   String
-  createdAt DateTime @default(now())
-
-  images    TweetImage[]
-  hashtags  Hashtag[]
-
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId  String
-
-  // Reply threading
-  parentId  String?
-  parent    Tweet?   @relation("TweetReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies   Tweet[]  @relation("TweetReplies")
-
-  // Retweet
-  retweetOfId String?
-  retweetOf   Tweet?  @relation("Retweets", fields: [retweetOfId], references: [id], onDelete: SetNull)
-  retweets    Tweet[] @relation("Retweets")
-
-  // Quote Tweet
-  quoteOfId   String?
-  quoteOf     Tweet?  @relation("Quotes", fields: [quoteOfId], references: [id], onDelete: SetNull)
-  quotes      Tweet[] @relation("Quotes")
-
-  likes       Like[]
-  notifications Notification[]
-  bookmarks   Bookmark[]
-  highlights  Highlight[]
-  views       Int      @default(0)
-  
-  // Poll support
-  poll        Poll?
-
-  // Community support
-  communityId String?
-  community   Community? @relation("CommunityTweets", fields: [communityId], references: [id], onDelete: SetNull)
-  countryCode String?
-  category    String?
-  aiSources   String?
-  classification String @default("SAFE") // "SAFE" | "SENSITIVE" | "NSFW" | "VIOLENT"
+  id             String         @id @default(cuid())
+  content        String
+  createdAt      DateTime       @default(now())
+  authorId       String
+  parentId       String?
+  retweetOfId    String?
+  quoteOfId      String?
+  views          Int            @default(0)
+  communityId    String?
+  countryCode    String?
+  category       String?
+  aiSources      String?
+  classification String         @default("SAFE")
+  bookmarks      Bookmark[]
+  highlights     Highlight[]
+  likes          Like[]
+  notifications  Notification[]
+  poll           Poll?
+  author         User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  community      Community?     @relation("CommunityTweets", fields: [communityId], references: [id])
+  parent         Tweet?         @relation("TweetReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies        Tweet[]        @relation("TweetReplies")
+  quoteOf        Tweet?         @relation("Quotes", fields: [quoteOfId], references: [id])
+  quotes         Tweet[]        @relation("Quotes")
+  retweetOf      Tweet?         @relation("Retweets", fields: [retweetOfId], references: [id])
+  retweets       Tweet[]        @relation("Retweets")
+  images         TweetImage[]
+  hashtags       Hashtag[]      @relation("HashtagToTweet")
+  locationLat    Float?
+  locationLng    Float?
+  locationLabel  String?
 }
 
 model Poll {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   expiresAt DateTime
-  tweetId   String   @unique
-  tweet     Tweet    @relation(fields: [tweetId], references: [id], onDelete: Cascade)
-  
+  tweetId   String       @unique
+  tweet     Tweet        @relation(fields: [tweetId], references: [id], onDelete: Cascade)
   options   PollOption[]
 }
 
 model PollOption {
-  id        String   @id @default(cuid())
-  text      String
-  pollId    String
-  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  
-  votes     PollVote[]
+  id     String     @id @default(cuid())
+  text   String
+  pollId String
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes  PollVote[]
 }
 
 model PollVote {
-  id        String   @id @default(cuid())
-  userId    String
-  optionId  String
-  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  id       String     @id @default(cuid())
+  userId   String
+  optionId String
+  option   PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
 
   @@unique([userId, optionId])
 }
 
 model BookmarkFolder {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   bookmarks Bookmark[]
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Bookmark {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String          @id @default(cuid())
   userId    String
-  tweet     Tweet    @relation(fields: [tweetId], references: [id], onDelete: Cascade)
   tweetId   String
-  createdAt DateTime @default(now())
-  
+  createdAt DateTime        @default(now())
   folderId  String?
-  folder    BookmarkFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  folder    BookmarkFolder? @relation(fields: [folderId], references: [id])
+  tweet     Tweet           @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tweetId])
   @@index([userId])
@@ -220,80 +198,73 @@ model Bookmark {
 
 model Like {
   id      String @id @default(cuid())
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId  String
-  tweet   Tweet  @relation(fields: [tweetId], references: [id], onDelete: Cascade)
   tweetId String
+  tweet   Tweet  @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tweetId])
 }
 
 model Follow {
   id          String @id @default(cuid())
-  follower    User   @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
   followerId  String
-  following   User   @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
   followingId String
+  follower    User   @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User   @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId])
 }
 
 model Notification {
   id        String   @id @default(cuid())
-  type      String   // "like" | "follow" | "reply" | "retweet"
+  type      String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
-
-  user      User     @relation("notifReceiver", fields: [userId], references: [id], onDelete: Cascade)
   userId    String
-  actor     User     @relation("notifActor", fields: [actorId], references: [id], onDelete: Cascade)
   actorId   String
-  tweet     Tweet?   @relation(fields: [tweetId], references: [id], onDelete: Cascade)
   tweetId   String?
+  actor     User     @relation("notifActor", fields: [actorId], references: [id], onDelete: Cascade)
+  tweet     Tweet?   @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+  user      User     @relation("notifReceiver", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Hashtag {
   id        String   @id @default(cuid())
   text      String   @unique
-  tweets    Tweet[]
   createdAt DateTime @default(now())
+  tweets    Tweet[]  @relation("HashtagToTweet")
 }
 
 model Conversation {
-  id        String    @id @default(cuid())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  
-  participants User[] @relation("ConversationParticipants")
-  messages     Message[]
+  id           String                @id @default(cuid())
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
   deletedBy    DeletedConversation[]
+  messages     Message[]
+  participants User[]                @relation("ConversationParticipants")
 
   @@index([updatedAt])
 }
 
 model Message {
-  id             String       @id @default(cuid())
+  id             String            @id @default(cuid())
   content        String
-  createdAt      DateTime     @default(now())
-  read           Boolean      @default(false)
-  type           String       @default("text") // "text" | "audio"
+  createdAt      DateTime          @default(now())
+  read           Boolean           @default(false)
+  type           String            @default("text")
   audioUrl       String?
-  
   conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  
   senderId       String
-  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  
-  reactions      MessageReaction[]
+  isEncrypted    Boolean           @default(false)
   deletedBy      DeletedMessage[]
-  isEncrypted    Boolean      @default(false)
+  conversation   Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User              @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  reactions      MessageReaction[]
 }
 
-
-
 model DeletedMessage {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   messageId String
   userId    String
   message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
@@ -303,12 +274,12 @@ model DeletedMessage {
 }
 
 model MessageReaction {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   emoji     String
   messageId String
-  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId, emoji])
 }
@@ -316,49 +287,48 @@ model MessageReaction {
 model Block {
   id        String @id @default(cuid())
   blockerId String
-  blocker   User   @relation("blocker", fields: [blockerId], references: [id], onDelete: Cascade)
   blockedId String
   blocked   User   @relation("blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  blocker   User   @relation("blocker", fields: [blockerId], references: [id], onDelete: Cascade)
 
   @@unique([blockerId, blockedId])
 }
 
 model Mute {
-  id        String @id @default(cuid())
-  muterId   String
-  muter     User   @relation("muter", fields: [muterId], references: [id], onDelete: Cascade)
-  mutedId   String
-  muted     User   @relation("muted", fields: [mutedId], references: [id], onDelete: Cascade)
+  id      String @id @default(cuid())
+  muterId String
+  mutedId String
+  muted   User   @relation("muted", fields: [mutedId], references: [id], onDelete: Cascade)
+  muter   User   @relation("muter", fields: [muterId], references: [id], onDelete: Cascade)
 
   @@unique([muterId, mutedId])
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  
-  access_token       String?  
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  
-  session_state      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
 
 model Highlight {
   id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
-  tweet     Tweet    @relation(fields: [tweetId], references: [id], onDelete: Cascade)
   tweetId   String
   createdAt DateTime @default(now())
+  tweet     Tweet    @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tweetId])
   @@index([userId])
@@ -376,57 +346,54 @@ model EmailVerification {
 model TweetImage {
   id      String @id @default(cuid())
   url     String
-  type    String @default("image") // "image" | "video"
+  type    String @default("image")
   tweetId String
   tweet   Tweet  @relation(fields: [tweetId], references: [id], onDelete: Cascade)
 }
 
 model TweetList {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   name        String
   description String?
-  isPrivate   Boolean  @default(false)
+  isPrivate   Boolean           @default(false)
   banner      String?
-  createdAt   DateTime @default(now())
-  
+  createdAt   DateTime          @default(now())
   creatorId   String
-  creator     User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  
+  creator     User              @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   members     TweetListMember[]
 }
 
 model TweetListMember {
-  id        String   @id @default(cuid())
-  listId    String
-  list      TweetList @relation(fields: [listId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String    @id @default(cuid())
+  listId String
+  userId String
+  list   TweetList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([listId, userId])
 }
 
 model Community {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   name        String
   description String?
   banner      String?
   avatar      String?
   creatorId   String
-  creator     User     @relation("CommunityCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  
+  createdAt   DateTime          @default(now())
+  creator     User              @relation("CommunityCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   members     CommunityMember[]
-  tweets      Tweet[] @relation("CommunityTweets")
+  tweets      Tweet[]           @relation("CommunityTweets")
 }
 
 model CommunityMember {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   communityId String
-  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role        String   @default("MEMBER") // "ADMIN" | "MODERATOR" | "MEMBER"
-  
+  role        String    @default("MEMBER")
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([communityId, userId])
 }
 
@@ -440,7 +407,7 @@ model UserInterest {
 }
 
 model DeletedConversation {
-  id             String @id @default(cuid())
+  id             String       @id @default(cuid())
   conversationId String
   userId         String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -453,8 +420,8 @@ model BackupCode {
   id        String   @id @default(cuid())
   codeHash  String
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -462,40 +429,40 @@ model BackupCode {
 model VerificationRequest {
   id        String   @id @default(cuid())
   userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   status    String   @default("pending")
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 model Report {
-  id          String   @id @default(cuid())
-  reporterId  String
-  reporter    User     @relation("reporter", fields: [reporterId], references: [id], onDelete: Cascade)
-  targetType  String   // "TWEET" | "USER"
-  targetId    String
-  reason      String
-  status      String   @default("PENDING") // "PENDING" | "RESOLVED" | "DISMISSED"
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  reporterId String
+  targetType String
+  targetId   String
+  reason     String
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now())
+  reporter   User     @relation("reporter", fields: [reporterId], references: [id], onDelete: Cascade)
 
   @@index([reporterId])
 }
 
 model Status {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type       String   @default("TEXT") // "TEXT" | "IMAGE" | "VIDEO"
-  content    String?  // Texto o subtitulo
-  mediaUrl   String?  // Imagen/Video
-  audioUrl   String?  // Musica adjunta
-  background    String?  // Estilo de fondo (ej: "clouds")
-  audioStart    Int?     // Segundo de inicio del audio
-  audioDuration Int?     @default(15) // Duracion de la historia (15 a 30s)
-  styleOptions  String?  // JSON string containing position and styles
-  createdAt  DateTime @default(now())
-  expiresAt  DateTime
+  id            String   @id @default(cuid())
+  userId        String
+  type          String   @default("TEXT")
+  content       String?
+  mediaUrl      String?
+  audioUrl      String?
+  background    String?
+  audioStart    Int?
+  audioDuration Int?     @default(15)
+  styleOptions  String?
+  createdAt     DateTime @default(now())
+  expiresAt     DateTime
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }

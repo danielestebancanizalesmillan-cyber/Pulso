@@ -8,7 +8,7 @@ import { classifyTweet } from "@/lib/classify";
 import { USER_SELECT } from "@/lib/constants";
 import { getOllamaResponse, PULSAI_SYSTEM_PROMPT, PULSAI_FEED_PROMPT, getThreadContext, runPulsAIEngine, classifyContent } from "@/lib/ai-service";
 
-export async function createTweet(content: string, parentId?: string, images?: { url: string, type: string }[], quoteOfId?: string, poll?: { options: string[], expiresAt: string }, communityId?: string, isSensitive: boolean = false) {
+export async function createTweet(content: string, parentId?: string, images?: { url: string, type: string }[], quoteOfId?: string, poll?: { options: string[], expiresAt: string }, communityId?: string, isSensitive: boolean = false, location?: { lat: number, lng: number, label: string }) {
     console.log(">> Action: createTweet called with content length:", content.length, "images:", images?.length, "poll:", !!poll);
     const session = await auth();
     console.log(">> Action: Session User ID:", session?.user?.id);
@@ -68,6 +68,9 @@ export async function createTweet(content: string, parentId?: string, images?: {
                         create: { text: h },
                     })),
                 },
+                locationLat: location?.lat,
+                locationLng: location?.lng,
+                locationLabel: location?.label,
             },
         });
         console.log(">> Tweet created successfully:", tweet.id);

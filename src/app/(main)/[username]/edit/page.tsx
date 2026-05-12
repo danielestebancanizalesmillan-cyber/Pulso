@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useTransition, useRef, useEffect } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/user";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
 import { REGIONS } from "@/lib/constants";
-import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 
 export default function EditProfilePage() {
     const { data: session, update } = useSession();
@@ -34,72 +33,35 @@ export default function EditProfilePage() {
     const [coverFile, setCoverFile] = useState<File | null>(null);
     const [coverPreview, setCoverPreview] = useState<string>(user?.coverImage || "");
     const coverInputRef = useRef<HTMLInputElement>(null);
-    const locationInputRef = useRef<HTMLInputElement>(null);
 
     const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setForm((f) => ({ ...f, [k]: e.target.value }));
 
-    useEffect(() => {
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-        if (!apiKey) return;
-
-        setOptions({
-            key: apiKey,
-            v: "weekly"
-        });
-
-        importLibrary("places").then((places) => {
-            if (!locationInputRef.current) return;
-            const autocomplete = new places.Autocomplete(locationInputRef.current, {
-                types: ["(cities)"]
-            });
-
-            autocomplete.addListener("place_changed", () => {
-                const place = autocomplete.getPlace();
-                if (!place.address_components) return;
-
-                const countryComponent = place.address_components.find(
-                    (c: any) => c.types.includes("country")
-                );
-
-                setForm(f => ({
-                    ...f,
-                    location: countryComponent ? countryComponent.long_name : f.location,
-                    countryCode: countryComponent ? countryComponent.short_name : f.countryCode
-                }));
-
-            });
-        });
-    }, []);
 
     const handleDetectLocation = () => {
         if (!navigator.geolocation) return alert("Geolocation not supported");
 
-        navigator.geolocation.getCurrentPosition((position) => {
+        navigator.geolocation.getCurrentPosition(async (position) => {
             const { latitude, longitude } = position.coords;
-            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-            if (!apiKey) return;
+            
+            try {
+                // Usando Nominatim (OpenStreetMap) en lugar de Google Geocoding
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+                const data = await res.json();
+                
+                const country = data.address.country || "";
+                const city = data.address.city || data.address.town || data.address.village || "";
+                const countryCode = data.address.country_code?.toUpperCase() || "GLOBAL";
 
-            setOptions({ key: apiKey });
-
-            Promise.all([importLibrary("geocoding"), importLibrary("places")]).then(([geocoding]) => {
-                const geocoder = new geocoding.Geocoder();
-                geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
-                    if (status === "OK" && results?.[0]) {
-                        const place = results[0];
-                        const countryComponent = place.address_components.find(
-                            (c: any) => c.types.includes("country")
-                        );
-
-                        setForm(f => ({
-                            ...f,
-                            location: countryComponent ? countryComponent.long_name : f.location,
-                            countryCode: countryComponent ? countryComponent.short_name : f.countryCode
-                        }));
-
-                    }
-                });
-            });
+                setForm(f => ({
+                    ...f,
+                    location: city ? `${city}, ${country}` : country,
+                    countryCode: countryCode
+                }));
+            } catch (err) {
+                console.error("Geocoding error:", err);
+                alert("No se pudo obtener el nombre de la ubicación");
+            }
         });
     };
 
@@ -289,7 +251,6 @@ export default function EditProfilePage() {
                             <label className="form-label">{t("location")}</label>
                             <div style={{ display: "flex", gap: 8 }}>
                                 <input 
-                                    ref={locationInputRef}
                                     className="form-input" 
                                     type="text" 
                                     value={form.location} 

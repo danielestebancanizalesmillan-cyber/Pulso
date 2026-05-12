@@ -14,6 +14,8 @@ import { useToast } from "./ToastProvider";
 import { useTranslation } from "@/lib/i18n";
 import { translateText } from "@/app/actions/translate";
 import { MediaLightbox } from "./MediaLightbox";
+import { LocationMap } from "./LocationMap";
+import { MapPin } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -860,6 +862,16 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                                         ))}
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {tweet.locationLat && tweet.locationLng && (
+                            <div onClick={(e) => e.stopPropagation()}>
+                                <LocationMap 
+                                    lat={tweet.locationLat} 
+                                    lng={tweet.locationLng} 
+                                    label={tweet.locationLabel || "Ubicación"} 
+                                />
                             </div>
                         )}
 

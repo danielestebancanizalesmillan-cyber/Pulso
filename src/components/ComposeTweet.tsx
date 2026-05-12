@@ -9,6 +9,7 @@ import { useTranslation } from "@/lib/i18n";
 import { EmojiPicker } from "./EmojiPicker";
 import { improveTweetWithAI } from "@/app/actions/ai";
 import { GifPicker } from "./GifPicker";
+import { MapPin, X } from "lucide-react";
 
 import { upload } from "@vercel/blob/client";
 
@@ -58,6 +59,8 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
     const [userCommunities, setUserCommunities] = useState<any[]>([]);
     const [isImproving, setIsImproving] = useState(false);
     const [isSensitive, setIsSensitive] = useState(false);
+    const [location, setLocation] = useState<{ lat: number, lng: number, label: string } | null>(null);
+    const [isLocating, setIsLocating] = useState(false);
 
     const handleAIEnhance = async () => {
         if (!content.trim() || isImproving) return;
@@ -142,6 +145,40 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
         setTimeout(() => textareaRef.current?.focus(), 10);
     };
 
+    const handleLocation = async () => {
+        if (location) {
+            setLocation(null);
+            return;
+        }
+
+        if (!navigator.geolocation) {
+            addToast("Tu navegador no soporta geolocalización", "error");
+            return;
+        }
+
+        setIsLocating(true);
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const { latitude, longitude } = pos.coords;
+            try {
+                // Reverse geocoding with Nominatim (OSM)
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+                const data = await res.json();
+                const label = data.address.city || data.address.town || data.address.village || data.address.state || "Ubicación desconocida";
+                setLocation({ lat: latitude, lng: longitude, label });
+                addToast(`Ubicación fijada en ${label}`, "success");
+            } catch (err) {
+                console.error("Geocoding error:", err);
+                setLocation({ lat: latitude, lng: longitude, label: "Ubicación detectada" });
+            } finally {
+                setIsLocating(false);
+            }
+        }, (err) => {
+            console.error("Geolocation error:", err);
+            addToast("No se pudo obtener tu ubicación", "error");
+            setIsLocating(false);
+        });
+    };
+
     const remaining = MAX - content.length;
     const isPollValid = showPoll && pollOptions.every(opt => opt.trim().length > 0) && pollOptions.length >= 2;
     const canPost = (content.trim().length > 0 || mediaPayloads.length > 0 || (showPoll && isPollValid)) && content.length <= MAX;
@@ -222,7 +259,7 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                     };
                 }
 
-                const res = await createTweet(content.trim(), parentId, [...uploadedMedia, ...hotlinkedMedia], quoteOfId, pollData, selectedCommunityId, isSensitive);
+                const res = await createTweet(content.trim(), parentId, [...uploadedMedia, ...hotlinkedMedia], quoteOfId, pollData, selectedCommunityId, isSensitive, location || undefined);
                 setContent("");
                 mediaPayloads.forEach(p => {
                     if (p.url.startsWith('blob:')) URL.revokeObjectURL(p.url);
@@ -480,6 +517,26 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                         </div>
                     </div>
                 )}
+                {location && (
+                    <div style={{ 
+                        display: "inline-flex", 
+                        alignItems: "center", 
+                        gap: "6px", 
+                        padding: "4px 10px", 
+                        background: "rgba(29, 155, 240, 0.1)", 
+                        color: "var(--blue)", 
+                        borderRadius: "9999px", 
+                        fontSize: "0.85rem",
+                        fontWeight: 600,
+                        marginBottom: "12px"
+                    }}>
+                        <MapPin size={14} />
+                        <span>{location.label}</span>
+                        <button onClick={() => setLocation(null)} style={{ background: "none", border: "none", color: "var(--blue)", cursor: "pointer", display: "flex", padding: 0 }}>
+                            <X size={14} />
+                        </button>
+                    </div>
+                )}
                 <div className="compose-divider" />
                 <div className="compose-actions">
                     <div className="compose-tools">
@@ -529,6 +586,18 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
                             </svg>
+                        </button>
+                        <button 
+                            className={`icon-btn ${location ? "active" : ""}`} 
+                            title="Añadir ubicación" 
+                            onClick={handleLocation}
+                            disabled={isLocating}
+                        >
+                            {isLocating ? (
+                                <span className="spinner-small" style={{ width: '16px', height: '16px', border: '2px solid var(--blue)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                            ) : (
+                                <MapPin size={20} />
+                            )}
                         </button>
                         <button 
                             className="icon-btn" 
