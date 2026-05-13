@@ -25,6 +25,14 @@ export async function generateMetadata() {
   };
 }
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
+
 import { cookies } from "next/headers";
 
 export default async function RootLayout({
