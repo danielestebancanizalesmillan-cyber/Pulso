@@ -9,7 +9,7 @@ import Script from "next/script";
 export async function generateMetadata() {
   const cookieStore = await cookies();
   const locale = cookieStore.get("language")?.value || "en";
-  
+
   if (locale === 'es') {
     return {
       title: "Pulso",
@@ -17,21 +17,13 @@ export async function generateMetadata() {
       manifest: "/manifest.json",
     };
   }
-  
+
   return {
     title: "Pulso",
     description: "A fully-featured social network built with Next.js",
     manifest: "/manifest.json",
   };
 }
-
-export const viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: "cover",
-};
 
 import { cookies } from "next/headers";
 
@@ -54,7 +46,7 @@ export default async function RootLayout({
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossOrigin="" />
         <Script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossOrigin="" strategy="beforeInteractive" />
         <Script id="gt-init" strategy="lazyOnload">
-        {`
+          {`
             window.googleTranslateElementInit = function() {
                 new window.google.translate.TranslateElement({
                     pageLanguage: 'en',

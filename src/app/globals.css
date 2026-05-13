@@ -118,7 +118,7 @@
   --text-primary: #f2ede9;
   --text-secondary: #c2b5b1;
   --text-muted: #968984;
-  --blue: #e8a87c; 
+  --blue: #e8a87c;
 }
 
 /* Accent Colors */
@@ -126,14 +126,17 @@
   --blue: #1d9bf0;
   --blue-hover: #1a8cd8;
 }
+
 [data-accent="green"] {
   --blue: #00ba7c;
   --blue-hover: #009362;
 }
+
 [data-accent="pink"] {
   --blue: #f91880;
   --blue-hover: #d1156c;
 }
+
 [data-accent="yellow"] {
   --blue: #ffd400;
   --blue-hover: #dcb800;
@@ -342,13 +345,10 @@ img {
 /* Layout grid */
 .app-layout {
   display: grid;
-  grid-template-columns: 275px minmax(0, 600px) 1fr;
+  grid-template-columns: 275px 600px 1fr;
   min-height: 100vh;
   max-width: 1280px;
   margin: 0 auto;
-  overflow-x: hidden;
-  width: 100%;
-  box-sizing: border-box;
 }
 
 /* Responsive grid handled at the bottom of the file */
@@ -500,8 +500,6 @@ img {
 .main-column {
   border-right: 1px solid var(--border);
   min-height: 100vh;
-  min-width: 0;
-  overflow-x: hidden;
 }
 
 .column-header {
@@ -917,8 +915,10 @@ img {
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .right-panel {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 /* Optional: Show scrollbar only on hover if supported by browser */
@@ -926,6 +926,7 @@ img {
   display: block;
   width: 6px;
 }
+
 .right-panel:hover::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 10px;
@@ -1147,7 +1148,6 @@ img {
   animation: scaleIn 0.3s ease both;
   position: relative;
   z-index: 1;
-  margin: 0 16px;
 }
 
 .auth-logo {
@@ -1904,8 +1904,6 @@ img {
   gap: 12px;
   z-index: 9999;
   pointer-events: none;
-  width: max-content;
-  max-width: calc(100vw - 32px);
 }
 
 .toast {
@@ -2098,8 +2096,15 @@ img {
 
 /* Verified Badge Animation */
 @keyframes verified-appear {
-  0% { transform: scale(0.7); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .verified-animated {
@@ -2115,21 +2120,19 @@ img {
 
 /* ========== RESPONSIVENESS & MOBILE OPTIMIZATION ========== */
 
-/* Large Desktop — full 3-column layout */
-@media (min-width: 1280px) {
+/* Tablet & Intermediate Desktop (hiding right panel) */
+@media (max-width: 1095px) {
   .app-layout {
-    grid-template-columns: 275px 600px 1fr;
-  }
-}
-
-/* Compact Desktop (1096px–1279px) — narrower sidebar, show right panel */
-@media (min-width: 1096px) and (max-width: 1279px) {
-  .app-layout {
-    grid-template-columns: 88px minmax(0, 600px) 290px;
-    max-width: 100%;
+    grid-template-columns: 80px 1fr !important;
+    max-width: 700px;
   }
 
-  .nav-label, .sidebar-user-info {
+  .right-panel {
+    display: none !important;
+  }
+
+  .nav-label,
+  .sidebar-user-info {
     display: none !important;
   }
 
@@ -2138,7 +2141,10 @@ img {
     padding: 12px 0;
   }
 
-  .sidebar-logo, .nav-link, .tweet-btn, .sidebar-user {
+  .sidebar-logo,
+  .nav-link,
+  .tweet-btn,
+  .sidebar-user {
     width: 50px;
     height: 50px;
     padding: 0;
@@ -2151,80 +2157,26 @@ img {
   }
 }
 
-/* Tablet (681px–1095px) — icon sidebar, no right panel */
-@media (min-width: 681px) and (max-width: 1095px) {
-  .app-layout {
-    grid-template-columns: 72px 1fr;
-    max-width: 100%;
-  }
-
-  .right-panel {
-    display: none !important;
-  }
-
-  .nav-label, .sidebar-user-info {
-    display: none !important;
-  }
-
-  .sidebar {
-    align-items: center;
-    padding: 12px 0;
-    border-right: 1px solid var(--border);
-  }
-
-  .sidebar-logo, .nav-link, .tweet-btn, .sidebar-user {
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    justify-content: center;
-    margin: 4px auto;
-  }
-
-  .tweet-btn {
-    border-radius: 50%;
-    width: 48px !important;
-    height: 48px !important;
-    padding: 0 !important;
-  }
-
-  .main-column {
-    min-width: 0;
-    overflow-x: hidden;
-  }
-}
-
-/* Mobile (≤680px) — bottom navigation bar */
 .nav-link.show-on-mobile-only {
   display: none !important;
 }
 
 @media (max-width: 680px) {
-  html, body {
-    overflow-x: hidden;
-  }
-
   .app-layout {
     display: flex !important;
     flex-direction: column !important;
-    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
-    max-width: 100% !important;
-    width: 100% !important;
+    padding-bottom: 60px;
+    /* Space for bottom nav */
+    max-width: 100vw !important;
     overflow-x: hidden !important;
-  }
-
-  .main-column {
-    width: 100% !important;
-    min-width: 0 !important;
-    overflow-x: hidden !important;
-    border-right: none !important;
   }
 
   .sidebar {
     position: fixed !important;
     bottom: 0 !important;
     top: auto !important;
-    left: 0 !important;
-    right: 0 !important;
+    left: 0;
+    right: 0;
     height: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
     width: 100% !important;
     flex-direction: row !important;
@@ -2236,18 +2188,13 @@ img {
     border-top: 1px solid var(--border) !important;
     border-right: none !important;
     z-index: 2000 !important;
-    overflow: visible !important;
   }
 
-  /* Hide elements not needed in bottom nav */
   .sidebar-logo,
   .sidebar-user,
   .tweet-btn {
     display: none !important;
-  }
-
-  .nav-label {
-    display: none !important;
+    /* Hide logo, user and big tweet btn on mobile nav */
   }
 
   .nav-link.hide-on-mobile {
@@ -2258,60 +2205,28 @@ img {
     display: flex !important;
   }
 
+  /* Floating Action Button for Tweet on Mobile */
+  .layout::after {
+    content: '+';
+    pointer-events: none;
+    opacity: 0;
+  }
+
   .nav-link {
-    width: auto !important;
-    height: 52px !important;
-    min-width: 44px !important;
-    margin: 0 !important;
-    flex: 1 !important;
-    padding: 0 !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0 !important;
+    width: auto;
+    height: 100%;
+    margin: 0;
+    flex: 1;
   }
 
-  /* Column header — prevent overflow */
   .column-header {
-    width: 100% !important;
-    max-width: 100vw !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
+    width: 100vw;
+    box-sizing: border-box;
   }
 
-  /* Toast — float above bottom nav */
-  .toast-container {
-    bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
-    width: calc(100% - 32px) !important;
-    left: 16px !important;
-    transform: none !important;
-  }
-
-  /* Modal — full screen sheet from bottom */
-  .modal-overlay {
-    padding: 0 !important;
-    align-items: flex-end !important;
-  }
-
-  .modal {
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 96vh !important;
-    border-radius: 20px 20px 0 0 !important;
-    border-bottom-left-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
-  }
-
-  /* Auth card */
-  .auth-card {
-    padding: 28px 20px !important;
-    border-radius: 16px !important;
-    margin: 0 12px !important;
-  }
-
-  /* Chat */
+  /* Chat Adjustments for Mobile */
   .message-container {
-    padding-bottom: 130px !important;
+    padding-bottom: 120px !important;
   }
 
   .call-modal-video-container {
@@ -2320,59 +2235,44 @@ img {
     border-radius: 0 !important;
   }
 
-  /* Empty state */
+
   .empty-state {
     padding: 40px 20px;
   }
 
   .empty-state h2 {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
   }
 
-  /* Suggestion items */
+  /* Fix overlapping issues in Chat identified by subagent */
   .suggestion-item {
     padding: 12px;
   }
 
-  /* Profile cover on small screens */
-  .profile-cover {
-    height: 140px !important;
-  }
-
-  /* Tweet action bar spacing */
-  .tweet-actions {
-    max-width: 100% !important;
-  }
-
-  /* Compose textarea smaller */
-  .compose-textarea {
-    font-size: 1rem !important;
-  }
-
-  /* Focused tweet text */
-  .tweet-focused-text {
-    font-size: 1.1rem !important;
+  .modal {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100vw !important;
+    border-radius: 0;
   }
 }
 
 /* Specific Chat Form Mobile Fix */
-@media (max-width: 680px) {
+@media (max-width: 500px) {
   .chat-form {
     position: fixed;
-    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    bottom: 60px;
+    /* Above the mobile bar */
     left: 0;
     right: 0;
     z-index: 900;
-    background: var(--bg-primary);
-    border-top: 1px solid var(--border);
   }
 }
 
-/* Floating Action Button (FAB) for composing tweets on mobile */
 .mobile-fab {
   display: none;
   position: fixed;
-  bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   right: 20px;
   width: 56px;
   height: 56px;
@@ -2380,7 +2280,7 @@ img {
   background: var(--blue);
   color: white;
   border: none;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 1100;
   align-items: center;
   justify-content: center;
@@ -2403,42 +2303,18 @@ img {
   }
 }
 
-/* Extra small phones (≤400px) */
-@media (max-width: 400px) {
-  .column-header h1 {
-    font-size: 1rem;
-  }
-
-  .tweet-name,
-  .sidebar-user-name {
-    font-size: 0.82rem;
-  }
-
-  .auth-card {
-    padding: 20px 16px !important;
-    margin: 0 8px !important;
-  }
-
-  .action-btn {
-    padding: 4px;
-    gap: 4px;
-  }
-
-  .tweet-actions {
-    gap: 0;
-  }
-}
-
 /* Accessibility */
 body.reduce-motion * {
   animation-duration: 0.01ms !important;
   transition-duration: 0.01ms !important;
 }
+
 body.high-contrast {
   --text-primary: #000;
   --bg-primary: #fff;
   --border: #000;
 }
+
 [data-theme="dark"] body.high-contrast {
   --text-primary: #fff;
   --bg-primary: #000;
@@ -2510,6 +2386,7 @@ body.high-contrast {
   color: var(--blue);
   border-color: var(--blue);
 }
+
 /* ========== PREMIUM AESTHETICS & GLASSMORPHISM ========== */
 :root {
   --blue-rgb: 29, 155, 240;
@@ -2553,4 +2430,3 @@ body.high-contrast {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--blue-rgb), 0.5);
 }
-
