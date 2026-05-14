@@ -385,7 +385,7 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
                                             <iframe 
                                                 src={`https://www.youtube.com/embed/${ytId}?autoplay=1&controls=0&mute=0&start=${audioStart}&end=${end}`} 
                                                 style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} 
-                                                allow="autoplay"
+                                                allow="autoplay; encrypted-media; clipboard-write; accelerometer; gyroscope; picture-in-picture"
                                             />
                                         );
                                     }

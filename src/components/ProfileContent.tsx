@@ -141,7 +141,7 @@ export function ProfileContent({
     const toggleProfileAudio = async () => {
         const ytId = getYouTubeId(latestStatus?.audioUrl);
 
-        if (ytPlayer && typeof ytPlayer.playVideo === "function") {
+                if (ytPlayer && typeof ytPlayer.playVideo === "function") {
             if (isPlayingAudio) ytPlayer.pauseVideo();
             else ytPlayer.playVideo();
             setIsPlayingAudio(!isPlayingAudio);
@@ -156,13 +156,14 @@ export function ProfileContent({
                     height: "1",
                     width: "1",
                     videoId: ytId,
-                    host: "https://www.youtube-nocookie.com",
+                            // Use the standard YouTube host to avoid origin/postMessage mismatches
+                            host: "https://www.youtube.com",
                     playerVars: {
                         autoplay: 1,
                         controls: 0,
                         disablekb: 1,
                         enablejsapi: 1,
-                        origin: window.location.origin,
+                                origin: window.location.origin,
                         playsinline: 1,
                         start: latestStatus.audioStart || 0,
                     },
