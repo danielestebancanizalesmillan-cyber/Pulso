@@ -6,12 +6,13 @@ interface AdProps {
     title: string;
     description: string;
     image?: string;
+    video?: string;
     cta: string;
     url: string;
     type?: "standard" | "premium" | "sidebar";
 }
 
-export function AdComponent({ title, description, image, cta, url, type = "standard" }: AdProps) {
+export function AdComponent({ title, description, image, video, cta, url, type = "standard" }: AdProps) {
     const isSidebar = type === "sidebar";
 
     return (
@@ -59,7 +60,11 @@ export function AdComponent({ title, description, image, cta, url, type = "stand
                         {description}
                     </p>
                     
-                    {image && (
+                    {video ? (
+                        <div style={{ marginTop: "10px", borderRadius: "12px", overflow: "hidden", border: "1px solid var(--border)", background: "#000" }}>
+                            <video src={video} autoPlay muted loop playsInline style={{ width: "100%", display: "block" }} />
+                        </div>
+                    ) : image && (
                         <div style={{ marginTop: "10px", borderRadius: "12px", overflow: "hidden", border: "1px solid var(--border)" }}>
                             <img src={image} alt="Ad" style={{ width: "100%", display: "block" }} />
                         </div>

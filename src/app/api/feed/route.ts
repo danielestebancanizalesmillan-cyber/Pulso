@@ -109,14 +109,22 @@ export async function GET(req: Request) {
         };
     }
 
-    const tweets = await prisma.tweet.findMany({
-        take: limit * 3, // Overfetch to score in memory
-        skip: cursor ? 1 : 0,
-        cursor: cursor ? { id: cursor } : undefined,
-        where,
-        orderBy: { createdAt: "desc" },
-        include: TWEET_INCLUDE as any,
-    });
+    const [tweets, ads] = await Promise.all([
+        prisma.tweet.findMany({
+            take: limit * 3, // Overfetch to score in memory
+            skip: cursor ? 1 : 0,
+            cursor: cursor ? { id: cursor } : undefined,
+            where,
+            orderBy: { createdAt: "desc" },
+            include: TWEET_INCLUDE as any,
+        }),
+        prisma.ad.findMany({
+            where: { active: true },
+            take: 2 // Get a few ads to inject
+        })
+    ]);
+
+    let finalTweets: any[] = [];
 
     if (type === "for-you" || !type) {
         const scoredTweets = tweets.map((t: any) => {
@@ -144,8 +152,30 @@ export async function GET(req: Request) {
         });
 
         scoredTweets.sort((a, b) => b.score - a.score);
-        return NextResponse.json({ tweets: scoredTweets.slice(0, limit) });
+        finalTweets = scoredTweets.slice(0, limit);
+    } else {
+        finalTweets = tweets.slice(0, limit);
     }
 
-    return NextResponse.json({ tweets: tweets.slice(0, limit) });
+    // Inject Ads every 5 tweets for non-verified users
+    const isVerified = (session.user as any).isVerified;
+    if (!isVerified && ads.length > 0) {
+        const result: any[] = [];
+        finalTweets.forEach((tweet, index) => {
+            result.push(tweet);
+            if ((index + 1) % 5 === 0) {
+                const adIndex = Math.floor((index + 1) / 5) - 1;
+                if (ads[adIndex % ads.length]) {
+                    result.push({
+                        ...ads[adIndex % ads.length],
+                        id: `ad-${ads[adIndex % ads.length].id}-${index}`,
+                        isAd: true
+                    });
+                }
+            }
+        });
+        return NextResponse.json({ tweets: result });
+    }
+
+    return NextResponse.json({ tweets: finalTweets });
 }

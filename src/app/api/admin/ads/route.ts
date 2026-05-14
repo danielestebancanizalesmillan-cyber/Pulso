@@ -21,13 +21,14 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, description, imageUrl, link, cta, active } = await req.json();
+    const { title, description, imageUrl, videoUrl, link, cta, active } = await req.json();
 
     const ad = await prisma.ad.create({
         data: {
             title,
             description,
             imageUrl,
+            videoUrl,
             link,
             cta: cta || "Más información",
             active: active ?? true

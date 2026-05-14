@@ -15,6 +15,7 @@ export default function AdminAdsPage() {
         title: "",
         description: "",
         imageUrl: "",
+        videoUrl: "",
         link: "",
         cta: "Más información",
         active: true
@@ -55,7 +56,7 @@ export default function AdminAdsPage() {
                 fetchAds();
                 setShowForm(false);
                 setEditingAd(null);
-                setFormData({ title: "", description: "", imageUrl: "", link: "", cta: "Más información", active: true });
+                setFormData({ title: "", description: "", imageUrl: "", videoUrl: "", link: "", cta: "Más información", active: true });
             }
         } catch (error) {
             console.error(error);
@@ -116,6 +117,16 @@ export default function AdminAdsPage() {
                                 />
                             </div>
                             <div style={{ display: "grid", gap: "8px" }}>
+                                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>URL de Video (opcional)</label>
+                                <input 
+                                    type="text" placeholder="https://..." value={formData.videoUrl} 
+                                    onChange={e => setFormData({ ...formData, videoUrl: e.target.value })} 
+                                    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b" }}
+                                />
+                            </div>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignItems: "center" }}>
+                            <div style={{ display: "grid", gap: "8px" }}>
                                 <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>Enlace de Destino</label>
                                 <input 
                                     type="text" placeholder="https://..." value={formData.link} 
@@ -123,8 +134,6 @@ export default function AdminAdsPage() {
                                     style={{ padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b" }} required
                                 />
                             </div>
-                        </div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignItems: "center" }}>
                             <div style={{ display: "grid", gap: "8px" }}>
                                 <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>Texto del Botón (CTA)</label>
                                 <input 
@@ -133,11 +142,11 @@ export default function AdminAdsPage() {
                                     style={{ padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b" }}
                                 />
                             </div>
-                            <label style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "0.95rem", fontWeight: 600, cursor: "pointer", marginTop: "24px" }}>
-                                <input type="checkbox" checked={formData.active} onChange={e => setFormData({ ...formData, active: e.target.checked })} style={{ width: "20px", height: "20px" }} />
-                                Anuncio Activo
-                            </label>
                         </div>
+                        <label style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "0.95rem", fontWeight: 600, cursor: "pointer", marginTop: "12px" }}>
+                            <input type="checkbox" checked={formData.active} onChange={e => setFormData({ ...formData, active: e.target.checked })} style={{ width: "20px", height: "20px" }} />
+                            Anuncio Activo
+                        </label>
                         <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
                             <button type="submit" style={{ background: "#3b82f6", color: "white", padding: "12px 32px", borderRadius: "12px", border: "none", fontWeight: 700, cursor: "pointer", fontSize: "1rem" }}>
                                 {editingAd ? "Guardar Cambios" : "Crear Anuncio"}
@@ -158,7 +167,12 @@ export default function AdminAdsPage() {
                 )}
                 {ads.map(ad => (
                     <div key={ad.id} style={{ background: "#ffffff", padding: "20px", borderRadius: "16px", border: "1px solid #e2e8f0", display: "flex", gap: "20px", alignItems: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}>
-                        {ad.imageUrl ? (
+                        {ad.videoUrl ? (
+                            <div style={{ width: "100px", height: "100px", background: "#000", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+                                <video src={ad.videoUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                <div style={{ position: "absolute", background: "rgba(0,0,0,0.5)", color: "white", fontSize: "0.6rem", padding: "2px 6px", borderRadius: "4px" }}>VIDEO</div>
+                            </div>
+                        ) : ad.imageUrl ? (
                             <img src={ad.imageUrl} style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "12px", background: "#f1f5f9" }} alt="" />
                         ) : (
                             <div style={{ width: "100px", height: "100px", background: "#f1f5f9", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8" }}>

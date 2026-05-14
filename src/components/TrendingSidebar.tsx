@@ -20,6 +20,8 @@ export function TrendingSidebar() {
     const isVerified = (session?.user as any)?.isVerified;
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    const [ad, setAd] = useState<any>(null);
+
     useEffect(() => {
         const checkFeatures = () => {
             setShowTrends(localStorage.getItem("twtr_show_trends") !== "false");
@@ -44,11 +46,24 @@ export function TrendingSidebar() {
         fetchTrends();
         const interval = setInterval(fetchTrends, 15000); // 15 seconds
 
+        // Fetch one random ad
+        if (!isVerified) {
+            fetch("/api/ads")
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        const randomAd = data[Math.floor(Math.random() * data.length)];
+                        setAd(randomAd);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
         return () => {
             clearInterval(interval);
             window.removeEventListener("twtr_settings_changed", checkFeatures);
         };
-    }, [trendRegion]);
+    }, [trendRegion, isVerified]);
 
     if (!showTrends) return null;
 
@@ -126,8 +141,16 @@ export function TrendingSidebar() {
                     </div>
                 </div>
             )}
-            {!isVerified && (
-                <AdComponent {...MOCK_ADS[2]} />
+            {!isVerified && ad && (
+                <AdComponent 
+                    title={ad.title} 
+                    description={ad.description} 
+                    image={ad.imageUrl} 
+                    video={ad.videoUrl} 
+                    url={ad.link} 
+                    cta={ad.cta} 
+                    type="sidebar"
+                />
             )}
         </div>
     );
