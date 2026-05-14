@@ -73,14 +73,6 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
     const ytId = getYouTubeId(currentItem.audioUrl);
 
     useEffect(() => {
-        return () => {
-            if (ytPlayerRef.current?.destroy) {
-                try { ytPlayerRef.current.destroy(); } catch {}
-            }
-        };
-    }, []);
-
-    useEffect(() => {
         setProgress(0);
         setAudioLoading(false);
         setAudioPlaying(false);
@@ -165,11 +157,13 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                 await loadYouTubeApi();
                 if (!window.YT?.Player) throw new Error("YouTube API unavailable");
 
+                const playerHost = "https://www.youtube.com";
+
                 ytPlayerRef.current = new window.YT.Player(ytContainerId.current, {
                     height: "1",
                     width: "1",
                     videoId: ytId,
-                    host: "https://www.youtube-nocookie.com",
+                    host: playerHost,
                     playerVars: {
                         autoplay: 1,
                         controls: 0,
@@ -181,9 +175,9 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                     },
                     events: {
                         onReady: (event: any) => {
-                            event.target.setVolume(80);
-                            event.target.unMute?.();
-                            event.target.playVideo();
+                            try { event.target.setVolume(80); } catch {}
+                            try { event.target.unMute?.(); } catch {}
+                            try { event.target.playVideo(); } catch (e) {}
                             setAudioPlaying(true);
                             setAudioLoading(false);
                         },
@@ -196,6 +190,17 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                 console.error("YouTube audio setup failed:", error);
                 toast.error("No se pudo activar el audio de YouTube");
                 setAudioLoading(false);
+
+                // Fallback: try to play native audio if available
+                try {
+                    const url = currentItem.audioUrl || "";
+                    if (audioRef.current && /\.(mp3|ogg|wav|webm)$/i.test(url)) {
+                        audioRef.current.currentTime = currentItem.audioStart || 0;
+                        audioRef.current.play().then(() => setAudioPlaying(true)).catch(() => {
+                            toast.error("La reproducción alternativa falló. Abre el audio en otra pestaña.");
+                        });
+                    }
+                } catch (e) { /* ignore fallback errors */ }
             }
             return;
         }
