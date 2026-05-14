@@ -26,6 +26,8 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
             console.error("Error parsing styleOptions", e);
         }
     }
+    const textPos = styleOpts?.textPos || { x: 50, y: 50 };
+    const hasTextStyle = Boolean(styleOpts?.textPos);
 
     // Dynamic duration based on audio selection
     const durationCount = currentItem.audioDuration || 5; 
@@ -156,10 +158,10 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 0.3 }}
                         style={{ 
-                            position: styleOpts ? "absolute" : "relative",
-                            left: styleOpts ? `${styleOpts.textPos.x}%` : "auto",
-                            top: styleOpts ? `${styleOpts.textPos.y}%` : "auto",
-                            transform: styleOpts ? "translate(-50%, -50%)" : "none",
+                            position: hasTextStyle ? "absolute" : "relative",
+                            left: hasTextStyle ? `${textPos.x}%` : "auto",
+                            top: hasTextStyle ? `${textPos.y}%` : "auto",
+                            transform: hasTextStyle ? "translate(-50%, -50%)" : "none",
                             background: styleOpts ? (styleOpts.useTextBg ? "rgba(0,0,0,0.45)" : "transparent") : "rgba(0,0,0,0.45)", 
                             backdropFilter: styleOpts ? (styleOpts.useTextBg ? "blur(12px)" : "none") : "blur(12px)", 
                             padding: "16px 24px", 
@@ -174,7 +176,7 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                     >
                         <p style={{ 
                             color: styleOpts ? (styleOpts.textColor || "white") : "white", 
-                            fontSize: styleOpts ? `${styleOpts.fontSize}rem` : "1.75rem", 
+                            fontSize: styleOpts?.fontSize ? `${styleOpts.fontSize}rem` : "1.75rem", 
                             fontWeight: "800", 
                             textAlign: "center", 
                             textShadow: "0 2px 4px rgba(0,0,0,0.2)", 
