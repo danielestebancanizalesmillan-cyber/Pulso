@@ -63,6 +63,8 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
     const [isSensitive, setIsSensitive] = useState(false);
     const [location, setLocation] = useState<{ lat: number, lng: number, label: string } | null>(null);
     const [isLocating, setIsLocating] = useState(false);
+    const [undoTimer, setUndoTimer] = useState<number | null>(null);
+    const undoRef = useRef<NodeJS.Timeout | null>(null);
 
     const handleAIEnhance = async () => {
         if (!content.trim() || isImproving) return;
@@ -78,6 +80,21 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
         } finally {
             setIsImproving(false);
         }
+    };
+
+    const applyFormat = (type: "bold" | "italic" | "list") => {
+        const start = textareaRef.current?.selectionStart || 0;
+        const end = textareaRef.current?.selectionEnd || 0;
+        const selected = content.substring(start, end);
+        
+        let formatted = "";
+        if (type === "bold") formatted = `**${selected}**`;
+        else if (type === "italic") formatted = `*${selected}*`;
+        else if (type === "list") formatted = `\n- ${selected}`;
+
+        const newContent = content.substring(0, start) + formatted + content.substring(end);
+        setContent(newContent);
+        setTimeout(() => textareaRef.current?.focus(), 10);
     };
 
     useEffect(() => {
@@ -196,8 +213,9 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
         let hasError = false;
 
         newMedia.forEach(item => {
-            if (item.file.size > 10 * 1024 * 1024) { // Increased to 10MB for videos
-                setError(t("fileSizeLimit"));
+            const limit = isVerified ? 1024 * 1024 * 1024 : 15 * 1024 * 1024; // 1GB for verified, 15MB for free
+            if (item.file.size > limit) {
+                setError(isVerified ? "El archivo supera el límite de 1GB" : t("fileSizeLimit"));
                 hasError = true;
                 return;
             }
@@ -221,6 +239,36 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
     const handleSubmit = async () => {
         if (!canPost || isPending) return;
 
+        if (isVerified && !undoTimer) {
+            setUndoTimer(5);
+            undoRef.current = setInterval(() => {
+                setUndoTimer(prev => {
+                    if (prev !== null && prev <= 1) {
+                        clearInterval(undoRef.current!);
+                        undoRef.current = null;
+                        setUndoTimer(null);
+                        executeSubmit();
+                        return null;
+                    }
+                    return prev !== null ? prev - 1 : null;
+                });
+            }, 1000);
+            return;
+        }
+
+        executeSubmit();
+    };
+
+    const handleUndo = () => {
+        if (undoRef.current) {
+            clearInterval(undoRef.current);
+            undoRef.current = null;
+        }
+        setUndoTimer(null);
+        addToast("Envio cancelado", "info");
+    };
+
+    const executeSubmit = async () => {
         startTransition(async () => {
             try {
                 let uploadedMedia: { url: string, type: string }[] = [];
@@ -629,6 +677,21 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                                 <line x1="12" y1="17" x2="12.01" y2="17" />
                             </svg>
                         </button>
+
+                        {/* Formatting Tools for Verified */}
+                        {isVerified && (
+                            <div style={{ display: "flex", gap: "2px", marginLeft: "4px", paddingLeft: "8px", borderLeft: "1px solid var(--border)" }}>
+                                <button className="icon-btn" title="Bold" onClick={() => applyFormat("bold")}>
+                                    <span style={{ fontWeight: 800, fontSize: "1.1rem" }}>B</span>
+                                </button>
+                                <button className="icon-btn" title="Italic" onClick={() => applyFormat("italic")}>
+                                    <span style={{ fontStyle: "italic", fontSize: "1.1rem", fontFamily: "serif" }}>I</span>
+                                </button>
+                                <button className="icon-btn" title="List" onClick={() => applyFormat("list")}>
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                                </button>
+                            </div>
+                        )}
                     </div>
                     <div className="compose-right">
                         {content.length > 0 && (
@@ -636,18 +699,37 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                                 {remaining}
                             </span>
                         )}
-                        <button
-                            className="post-btn"
-                            onClick={handleSubmit}
-                            disabled={!canPost || isPending}
-                        >
-                            {isPending
-                                ? "..."
-                                : parentId 
-                                    ? t("reply") 
-                                    : t("tweet")
-                            }
-                        </button>
+                        {undoTimer !== null ? (
+                            <button
+                                className="post-btn"
+                                onClick={handleUndo}
+                                style={{ background: "var(--red)", width: "100px", position: "relative", overflow: "hidden" }}
+                            >
+                                <div style={{ 
+                                    position: "absolute", 
+                                    left: 0, 
+                                    top: 0, 
+                                    bottom: 0, 
+                                    width: `${(undoTimer / 5) * 100}%`, 
+                                    background: "rgba(0,0,0,0.2)", 
+                                    transition: "width 1s linear" 
+                                }} />
+                                <span style={{ position: "relative", zIndex: 1 }}>Deshacer {undoTimer}s</span>
+                            </button>
+                        ) : (
+                            <button
+                                className="post-btn"
+                                onClick={handleSubmit}
+                                disabled={!canPost || isPending}
+                            >
+                                {isPending
+                                    ? "..."
+                                    : parentId 
+                                        ? t("reply") 
+                                        : t("tweet")
+                                }
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

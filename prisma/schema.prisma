@@ -132,6 +132,10 @@ model Tweet {
   category       String?
   aiSources      String?
   classification String         @default("SAFE")
+  isPromoted     Boolean        @default(false)
+  isEdited       Boolean        @default(false)
+  canEditUntil   DateTime?
+  canUndoUntil   DateTime?
   bookmarks      Bookmark[]
   highlights     Highlight[]
   likes          Like[]

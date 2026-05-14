@@ -20,18 +20,21 @@ export function Avatar({ user, size = "md", className = "" }: AvatarProps) {
     // Debugging (optional, remove in production)
     // console.log('Avatar debug:', { username: (user as any)?.username, src });
 
+    const isGold = (user as any)?.verificationType === "GOLD";
+    const shapeClass = isGold ? "avatar-square" : "";
+
     if (src) {
         return (
             <img
                 src={src}
                 alt={user?.name || "Avatar"}
-                className={`avatar ${sizeClass} ${className}`}
+                className={`avatar ${sizeClass} ${shapeClass} ${className}`}
             />
         );
     }
 
     return (
-        <div className={`avatar-placeholder ${sizeClass} ${className}`}>
+        <div className={`avatar-placeholder ${sizeClass} ${shapeClass} ${className}`}>
             {letter}
         </div>
     );

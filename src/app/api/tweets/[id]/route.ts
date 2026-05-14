@@ -33,15 +33,19 @@ const TWEET_INCLUDE = {
                     bookmarks: { select: { userId: true } },
                     images: { select: { url: true, type: true } },
                     _count: { select: { likes: true, replies: true, retweets: true } },
-                },
-                orderBy: { createdAt: "asc" as const },
             },
-            retweets: { select: { id: true, authorId: true } },
-            _count: { select: { likes: true, replies: true, retweets: true, bookmarks: true } },
+            orderBy: [
+                { author: { isVerified: "desc" as const } },
+                { createdAt: "asc" as const }
+            ],
         },
-        orderBy: { createdAt: "asc" as const },
+        orderBy: [
+            { author: { isVerified: "desc" as const } },
+            { createdAt: "asc" as const }
+        ],
     },
-    retweets: { select: { id: true, authorId: true } },
+},
+retweets: { select: { id: true, authorId: true } },
     retweetOf: {
         include: {
             author: { select: USER_SELECT },

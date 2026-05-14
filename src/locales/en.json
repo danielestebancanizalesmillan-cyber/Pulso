@@ -275,5 +275,12 @@
     "removeBookmark": "Remove from bookmarks",
     "addedToFolder": "Added to folder",
     "deleteFolder": "Delete folder",
-    "deleteFolderConfirm": "Are you sure you want to delete this folder? The bookmarks will return to the general view."
+    "deleteFolderConfirm": "Are you sure you want to delete this folder? The bookmarks will return to the general view.",
+    "edited": "Edited",
+    "promoted": "Promoted",
+    "cancel": "Cancel",
+    "undo": "Undo",
+    "bold": "Bold",
+    "italic": "Italic",
+    "list": "List"
 }

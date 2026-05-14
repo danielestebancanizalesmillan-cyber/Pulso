@@ -471,6 +471,60 @@ export async function togglePinTweet(tweetId: string) {
     return { success: true };
 }
 
+export async function promoteTweet(tweetId: string) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+    
+    const dbUser = await prisma.user.findUnique({ where: { id: session.user.id } });
+    if (!dbUser?.isVerified) throw new Error("Only verified users can promote posts");
+
+    const tweet = await prisma.tweet.findUnique({ where: { id: tweetId } });
+    if (!tweet || tweet.authorId !== session.user.id) {
+        throw new Error("Only the author can promote this tweet");
+    }
+
+    await prisma.tweet.update({
+        where: { id: tweetId },
+        data: { isPromoted: !tweet.isPromoted }
+    });
+
+    revalidatePath("/home");
+    revalidatePath("/");
+    return { success: true };
+}
+
+export async function editTweet(tweetId: string, newContent: string) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+
+    const tweet = await prisma.tweet.findUnique({ where: { id: tweetId } });
+    if (!tweet || tweet.authorId !== session.user.id) {
+        throw new Error("Only the author can edit this tweet");
+    }
+
+    const dbUser = await prisma.user.findUnique({ where: { id: session.user.id } });
+    if (!dbUser?.isVerified) throw new Error("Only verified users can edit posts");
+
+    // Check time window (60 minutes)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    if (tweet.createdAt < oneHourAgo) {
+        throw new Error("The editing window (60 minutes) has expired");
+    }
+
+    await prisma.tweet.update({
+        where: { id: tweetId },
+        data: { 
+            content: newContent,
+            isEdited: true
+        }
+    });
+
+    revalidatePath("/home");
+    revalidatePath("/");
+    revalidatePath(`/tweet/${tweetId}`);
+    return { success: true };
+}
+
 export async function incrementViewCount(tweetId: string) {
     try {
         await prisma.tweet.update({

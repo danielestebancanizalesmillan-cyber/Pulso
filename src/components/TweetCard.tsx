@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Avatar } from "./Avatar";
 import { useSession } from "next-auth/react";
 import { VerifiedBadge } from "./VerifiedBadge";
-import { likeTweet, retweetTweet, deleteTweet, toggleBookmark, toggleHighlight, voteInPoll, togglePinTweet } from "@/app/actions/tweet";
+import { likeTweet, retweetTweet, deleteTweet, toggleBookmark, toggleHighlight, voteInPoll, togglePinTweet, promoteTweet, editTweet } from "@/app/actions/tweet";
 import { addBookmarkToFolder, createBookmarkFolder } from "@/app/actions/bookmark";
 import { createReport } from "@/app/actions/admin";
 import Link from "next/link";
@@ -154,6 +154,12 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
     const menuRef = useRef<HTMLDivElement>(null);
     const [aiSources, setAiSources] = useState<any[]>([]);
     const [revealed, setRevealed] = useState(false);
+    const [isEditingPost, setIsEditingPost] = useState(false);
+    const [editContent, setEditContent] = useState(tweet.content);
+    const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+    const isGold = tweet.author?.verificationType === "GOLD";
+    const isGrey = tweet.author?.verificationType === "GREY";
 
     const birthDate = (session?.user as any)?.birthDate;
     const userShowSensitive = (session?.user as any)?.showSensitiveContent;
@@ -462,13 +468,13 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
     return (
         <>
         <motion.article
-            className="tweet-card"
-            onClick={() => router.push(`/tweet/${tweet.id}`)}
+            className={`tweet-card ${isGold ? 'gold-premium' : ''} ${tweet.isPromoted ? 'is-promoted' : ''}`}
+            onClick={() => !isEditingPost && router.push(`/tweet/${tweet.id}`)}
             style={{ 
                 position: "relative", 
                 overflow: "hidden",
-                borderLeft: tweet.author?.isVerified ? "3px solid var(--blue)" : "1px solid var(--border)",
-                background: tweet.author?.isVerified ? "rgba(29, 155, 240, 0.02)" : "transparent",
+                borderLeft: isGold ? "3px solid var(--yellow)" : (isGrey ? "3px solid #829aab" : (tweet.author?.isVerified ? "3px solid var(--blue)" : "1px solid var(--border)")),
+                background: isGold ? "rgba(255, 215, 0, 0.03)" : (tweet.author?.isVerified ? "rgba(29, 155, 240, 0.02)" : "transparent"),
                 transition: "background 0.2s, border-color 0.2s"
             }}
             initial={{ opacity: 0, scale: 0.98 }}
@@ -531,6 +537,32 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                             </Link>
                             <span className="tweet-dot">·</span>
                             <span className="tweet-time" suppressHydrationWarning>{formatTime(tweet.createdAt, t, locale)}</span>
+                            
+                            {tweet.isEdited && (
+                                <span style={{ color: "var(--text-secondary)", fontSize: "0.80rem", marginLeft: 4 }}>
+                                    ({t("edited") || "Editado"})
+                                </span>
+                            )}
+
+                            {tweet.isPromoted && (
+                                <div style={{ 
+                                    marginLeft: 8, 
+                                    background: isGold ? "rgba(255, 215, 0, 0.15)" : "rgba(29, 155, 240, 0.1)",
+                                    color: isGold ? "var(--yellow)" : "var(--blue)",
+                                    fontSize: "0.65rem",
+                                    fontWeight: 800,
+                                    padding: "1px 6px",
+                                    borderRadius: "4px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 4,
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.05em"
+                                }}>
+                                    <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M19.49 3.14a1.2 1.2 0 0 0-1.76 0l-1.07 1.07-1.48-1.48a1.2 1.2 0 0 0-1.71 0L12 4.19l-1.47-1.46a1.2 1.2 0 0 0-1.71 0l-1.48 1.48-1.07-1.07a1.2 1.2 0 0 0-1.76 0l-1.07 1.07a1.2 1.2 0 0 0 0 1.76l1.07 1.07-1.48 1.48a1.2 1.2 0 0 0 0 1.71L4.19 12l-1.46 1.47a1.2 1.2 0 0 0 0 1.71l1.48 1.48-1.07 1.07a1.2 1.2 0 0 0 0 1.76l1.07 1.07-1.48 1.48a1.2 1.2 0 0 0 1.71 0L12 19.81l1.47 1.46a1.2 1.2 0 0 0 1.71 0l1.48-1.48 1.07 1.07a1.2 1.2 0 0 0 1.76 0l1.07-1.07a1.2 1.2 0 0 0 0-1.76l-1.07-1.07 1.48-1.48a1.2 1.2 0 0 0 0-1.71L19.81 12l1.46-1.47a1.2 1.2 0 0 0 0-1.71l-1.48-1.48 1.07-1.07a1.2 1.2 0 0 0 0-1.76z"/></svg>
+                                    {t("promoted") || "Promocionado"}
+                                </div>
+                            )}
 
                             {isOwner && (
                                 <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
@@ -567,6 +599,40 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                                             <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2" />
                                         </svg>
                                     </button>
+
+                                    {/* Verified-only Action Menu */}
+                                    {(session?.user as any)?.isVerified && (
+                                        <>
+                                            <button
+                                                className={`action-btn ${tweet.isPromoted ? 'active-gold' : ''}`}
+                                                onClick={(e) => { e.stopPropagation(); startTransition(async () => { await promoteTweet(tweet.id); addToast("Post promocionado", "success"); }) }}
+                                                title={tweet.isPromoted ? "Quitar promoción" : "Promocionar Post"}
+                                                style={{ color: tweet.isPromoted ? "var(--yellow)" : undefined }}
+                                            >
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                                                </svg>
+                                            </button>
+
+                                            {/* Edit Button (60m window) */}
+                                            {(() => {
+                                                const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+                                                const canEdit = new Date(tweet.createdAt) > oneHourAgo;
+                                                if (!canEdit) return null;
+                                                return (
+                                                    <button
+                                                        className="action-btn"
+                                                        onClick={(e) => { e.stopPropagation(); setIsEditingPost(true); }}
+                                                        title="Editar Post"
+                                                    >
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                        </svg>
+                                                    </button>
+                                                );
+                                            })()}
+                                        </>
+                                    )}
                                 </div>
                             )}
 
@@ -586,40 +652,83 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                             )}
                         </div>
 
-                        <p className="tweet-text" style={{ filter: shouldBlurWhole ? "blur(8px)" : "none", pointerEvents: shouldBlurWhole ? "none" : "auto" }}>
-                            {(translatedContent || tweet.content || "").split(/(#[a-zA-Z0-9_]+|@[a-zA-Z0-9_]+|https?:\/\/[^\s]+|\*\*[^*]+\*\*|\*[^*]+\*)/g).map((part: string, i: number) => {
-                                if (!part) return null;
-                                if (part.startsWith("#")) {
-                                    return (
-                                        <Link key={i} href={`/explore?q=${encodeURIComponent(part)}`} style={{ color: "var(--blue)", textDecoration: "none" }} onClick={(e) => e.stopPropagation()}>
-                                            {part}
-                                        </Link>
-                                    );
-                                }
-                                if (part.startsWith("@")) {
-                                    const cleanedPart = part.replace(/\s/g, "");
-                                    return (
-                                        <Link key={i} href={`/${cleanedPart.substring(1)}`} style={{ color: "var(--blue)", textDecoration: "none" }} onClick={(e) => e.stopPropagation()}>
-                                            {cleanedPart}
-                                        </Link>
-                                    );
-                                }
-                                if (part.startsWith("http://") || part.startsWith("https://")) {
-                                    return (
-                                        <a key={i} href={part} target="_blank" style={{ color: "var(--blue)", textDecoration: "underline" }} onClick={(e) => e.stopPropagation()}>
-                                            {part}
-                                        </a>
-                                    );
-                                }
-                                if (part.startsWith("**") && part.endsWith("**")) {
-                                    return <strong key={i} style={{ fontWeight: 800, color: "var(--text-main)" }}>{part.slice(2, -2)}</strong>;
-                                }
-                                if (part.startsWith("*") && part.endsWith("*")) {
-                                    return <em key={i} style={{ fontStyle: "italic", color: "var(--text-secondary)" }}>{part.slice(1, -1)}</em>;
-                                }
-                                return <span key={i}>{part}</span>;
-                            })}
-                        </p>
+                        {isEditingPost ? (
+                            <div className="edit-post-area" onClick={(e) => e.stopPropagation()} style={{ marginBottom: 12 }}>
+                                <textarea
+                                    className="compose-textarea"
+                                    value={editContent}
+                                    onChange={(e) => setEditContent(e.target.value)}
+                                    autoFocus
+                                    style={{ fontSize: "1rem", border: "1px solid var(--border)", borderRadius: "8px", padding: "8px", background: "var(--bg-secondary)" }}
+                                />
+                                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                                    <button 
+                                        className="post-btn" 
+                                        onClick={async () => {
+                                            if (editContent.length > ((session?.user as any)?.isVerified ? 2000 : 280)) {
+                                                addToast("El contenido es demasiado largo", "error");
+                                                return;
+                                            }
+                                            setIsSavingEdit(true);
+                                            try {
+                                                await editTweet(tweet.id, editContent);
+                                                addToast("Post actualizado", "success");
+                                                setIsEditingPost(false);
+                                            } catch (err: any) {
+                                                addToast(err.message || "Error al editar", "error");
+                                            } finally {
+                                                setIsSavingEdit(false);
+                                            }
+                                        }}
+                                        disabled={isSavingEdit || editContent === tweet.content || editContent.length > ((session?.user as any)?.isVerified ? 2000 : 280)}
+                                    >
+                                        {isSavingEdit ? "..." : t("save") || "Guardar"}
+                                    </button>
+                                    <button 
+                                        className="btn-ghost" 
+                                        onClick={() => { setIsEditingPost(false); setEditContent(tweet.content); }}
+                                        style={{ color: "var(--text-secondary)", padding: "8px 16px" }}
+                                    >
+                                        {t("cancel") || "Cancelar"}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="tweet-text" style={{ filter: shouldBlurWhole ? "blur(8px)" : "none", pointerEvents: shouldBlurWhole ? "none" : "auto" }}>
+                                {(translatedContent || tweet.content || "").split(/(#[a-zA-Z0-9_]+|@[a-zA-Z0-9_]+|https?:\/\/[^\s]+|\*\*[^*]+\*\*|\*[^*]+\*)/g).map((part: string, i: number) => {
+                                    if (!part) return null;
+                                    if (part.startsWith("#")) {
+                                        return (
+                                            <Link key={i} href={`/explore?q=${encodeURIComponent(part)}`} style={{ color: "var(--blue)", textDecoration: "none" }} onClick={(e) => e.stopPropagation()}>
+                                                {part}
+                                            </Link>
+                                        );
+                                    }
+                                    if (part.startsWith("@")) {
+                                        const cleanedPart = part.replace(/\s/g, "");
+                                        return (
+                                            <Link key={i} href={`/${cleanedPart.substring(1)}`} style={{ color: "var(--blue)", textDecoration: "none" }} onClick={(e) => e.stopPropagation()}>
+                                                {cleanedPart}
+                                            </Link>
+                                        );
+                                    }
+                                    if (part.startsWith("http://") || part.startsWith("https://")) {
+                                        return (
+                                            <a key={i} href={part} target="_blank" style={{ color: "var(--blue)", textDecoration: "underline" }} onClick={(e) => e.stopPropagation()}>
+                                                {part}
+                                            </a>
+                                        );
+                                    }
+                                    if (part.startsWith("**") && part.endsWith("**")) {
+                                        return <strong key={i} style={{ fontWeight: 800, color: "var(--text-main)" }}>{part.slice(2, -2)}</strong>;
+                                    }
+                                    if (part.startsWith("*") && part.endsWith("*")) {
+                                        return <em key={i} style={{ fontStyle: "italic", color: "var(--text-secondary)" }}>{part.slice(1, -1)}</em>;
+                                    }
+                                    return <span key={i}>{part}</span>;
+                                })}
+                            </p>
+                        )}
 
                         {tweet.content && (
                             <div style={{ paddingBottom: 8 }}>

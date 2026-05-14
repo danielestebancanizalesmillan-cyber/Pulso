@@ -275,5 +275,12 @@
     "removeBookmark": "Quitar de marcadores",
     "addedToFolder": "Añadido a la carpeta",
     "deleteFolder": "Eliminar carpeta",
-    "deleteFolderConfirm": "¿Estás seguro de que quieres eliminar esta carpeta? Los marcadores volverán a la vista general."
+    "deleteFolderConfirm": "¿Estás seguro de que quieres eliminar esta carpeta? Los marcadores volverán a la vista general.",
+    "edited": "Editado",
+    "promoted": "Promocionado",
+    "cancel": "Cancelar",
+    "undo": "Deshacer",
+    "bold": "Negrita",
+    "italic": "Cursiva",
+    "list": "Lista"
 }

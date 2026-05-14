@@ -125,7 +125,15 @@ export async function GET(req: Request) {
             const retweetsCount = t._count?.retweets || 0;
             const repliesCount = t._count?.replies || 0;
             
-            const score = likesCount * 2 + retweetsCount * 3 + repliesCount * 2;
+            // Base engagement score
+            const baseScore = likesCount * 2 + retweetsCount * 3 + repliesCount * 2;
+            
+            // Verification and Promotion boosts
+            const verifiedBoost = t.author?.isVerified ? 2.5 : 1.0;
+            const promotedBoost = t.isPromoted ? 10.0 : 1.0;
+            
+            const score = baseScore * verifiedBoost * promotedBoost;
+            
             const hoursPassed = (Date.now() - new Date(t.createdAt).getTime()) / (1000 * 60 * 60);
             const decayedScore = score / Math.pow(hoursPassed + 2, 1.5);
             

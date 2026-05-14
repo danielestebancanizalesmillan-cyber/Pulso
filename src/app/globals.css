@@ -164,6 +164,38 @@ body {
   min-height: 100vh;
 }
 
+/* Premium Verified Styles */
+.gold-premium {
+  position: relative;
+}
+
+.gold-premium::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.avatar-square {
+  border-radius: 20% !important;
+}
+
+.is-promoted {
+  border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.active-gold {
+  color: var(--yellow) !important;
+}
+
+.verified-animated:hover {
+  animation: pulse 0.5s ease-in-out;
+}
+
 a {
   color: inherit;
   text-decoration: none;
