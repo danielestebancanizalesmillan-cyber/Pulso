@@ -7,11 +7,49 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Avatar } from "./Avatar";
 import { toast } from "react-hot-toast";
 
+declare global {
+    interface Window {
+        YT?: any;
+        onYouTubeIframeAPIReady?: () => void;
+    }
+}
+
+function getYouTubeId(url?: string | null) {
+    if (!url) return null;
+    const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+    return match && match[2].length === 11 ? match[2] : null;
+}
+
+function loadYouTubeApi() {
+    return new Promise<void>((resolve) => {
+        if (window.YT?.Player) {
+            resolve();
+            return;
+        }
+
+        const previousReady = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = () => {
+            previousReady?.();
+            resolve();
+        };
+
+        if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+            const tag = document.createElement("script");
+            tag.src = "https://www.youtube.com/iframe_api";
+            document.head.appendChild(tag);
+        }
+    });
+}
+
 export function StatusViewerModal({ group, onClose }: { group: any, onClose: () => void }) {
     const { data: session } = useSession();
     const [currentIndex, setCurrentIndex] = useState(0);
     const [progress, setProgress] = useState(0);
+    const [audioReady, setAudioReady] = useState(false);
+    const [audioPlaying, setAudioPlaying] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
+    const ytPlayerRef = useRef<any>(null);
+    const ytContainerId = useRef(`status-yt-${Math.random().toString(36).slice(2)}`);
 
     const items = group.items;
     const currentItem = items[currentIndex];
@@ -32,6 +70,56 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
     // Dynamic duration based on audio selection
     const durationCount = currentItem.audioDuration || 5; 
     const stepInterval = (durationCount * 1000) / 100; // time in ms per 1% progress
+    const ytId = getYouTubeId(currentItem.audioUrl);
+
+    useEffect(() => {
+        setAudioReady(false);
+        setAudioPlaying(false);
+
+        if (ytPlayerRef.current?.destroy) {
+            try { ytPlayerRef.current.destroy(); } catch {}
+            ytPlayerRef.current = null;
+        }
+
+        if (!currentItem.audioUrl || !ytId) return;
+
+        let cancelled = false;
+        loadYouTubeApi().then(() => {
+            if (cancelled || !window.YT?.Player) return;
+
+            ytPlayerRef.current = new window.YT.Player(ytContainerId.current, {
+                height: "1",
+                width: "1",
+                videoId: ytId,
+                playerVars: {
+                    autoplay: 0,
+                    controls: 0,
+                    disablekb: 1,
+                    enablejsapi: 1,
+                    origin: window.location.origin,
+                    playsinline: 1,
+                    start: currentItem.audioStart || 0,
+                },
+                events: {
+                    onReady: (event: any) => {
+                        event.target.setVolume(80);
+                        setAudioReady(true);
+                    },
+                    onStateChange: (event: any) => {
+                        setAudioPlaying(event.data === window.YT.PlayerState.PLAYING);
+                    }
+                }
+            });
+        });
+
+        return () => {
+            cancelled = true;
+            if (ytPlayerRef.current?.destroy) {
+                try { ytPlayerRef.current.destroy(); } catch {}
+                ytPlayerRef.current = null;
+            }
+        };
+    }, [currentItem.id, currentItem.audioUrl, currentItem.audioStart, ytId]);
 
     useEffect(() => {
         setProgress(0);
@@ -88,6 +176,33 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
             }
         } catch (error) {
             toast.error("Error al eliminar");
+        }
+    };
+
+    const toggleAudio = () => {
+        if (ytId && ytPlayerRef.current) {
+            if (audioPlaying) {
+                ytPlayerRef.current.pauseVideo();
+                setAudioPlaying(false);
+            } else {
+                ytPlayerRef.current.seekTo(currentItem.audioStart || 0, true);
+                ytPlayerRef.current.unMute?.();
+                ytPlayerRef.current.playVideo();
+                setAudioPlaying(true);
+            }
+            return;
+        }
+
+        if (!audioRef.current) return;
+        if (audioPlaying) {
+            audioRef.current.pause();
+            setAudioPlaying(false);
+        } else {
+            audioRef.current.currentTime = currentItem.audioStart || 0;
+            audioRef.current.play().then(() => setAudioPlaying(true)).catch((error) => {
+                console.error("Status audio playback failed:", error);
+                toast.error("Toca de nuevo para activar el audio");
+            });
         }
     };
 
@@ -196,23 +311,18 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                         <div style={{ fontSize: "0.85rem", opacity: 0.9, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {styleOpts?.audioTitle || "Reproduciendo música..."}
                         </div>
-                        
-                        {(() => {
-                            const match = currentItem.audioUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-                            const ytId = (match && match[2].length === 11) ? match[2] : null;
-                            if (ytId) {
-                                const start = currentItem.audioStart || 0;
-                                const end = start + (currentItem.audioDuration || 15);
-                                return (
-                                    <iframe 
-                                        src={`https://www.youtube.com/embed/${ytId}?autoplay=1&controls=0&mute=0&start=${start}&end=${end}`} 
-                                        style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} 
-                                        allow="autoplay"
-                                    />
-                                );
-                            }
-                            return <audio ref={audioRef} src={currentItem.audioUrl} autoPlay loop style={{ display: "none" }} />;
-                        })()}
+                        <button
+                            onClick={toggleAudio}
+                            disabled={Boolean(ytId) && !audioReady}
+                            style={{ background: "white", color: "black", border: "none", borderRadius: "999px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 800, cursor: (ytId && !audioReady) ? "wait" : "pointer" }}
+                        >
+                            {audioPlaying ? "Pausar" : "Audio"}
+                        </button>
+                        {ytId ? (
+                            <div id={ytContainerId.current} style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} />
+                        ) : (
+                            <audio ref={audioRef} src={currentItem.audioUrl} loop style={{ display: "none" }} />
+                        )}
                     </div>
                 )}
 

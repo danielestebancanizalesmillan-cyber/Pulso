@@ -5,7 +5,7 @@ import Link from "next/link";
 import { translateText, detectLanguage } from "@/app/actions/translate";
 import { useTranslation } from "@/lib/i18n";
 
-export function PostContentTranslator({ content, className }: { content: string, className?: string }) {
+export function PostContentTranslator({ content, className, alwaysShowButton = false }: { content: string, className?: string, alwaysShowButton?: boolean }) {
     const { t, locale } = useTranslation();
     const [translatedText, setTranslatedText] = useState<string | null>(null);
     const [isTranslating, setIsTranslating] = useState(false);
@@ -23,8 +23,13 @@ export function PostContentTranslator({ content, className }: { content: string,
 
     useEffect(() => {
         const checkLanguage = async () => {
-            const lang = await detectLanguage(content);
-            setContentLanguage(lang);
+            try {
+                const lang = await detectLanguage(content);
+                setContentLanguage(lang);
+            } catch (error) {
+                console.error("Language detection failed:", error);
+                setContentLanguage("unknown");
+            }
         };
         checkLanguage();
     }, [content]);
@@ -51,7 +56,7 @@ export function PostContentTranslator({ content, className }: { content: string,
     const isSameLanguage = contentLanguage === locale;
 
     // Don't show translate button if it's the same language or we haven't detected yet
-    const shouldShowButton = !isSameLanguage && contentLanguage !== null && showTranslationToggle;
+    const shouldShowButton = showTranslationToggle && (alwaysShowButton || (!isSameLanguage && contentLanguage !== null));
 
     return (
         <div style={{ marginTop: 4, marginBottom: 12 }}>

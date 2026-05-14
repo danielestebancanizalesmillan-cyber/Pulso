@@ -291,7 +291,12 @@ export function ProfileContent({
 
                     {/* Auto-reproducir musica si el estado tiene */}
                     {latestStatus && latestStatus.audioUrl && (
-                        <div id="yt-player-ambient" style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} />
+                        <>
+                            <div id="yt-player-ambient" style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} />
+                            {!latestStatus.audioUrl.includes("youtube.com") && !latestStatus.audioUrl.includes("youtu.be") && (
+                                <audio ref={audioRef} src={latestStatus.audioUrl} loop style={{ display: "none" }} />
+                            )}
+                        </>
                     )}
 
                     <div style={{ display: "flex", gap: 8, paddingTop: 8 }}>
@@ -347,6 +352,16 @@ export function ProfileContent({
                     </div>
                 </div>
 
+                {latestStatus?.audioUrl && (
+                    <button
+                        onClick={toggleProfileAudio}
+                        className="btn btn-outline"
+                        style={{ marginTop: 12, padding: "8px 14px", borderRadius: "999px", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: 8 }}
+                    >
+                        <span>{isPlayingAudio ? "Pausar musica" : "Reproducir musica"}</span>
+                    </button>
+                )}
+
                 <div className="profile-name" style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     {user.name}
                     <VerifiedBadge type={user.verificationType || (user.isVerified ? "BLUE" : "NONE")} size={20} />
@@ -367,7 +382,7 @@ export function ProfileContent({
                 <div className="profile-handle">@{user.username}</div>
                 {user.bio && (
                     <div style={{ marginTop: "12px", marginBottom: "4px" }}>
-                        <PostContentTranslator content={user.bio} className="profile-bio" />
+                        <PostContentTranslator content={user.bio} className="profile-bio" alwaysShowButton />
                     </div>
                 )}
 
