@@ -389,7 +389,7 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
                                             />
                                         );
                                     }
-                                    return <audio ref={audioPreviewRef} src={audioUrl} autoPlay loop style={{ display: "none" }} />;
+                                    return <audio ref={audioPreviewRef} src={audioUrl} crossOrigin="anonymous" autoPlay loop style={{ display: "none" }} />;
                                 })()}
 
                                 <div style={{ display: "flex", gap: "16px" }}>

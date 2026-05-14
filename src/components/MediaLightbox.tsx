@@ -111,7 +111,7 @@ export function MediaLightbox({ images, initialIndex, onClose, tweet, userId }: 
                             />
                         ) : currentMedia.type === 'audio' ? (
                             <div style={{ width: "100%", maxWidth: 800, padding: 20, background: "rgba(0,0,0,0.6)", borderRadius: 12 }}>
-                                <audio src={currentMedia.url} controls style={{ width: "100%" }} />
+                                <audio src={currentMedia.url} crossOrigin="anonymous" controls style={{ width: "100%" }} />
                             </div>
                         ) : (
                             <img

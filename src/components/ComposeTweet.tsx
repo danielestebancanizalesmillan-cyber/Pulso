@@ -385,7 +385,7 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                                     />
                                 ) : payload.type === 'audio' ? (
                                     <div style={{ width: "100%", padding: 12, background: "rgba(0,0,0,0.6)", borderRadius: 12, display: "flex", alignItems: "center", gap: 12 }}>
-                                        <audio src={payload.url} controls style={{ width: "100%" }} />
+                                        <audio src={payload.url} crossOrigin="anonymous" controls style={{ width: "100%" }} />
                                     </div>
                                 ) : (
                                     <img src={payload.url} alt={`Upload preview ${idx}`} style={{ width: "100%", height: mediaPayloads.length > 2 ? 150 : 300, objectFit: "cover", borderRadius: 16 }} />

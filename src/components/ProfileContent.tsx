@@ -331,7 +331,7 @@ export function ProfileContent({
                         <>
                             <div id="yt-player-ambient" style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} />
                             {!latestStatus.audioUrl.includes("youtube.com") && !latestStatus.audioUrl.includes("youtu.be") && (
-                                <audio ref={audioRef} src={latestStatus.audioUrl} loop style={{ display: "none" }} />
+                                <audio ref={audioRef} src={latestStatus.audioUrl} crossOrigin="anonymous" loop style={{ display: "none" }} />
                             )}
                         </>
                     )}
