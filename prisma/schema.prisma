@@ -486,3 +486,15 @@ model StatusView {
 
   @@unique([statusId, userId])
 }
+
+model Ad {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  imageUrl    String?
+  link        String
+  cta         String   @default("Más información")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

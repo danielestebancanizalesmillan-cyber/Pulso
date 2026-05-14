@@ -34,6 +34,7 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
     const hasMoreRef = useRef(true);
     const [pullDistance, setPullDistance] = useState(0);
     const touchStartRef = useRef<number | null>(null);
+    const [dbAds, setDbAds] = useState<any[]>([]);
 
     // Sync ref with state
     useEffect(() => {
@@ -127,6 +128,14 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
             setPullDistance(0);
         }
     }, [endpoint, tab]);
+
+    useEffect(() => {
+        // Fetch ads once
+        fetch("/api/ads")
+            .then(r => r.json())
+            .then(data => setDbAds(data))
+            .catch(err => console.error("Failed to fetch ads:", err));
+    }, []);
 
     useEffect(() => {
         if (!process.env.NEXT_PUBLIC_PUSHER_APP_KEY || !process.env.NEXT_PUBLIC_PUSHER_CLUSTER) return;
@@ -319,7 +328,12 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
                             <TweetCard tweet={t} currentUserId={currentUserId} />
                             {/* Inject Ad every 6 items, skip if user is verified */}
                             {(index + 1) % 6 === 0 && !(data?.user as any)?.isVerified && (
-                                <AdComponent {...MOCK_ADS[Math.floor(index / 6) % MOCK_ADS.length]} />
+                                <AdComponent 
+                                    {...(dbAds.length > 0 
+                                        ? { ...dbAds[Math.floor(index / 6) % dbAds.length], url: dbAds[Math.floor(index / 6) % dbAds.length].link } 
+                                        : MOCK_ADS[Math.floor(index / 6) % MOCK_ADS.length]
+                                    )} 
+                                />
                             )}
                         </React.Fragment>
                     ))}

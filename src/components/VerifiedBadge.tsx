@@ -17,7 +17,7 @@ export function VerifiedBadge({ type, isVerified, size = 18, className = "", ani
   
   const getTitle = () => {
     if (computedType === "GOLD") return "Cuenta oficial de empresa u organización";
-    if (computedType === "GREY") return "Cuenta gubernamental o de institución pública";
+    if (computedType === "GREY") return "Servidor Público o Institución gubernamental";
     return "Cuenta verificada";
   };
 

@@ -17,7 +17,8 @@ export async function createTweet(content: string, parentId?: string, images?: {
     console.log(">> Action: Database User Found:", !!dbUser);
     if (!dbUser) throw new Error("Session invalid or user deleted. Please log out and log back in.");
 
-    if (content.length > 280) throw new Error("Tweet is too long (max 280 characters)");
+    const limit = dbUser.isVerified ? 2000 : 280;
+    if (content.length > limit) throw new Error(`Tweet is too long (max ${limit} characters)`);
 
     // Anti-spam: 5 second cooldown
     const lastTweet = await prisma.tweet.findFirst({

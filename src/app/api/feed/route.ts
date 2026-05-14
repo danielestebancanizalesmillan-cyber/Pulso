@@ -90,9 +90,8 @@ export async function GET(req: Request) {
         authorId: { notIn: excludeUserIds }
     };
 
-    if (selectedCategories.length > 0) {
-        where.category = { in: selectedCategories };
-    }
+    // In "For You", interests are used for boosting, not for strict filtering
+    // Unless we are in a specific category tab (not implemented yet)
 
     if (countryCode && countryCode !== "GLOBAL") {
         where.countryCode = countryCode;
@@ -134,8 +133,12 @@ export async function GET(req: Request) {
             
             const score = baseScore * verifiedBoost * promotedBoost;
             
+            // Interest boost
+            const interestBoost = (t.category && selectedCategories.includes(t.category)) ? 2.0 : 1.0;
+            const finalScore = score * interestBoost;
+
             const hoursPassed = (Date.now() - new Date(t.createdAt).getTime()) / (1000 * 60 * 60);
-            const decayedScore = score / Math.pow(hoursPassed + 2, 1.5);
+            const decayedScore = finalScore / Math.pow(hoursPassed + 2, 1.5);
             
             return { ...t, score: decayedScore };
         });
