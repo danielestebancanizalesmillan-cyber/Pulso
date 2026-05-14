@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { updateProfile } from "@/app/actions/user";
+import { updateProfile, getProfileData } from "@/app/actions/user";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
 import { REGIONS } from "@/lib/constants";
@@ -38,6 +38,25 @@ export default function EditProfilePage() {
 
     const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setForm((f) => ({ ...f, [k]: e.target.value }));
+
+    // Fetch full profile data
+    useEffect(() => {
+        getProfileData().then((data) => {
+            if (data) {
+                setForm(f => ({
+                    ...f,
+                    name: data.name || "",
+                    username: data.username || "",
+                    bio: data.bio || "",
+                    location: data.location || "",
+                    website: data.website || "",
+                    countryCode: data.countryCode || "GLOBAL",
+                }));
+                if (data.avatar) setAvatarPreview(data.avatar);
+                if (data.coverImage) setCoverPreview(data.coverImage);
+            }
+        }).catch(console.error);
+    }, []);
 
     // Map ISO 3166-1 alpha-2 to REGIONS codes
     const isoToRegion = (iso: string): string => {

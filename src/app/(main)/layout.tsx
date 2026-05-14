@@ -1,7 +1,6 @@
 import { Sidebar } from "@/components/Sidebar";
 import { RightPanel } from "@/components/RightPanel";
 import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { VerificationBanner } from "@/components/VerificationBanner";
 import { GlobalCompose } from "@/components/GlobalCompose";
 import { MobileTweetFAB } from "@/components/MobileTweetFAB";
@@ -12,11 +11,10 @@ export const dynamic = "force-dynamic";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
     const session = await auth();
-    if (!session) redirect("/login");
 
     return (
         <UsernameGuard>
-            <VerificationBanner />
+            {session && <VerificationBanner />}
             <div className="app-layout">
                 <Sidebar />
                 <main className="main-column">
@@ -27,9 +25,9 @@ export default async function MainLayout({ children }: { children: React.ReactNo
                     <RightPanel />
                 </aside>
             </div>
-            <GlobalCompose />
-            <MobileTweetFAB />
-            <KeyboardShortcuts />
+            {session && <GlobalCompose />}
+            {session && <MobileTweetFAB />}
+            {session && <KeyboardShortcuts />}
         </UsernameGuard>
     );
 }

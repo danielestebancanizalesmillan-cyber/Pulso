@@ -59,6 +59,7 @@ model User {
   notifications          Notification[]        @relation("notifReceiver")
   reports                Report[]              @relation("reporter")
   statuses               Status[]
+  statusViews            StatusView[]
   tweets                 Tweet[]
   createdLists           TweetList[]
   listMembers            TweetListMember[]
@@ -463,6 +464,18 @@ model Status {
   createdAt     DateTime @default(now())
   expiresAt     DateTime
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  views         StatusView[]
 
   @@index([userId])
+}
+
+model StatusView {
+  id        String   @id @default(cuid())
+  statusId  String
+  userId    String
+  createdAt DateTime @default(now())
+  status    Status   @relation(fields: [statusId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([statusId, userId])
 }

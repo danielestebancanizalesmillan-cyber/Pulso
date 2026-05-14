@@ -1,24 +1,27 @@
 
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { USER_SELECT } from "@/lib/constants";
 
 
-export async function GET() {
-    const session = await auth();
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(req: Request) {
+    const { searchParams } = new URL(req.url);
+    const cursor = searchParams.get("cursor");
+    const limit = 10;
 
     const tweets = await prisma.tweet.findMany({
         where: { parentId: null, retweetOfId: null },
         orderBy: { createdAt: "desc" },
-        take: 100,
+        take: limit * 3,
+        skip: cursor ? 1 : 0,
+        cursor: cursor ? { id: cursor } : undefined,
 
         include: {
             author: { select: USER_SELECT },
             likes: { select: { userId: true } },
             replies: { select: { id: true } },
             retweets: { select: { id: true, authorId: true } },
+            bookmarks: { select: { userId: true } },
             images: { select: { url: true, type: true } },
             quoteOf: {
                 include: {
@@ -44,6 +47,5 @@ export async function GET() {
 
     scoredTweets.sort((a: any, b: any) => b.score - a.score);
 
-    return NextResponse.json({ tweets: scoredTweets.slice(0, 50) });
+    return NextResponse.json({ tweets: scoredTweets.slice(0, limit) });
 }
-

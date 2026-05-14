@@ -505,7 +505,7 @@ img {
 .column-header {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 99999;
   background: var(--bg-primary);
   opacity: 0.98;
   backdrop-filter: blur(12px);

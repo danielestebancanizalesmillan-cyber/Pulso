@@ -63,6 +63,9 @@ export async function getStatuses() {
                     image: true,
                     avatar: true
                 }
+            },
+            views: {
+                where: { userId: session.user.id }
             }
         },
         orderBy: { createdAt: "desc" }
@@ -72,6 +75,7 @@ export async function getStatuses() {
 }
 
 export async function getUserStatuses(userId: string) {
+    const session = await auth();
     const statuses = await prisma.status.findMany({
         where: {
             userId,
@@ -86,7 +90,10 @@ export async function getUserStatuses(userId: string) {
                     image: true,
                     avatar: true
                 }
-            }
+            },
+            views: session?.user?.id ? {
+                where: { userId: session.user.id }
+            } : false
         },
         orderBy: { createdAt: "desc" }
     });
@@ -143,5 +150,30 @@ export async function searchYouTube(query: string) {
     } catch (err) {
         console.error("searchYouTube Error:", err);
         return [];
+    }
+}
+
+export async function markStatusViewed(statusId: string) {
+    const session = await auth();
+    if (!session?.user?.id) return { success: false };
+
+    try {
+        await prisma.statusView.upsert({
+            where: {
+                statusId_userId: {
+                    statusId,
+                    userId: session.user.id
+                }
+            },
+            update: {},
+            create: {
+                statusId,
+                userId: session.user.id
+            }
+        });
+        return { success: true };
+    } catch (e) {
+        console.error("Error marking status viewed:", e);
+        return { success: false };
     }
 }

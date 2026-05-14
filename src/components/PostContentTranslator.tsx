@@ -5,7 +5,7 @@ import Link from "next/link";
 import { translateText, detectLanguage } from "@/app/actions/translate";
 import { useTranslation } from "@/lib/i18n";
 
-export function PostContentTranslator({ content }: { content: string }) {
+export function PostContentTranslator({ content, className }: { content: string, className?: string }) {
     const { t, locale } = useTranslation();
     const [translatedText, setTranslatedText] = useState<string | null>(null);
     const [isTranslating, setIsTranslating] = useState(false);
@@ -55,7 +55,7 @@ export function PostContentTranslator({ content }: { content: string }) {
 
     return (
         <div style={{ marginTop: 4, marginBottom: 12 }}>
-            <p className="tweet-focused-text" style={{ margin: 0 }}>
+            <p className={className || "tweet-focused-text"} style={{ margin: 0 }}>
                 {(displayContent || "").split(/(#[a-zA-Z0-9_]+|@[a-zA-Z0-9_]+|https?:\/\/[^\s]+)/g).map((part: string, i: number) => {
                     if (!part) return null;
                     if (part.startsWith("#")) {

@@ -4,7 +4,6 @@ import { USER_SELECT } from "@/lib/constants";
 import { ComposeTweet } from "@/components/ComposeTweet";
 import { InfiniteFeed } from "@/components/InfiniteFeed";
 import { HomeTabs } from "@/components/HomeTabs";
-import { redirect } from "next/navigation";
 
 const TWEET_INCLUDE = {
     author: { select: USER_SELECT },
@@ -49,11 +48,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     const geo = resolvedSearchParams.geo || "local";
 
     const session = await auth();
-    if (!session?.user?.id) {
-        redirect("/login");
-    }
-    const userId = session.user.id;
+    const userId = session?.user?.id;
     const userCountry = (session?.user as any)?.countryCode;
+    const isGuest = !userId;
 
     return (
         <>
@@ -90,12 +87,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                     </div>
                 )}
             </div>
-            <HomeTabs tab={tab} geo={geo} />
-            <ComposeTweet />
+            {session && <HomeTabs tab={tab} geo={geo} />}
+            {session && <ComposeTweet />}
             <InfiniteFeed 
-                tab={tab} 
+                tab={isGuest ? "global" : tab} 
                 initialTweets={EMPTY_TWEETS} 
-                endpoint="/api/feed"
+                endpoint={isGuest ? "/api/feed/global" : "/api/feed"}
                 currentUserId={userId}
                 countryCode={geo === "global" ? "GLOBAL" : userCountry}
             />

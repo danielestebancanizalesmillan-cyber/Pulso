@@ -13,6 +13,7 @@ import { getUserStatuses } from "@/app/actions/status";
 import { StatusViewerModal } from "./StatusViewerModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { CreateStatusModal } from "./CreateStatusModal";
+import { PostContentTranslator } from "./PostContentTranslator";
 
 export function ProfileContent({ 
     user, 
@@ -41,6 +42,9 @@ export function ProfileContent({
 }) {
     const { t, locale } = useTranslation();
     const [showMoreMenu, setShowMoreMenu] = useState(false);
+    
+    const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+    const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
     // Status / History States
     const [statuses, setStatuses] = useState<any[]>([]);
@@ -81,7 +85,7 @@ export function ProfileContent({
                     width: '1',
                     videoId: ytId,
                     playerVars: { 
-                        autoplay: 1, 
+                        autoplay: 0, 
                         controls: 0, 
                         mute: 0,
                         start: latestStatus.audioStart || 0 
@@ -141,6 +145,17 @@ export function ProfileContent({
             }
         }
     }, [latestStatus, hasStatus]);
+
+    const toggleProfileAudio = () => {
+        if (ytPlayer && typeof ytPlayer.playVideo === 'function') {
+            if (isPlayingAudio) ytPlayer.pauseVideo();
+            else ytPlayer.playVideo();
+        } else if (audioRef.current) {
+            if (isPlayingAudio) audioRef.current.pause();
+            else audioRef.current.play().catch(console.error);
+        }
+        setIsPlayingAudio(!isPlayingAudio);
+    };
 
     const handleViewHistory = (e: any) => {
         e.stopPropagation(); 
@@ -225,7 +240,10 @@ export function ProfileContent({
 
             <div className="profile-info-section">
                 <div className="profile-avatar-row">
-                    <div style={{ position: "relative", cursor: hasStatus ? "pointer" : "default" }} onClick={() => hasStatus && setShowAvatarMenu(!showAvatarMenu)}>
+                    <div style={{ position: "relative", cursor: "pointer" }} onClick={() => {
+                        if (hasStatus) setShowAvatarMenu(!showAvatarMenu);
+                        else if (user.avatar || user.image) setLightboxImage(user.avatar || user.image);
+                    }}>
                         {/* ☁️ Nube Flotante sobre el Avatar con Efecto Nube ☁️ */}
                         {latestStatus && latestStatus.background && (
                             <motion.div 
@@ -265,7 +283,7 @@ export function ProfileContent({
                         {/* Menú de Avatar - Sólido */}
                         {showAvatarMenu && (
                             <div style={{ position: "absolute", top: "100%", left: 0, marginTop: 8, zIndex: 100, minWidth: 160, background: "#1a1a1b", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", padding: "6px", boxShadow: "0 12px 32px rgba(0,0,0,0.4)" }}>
-                                <button onClick={(e) => { e.stopPropagation(); alert("Ver foto de perfil... (TBD)"); setShowAvatarMenu(false); }} style={{ width: "100%", textAlign: "left", background: "none", border: "none", color: "white", padding: "10px 12px", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.05)"} onMouseLeave={(e) => e.currentTarget.style.background = "none"}>Ver Foto</button>
+                                <button onClick={(e) => { e.stopPropagation(); if (user.avatar || user.image) setLightboxImage(user.avatar || user.image); setShowAvatarMenu(false); }} style={{ width: "100%", textAlign: "left", background: "none", border: "none", color: "white", padding: "10px 12px", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.05)"} onMouseLeave={(e) => e.currentTarget.style.background = "none"}>Ver Foto</button>
                                 <button onClick={handleViewHistory} style={{ width: "100%", textAlign: "left", background: "none", border: "none", color: "#1d9bf0", padding: "10px 12px", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontWeight: "bold" }}>Ver Historia</button>
                             </div>
                         )}
@@ -347,7 +365,11 @@ export function ProfileContent({
                     )}
                 </div>
                 <div className="profile-handle">@{user.username}</div>
-                {user.bio && <p className="profile-bio">{user.bio}</p>}
+                {user.bio && (
+                    <div style={{ marginTop: "12px", marginBottom: "4px" }}>
+                        <PostContentTranslator content={user.bio} className="profile-bio" />
+                    </div>
+                )}
 
                 <div className="profile-meta">
                     {user.location && (
@@ -395,7 +417,7 @@ export function ProfileContent({
                     <span>{t("posts")}</span>
                 </Link>
                 <Link href={`/${user.username}?tab=replies`} className={`profile-tab ${tab === "replies" ? "active" : ""}`} style={{ flex: 1, textAlign: "center", textDecoration: "none", display: "flex", justifyContent: "center", alignItems: "center", gap: "8px" }}>
-                    <span>{t("reply")}s</span>
+                    <span>{t("replies")}</span>
                 </Link>
                 <Link href={`/${user.username}?tab=highlights`} className={`profile-tab ${tab === "highlights" ? "active" : ""}`} style={{ flex: 1, textAlign: "center", textDecoration: "none", display: "flex", justifyContent: "center", alignItems: "center", gap: "8px" }}>
                     <span>{t("highlights") || "Highlights"}</span>

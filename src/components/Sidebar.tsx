@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "./ThemeProvider";
 import { Avatar } from "./Avatar";
 import { VerifiedBadge } from "./VerifiedBadge";
@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export function Sidebar() {
     const { data: session, status, update } = useSession();
     const pathname = usePathname();
+    const router = useRouter();
     const { theme } = useTheme();
     const { t, locale, toggleLocale } = useTranslation();
     const [showDropdown, setShowDropdown] = useState(false);
@@ -240,6 +241,10 @@ export function Sidebar() {
             <button
                 className="tweet-btn"
                 onClick={() => {
+                    if (!user?.id) {
+                        router.push("/login");
+                        return;
+                    }
                     const event = new CustomEvent("open-compose");
                     window.dispatchEvent(event);
                 }}
@@ -252,19 +257,19 @@ export function Sidebar() {
 
             <div
                 className="sidebar-user"
-                onClick={() => setShowDropdown((v) => !v)}
+                onClick={() => user?.id ? setShowDropdown((v) => !v) : router.push("/login")}
                 style={{ position: "relative" }}
             >
                 <Avatar user={user} size="md" />
                 <div className="sidebar-user-info nav-label">
                     <span className="sidebar-user-name" style={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        {user?.name || t("user")}
-                        <VerifiedBadge type={user?.verificationType || (user?.isVerified ? "BLUE" : "NONE")} size={16} />
+                        {user?.name || t("login")}
+                        {user?.id && <VerifiedBadge type={user?.verificationType || (user?.isVerified ? "BLUE" : "NONE")} size={16} />}
                     </span>
-                    <span className="sidebar-user-handle">@{username}</span>
+                    <span className="sidebar-user-handle">{user?.id ? `@${username}` : t("signInToAccount")}</span>
                 </div>
 
-                {showDropdown && (
+                {showDropdown && user?.id && (
                     <div
                         className="dropdown"
                         style={{ bottom: "60px", left: 0, right: 0, padding: "8px 0", minWidth: 260 }}

@@ -1,13 +1,20 @@
 "use client";
 
 import { useTranslation } from "@/lib/i18n";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export function MobileTweetFAB() {
     const { t } = useTranslation();
     const pathname = usePathname();
+    const router = useRouter();
+    const { data: session } = useSession();
 
     const handleOpenCompose = () => {
+        if (!session?.user?.id) {
+            router.push("/login");
+            return;
+        }
         const event = new CustomEvent("open-compose");
         window.dispatchEvent(event);
     };

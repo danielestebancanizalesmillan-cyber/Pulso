@@ -321,6 +321,10 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
     const handleLike = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        if (!userId) {
+            router.push("/login");
+            return;
+        }
         
         // Optimistic update
         const newLiked = !liked;
@@ -337,6 +341,10 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
     const handleRetweet = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        if (!userId) {
+            router.push("/login");
+            return;
+        }
         
         // Optimistic update
         const newRetweeted = !retweeted;
@@ -350,6 +358,10 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
     const handleBookmark = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        if (!userId) {
+            router.push("/login");
+            return;
+        }
         
         if (!bookmarked) {
             // Optimistic update
@@ -397,6 +409,10 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
     const handleRemoveBookmark = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        if (!userId) {
+            router.push("/login");
+            return;
+        }
         
         setBookmarked(false);
         setBookmarkCount((prev: number) => Math.max(0, prev - 1));
@@ -682,6 +698,10 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                                                                 <button 
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
+                                                                        if (!userId) {
+                                                                            router.push("/login");
+                                                                            return;
+                                                                        }
                                                                         startTransition(async () => {
                                                                             try {
                                                                                 await voteInPoll(option.id);
@@ -893,7 +913,7 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                             </button>
 
                             {/* Quote */}
-                            <button className="action-btn" style={{ color: "var(--text-secondary)" }} onClick={(e) => { e.stopPropagation(); setShowQuoteModal(true); }} title={t("quote")}>
+                            <button className="action-btn" style={{ color: "var(--text-secondary)" }} onClick={(e) => { e.stopPropagation(); if (!userId) router.push("/login"); else setShowQuoteModal(true); }} title={t("quote")}>
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>

@@ -420,3 +420,18 @@ export async function deleteAccount() {
         where: { id: session.user.id }
     });
 }
+
+export async function getProfileData(username?: string) {
+    const session = await auth();
+    let queryId = session?.user?.id;
+    if (username) {
+        const u = await prisma.user.findUnique({ where: { username } });
+        if (u) queryId = u.id;
+    }
+    
+    if (!queryId) return null;
+
+    return prisma.user.findUnique({
+        where: { id: queryId }
+    });
+}

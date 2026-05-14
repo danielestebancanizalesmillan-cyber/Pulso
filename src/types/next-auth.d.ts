@@ -11,6 +11,7 @@ declare module "next-auth" {
       countryCode?: string | null;
       role?: string;
       accountLabel?: string | null;
+      coverImage?: string | null;
     } & DefaultSession["user"]
   }
 
@@ -23,6 +24,7 @@ declare module "next-auth" {
     countryCode?: string | null;
     role?: string;
     accountLabel?: string | null;
+    coverImage?: string | null;
     emailVerified?: Date | null;
   }
 }
@@ -37,6 +39,7 @@ declare module "next-auth/jwt" {
     countryCode?: string | null;
     role?: string;
     accountLabel?: string | null;
+    coverImage?: string | null;
     emailVerified?: Date | null;
   }
 }

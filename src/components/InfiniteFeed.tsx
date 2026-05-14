@@ -12,7 +12,7 @@ import { useSession } from "next-auth/react";
 interface InfiniteFeedProps {
     initialTweets?: any[];
     endpoint: string; // e.g. "/api/feed" 
-    currentUserId: string;
+    currentUserId?: string;
     tab?: string;
     countryCode?: string;
 }
@@ -53,7 +53,7 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
     const observerTarget = useRef<HTMLDivElement>(null);
 
     const loadMore = useCallback(async () => {
-        if (loadingRef.current || !hasMoreRef.current || status !== "authenticated") return;
+        if (loadingRef.current || !hasMoreRef.current) return;
         loadingRef.current = true;
         setLoading(true);
         try {
@@ -86,9 +86,8 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
                     // Filter out any tweets that already exist in the state
                     const filtered = newTweets.filter((nt: any) => !prev.some((pt: any) => pt.id === nt.id));
                     if (filtered.length === 0 && newTweets.length > 0) {
-                        // All returned tweets were duplicates, could be a pagination issue
-                        // but we should stop here to avoid infinite loops if the server keeps returning same data
-                        // For now just return prev
+                        setHasMore(false);
+                        hasMoreRef.current = false;
                         return prev;
                     }
                     return [...prev, ...filtered];
@@ -102,10 +101,10 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
             setLoading(false);
             setInitialLoading(false);
         }
-    }, [endpoint, tab, status]); // removed loading, hasMore from dependencies
+    }, [endpoint, tab, countryCode]);
 
     useEffect(() => {
-        if (initialTweets.length === 0 && page === 1 && status === "authenticated") {
+        if (initialTweets.length === 0 && page === 1 && status !== "loading") {
             loadMore();
         }
     }, [initialTweets.length, page, loadMore, status]);
@@ -283,7 +282,7 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
 
     return (
         <div className="feed" style={{ position: "relative" }}>
-            <StatusCarousel />
+            {status === "authenticated" && <StatusCarousel />}
             {pullDistance > 0 && (
                 <div style={{ 
                     display: "flex", justifyContent: "center", padding: "12px", 

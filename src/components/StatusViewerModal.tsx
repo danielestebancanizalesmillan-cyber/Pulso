@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { deleteStatus } from "@/app/actions/status";
+import { deleteStatus, markStatusViewed } from "@/app/actions/status";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar } from "./Avatar";
@@ -37,6 +37,10 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
         // Setup Audio Start Time Snippet
         if (audioRef.current && currentItem.audioStart) {
             audioRef.current.currentTime = currentItem.audioStart;
+        }
+
+        if (session?.user?.id && !isOwner) {
+            markStatusViewed(currentItem.id).catch(console.error);
         }
 
         const startTime = Date.now();
@@ -187,7 +191,9 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                 {currentItem.audioUrl && (
                     <div style={{ position: "relative", zIndex: 2, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(10px)", padding: "10px 16px", borderRadius: "12px", display: "flex", alignItems: "center", gap: "8px", color: "white", marginBottom: "30px", border: "1px solid rgba(255,255,255,0.1)" }}>
                         <div style={{ fontSize: "1.1rem" }}>🎵</div>
-                        <div style={{ fontSize: "0.85rem", opacity: 0.9, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentItem.type === "IMAGE" ? "Música de la historia" : "Reproduciendo audio..."}</div>
+                        <div style={{ fontSize: "0.85rem", opacity: 0.9, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {styleOpts?.audioTitle || "Reproduciendo música..."}
+                        </div>
                         
                         {(() => {
                             const match = currentItem.audioUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);

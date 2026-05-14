@@ -18,6 +18,7 @@ export default {
                 token.emailVerified = user.emailVerified;
                 token.image = user.image;
                 token.avatar = user.avatar;
+                token.coverImage = user.coverImage;
                 token.role = user.role;
                 token.accountLabel = user.accountLabel;
                 token.birthDate = user.birthDate;
@@ -33,6 +34,7 @@ export default {
                 session.user.emailVerified = token.emailVerified;
                 session.user.image = token.image;
                 session.user.avatar = token.avatar;
+                session.user.coverImage = token.coverImage;
                 session.user.countryCode = token.countryCode;
                 session.user.role = token.role;
                 session.user.accountLabel = token.accountLabel;

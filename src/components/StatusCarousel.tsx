@@ -59,16 +59,23 @@ export function StatusCarousel() {
             </div>
 
             {/* Other Users Statuses */}
-            {groupedStatuses.filter(g => g.userId !== session?.user?.id).map(group => (
-                <div key={group.userId} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer", flexShrink: 0 }} onClick={() => setActiveViewer(group)}>
-                    <div style={{ width: "56px", height: "56px", borderRadius: "50%", padding: "2px", background: "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)", animation: "rotate 2s linear infinite" }}>
-                        <div style={{ background: "var(--bg-primary)", borderRadius: "50%", padding: "2px", width: "100%", height: "100%" }}>
-                            <Avatar user={group.user} size="lg" />
+            {groupedStatuses.filter(g => g.userId !== session?.user?.id).map(group => {
+                const allSeen = group.items.every((item: any) => item.views && item.views.length > 0);
+                return (
+                    <div key={group.userId} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer", flexShrink: 0 }} onClick={() => setActiveViewer(group)}>
+                        <div style={{ 
+                            width: "56px", height: "56px", borderRadius: "50%", padding: "2px", 
+                            background: allSeen ? "var(--border)" : "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
+                            animation: allSeen ? "none" : "rotate 2s linear infinite" 
+                        }}>
+                            <div style={{ background: "var(--bg-primary)", borderRadius: "50%", padding: "2px", width: "100%", height: "100%" }}>
+                                <Avatar user={group.user} size="lg" />
+                            </div>
                         </div>
+                        <span style={{ fontSize: "0.75rem", color: allSeen ? "var(--text-secondary)" : "var(--text-primary)", maxWidth: "64px", overflow: "hidden", textOverflow: "ellipsis" }}>{group.user.name}</span>
                     </div>
-                    <span style={{ fontSize: "0.75rem", color: "var(--text-primary)", maxWidth: "64px", overflow: "hidden", textOverflow: "ellipsis" }}>{group.user.name}</span>
-                </div>
-            ))}
+                );
+            })}
 
             {showCreate && <CreateStatusModal onClose={() => { setShowCreate(false); fetchStatuses(); }} />}
             {activeViewer && <StatusViewerModal group={activeViewer} onClose={() => { setActiveViewer(null); fetchStatuses(); }} />}

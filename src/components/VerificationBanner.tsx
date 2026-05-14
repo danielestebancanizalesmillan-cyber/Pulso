@@ -1,29 +1,31 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { resendVerification } from "@/app/actions/user";
 import { useTranslation } from "@/lib/i18n";
 
 export function VerificationBanner() {
     const { data: session, update } = useSession();
     const { t } = useTranslation();
-    const [isPending, startTransition] = useTransition();
+    const [isPending, setIsPending] = useState(false);
     const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
     if (!session?.user || (session.user as any).emailVerified) return null;
 
-    const handleResend = () => {
+    const handleResend = async () => {
         setStatus("idle");
-        startTransition(async () => {
-            try {
-                await resendVerification();
-                setStatus("success");
-                setTimeout(() => setStatus("idle"), 5000);
-            } catch (err) {
-                setStatus("error");
-            }
-        });
+        setIsPending(true);
+        try {
+            await resendVerification();
+            await update();
+            setStatus("success");
+            setTimeout(() => setStatus("idle"), 5000);
+        } catch (err) {
+            setStatus("error");
+        } finally {
+            setIsPending(false);
+        }
     };
 
     return (

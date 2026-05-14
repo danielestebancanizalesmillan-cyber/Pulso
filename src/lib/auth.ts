@@ -20,6 +20,7 @@ declare module "next-auth" {
             countryCode?: string | null;
             role?: string;
             accountLabel?: string | null;
+            coverImage?: string | null;
         } & DefaultSession["user"]
     }
 
@@ -32,6 +33,7 @@ declare module "next-auth" {
         countryCode?: string | null;
         role?: string;
         accountLabel?: string | null;
+        coverImage?: string | null;
     }
 }
 
@@ -45,6 +47,7 @@ declare module "next-auth/jwt" {
         countryCode?: string | null;
         role?: string;
         accountLabel?: string | null;
+        coverImage?: string | null;
     }
 }
 
@@ -203,6 +206,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     countryCode: user.countryCode,
                     role: user.role,
                     accountLabel: user.accountLabel,
+                    coverImage: user.coverImage,
                     birthDate: user.birthDate,
                     showSensitiveContent: user.showSensitiveContent,
                 } as any;
@@ -221,10 +225,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 token.countryCode = user.countryCode;
                 token.role = user.role;
                 token.accountLabel = user.accountLabel;
+                token.coverImage = user.coverImage;
                 token.birthDate = user.birthDate;
                 token.showSensitiveContent = user.showSensitiveContent;
             }
-            if (trigger === "update" || !token.avatar) {
+            if (token.id) {
                 try {
                     const dbUser = await prisma.user.findUnique({
                         where: { id: token.id as string },
@@ -232,7 +237,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                             name: true,
                             username: true,
                             avatar: true, 
+                            coverImage: true,
                             image: true, 
+                            emailVerified: true,
                             accountLabel: true, 
                             birthDate: true, 
                             showSensitiveContent: true, 
@@ -244,6 +251,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         token.username = dbUser.username;
                         token.avatar = dbUser.avatar;
                         token.image = dbUser.avatar || dbUser.image;
+                        token.coverImage = dbUser.coverImage;
+                        token.emailVerified = dbUser.emailVerified;
                         token.accountLabel = dbUser.accountLabel;
                         token.birthDate = dbUser.birthDate;
                         token.showSensitiveContent = dbUser.showSensitiveContent;
@@ -257,4 +266,3 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
     }
 });
-

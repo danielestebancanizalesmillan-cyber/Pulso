@@ -33,12 +33,16 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
     const [isSearching, setIsSearching] = useState(false);
 
     // Audio segment states
+    const [audioTitle, setAudioTitle] = useState("");
     const [audioStart, setAudioStart] = useState(0);
     const [audioDuration, setAudioDuration] = useState(15);
 
     // Image upload states
     const [file, setFile] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
+
+    // Audio Preview refs
+    const audioPreviewRef = useRef<HTMLAudioElement>(null);
 
     // Text Styling & Position States
     const [textPos, setTextPos] = useState({ x: 50, y: 50 }); // percentages (0-100)
@@ -68,8 +72,16 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
         if (selectedFile) {
             setFile(selectedFile);
             setPreview(URL.createObjectURL(selectedFile));
+            setType("IMAGE");
         }
     };
+
+    // Auto-update audio preview start time
+    useEffect(() => {
+        if (audioPreviewRef.current) {
+            audioPreviewRef.current.currentTime = audioStart;
+        }
+    }, [audioStart]);
 
     const handleSubmit = async () => {
         if (type === "TEXT" && !content.trim()) {
@@ -91,12 +103,8 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
                 uploadedUrl = newBlob.url;
             }
 
-            const styleOptions = type === "TEXT" ? JSON.stringify({
-                textPos,
-                fontSize,
-                useTextBg,
-                textColor
-            }) : null;
+            const baseStyleOptions = { textPos, fontSize, useTextBg, textColor, audioTitle: audioTitle || null };
+            const styleOptions = (type === "TEXT" || content) ? JSON.stringify(baseStyleOptions) : JSON.stringify({ audioTitle: audioTitle || null });
 
             await createStatus(
                 type, 
@@ -249,6 +257,46 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
                                     placeholder="Añade un subtítulo (opcional)..." 
                                     style={{ background: "transparent", border: "none", borderBottom: "1px solid rgba(255,255,255,0.4)", color: "white", textAlign: "center", outline: "none", width: "80%", fontSize: "1rem" }}
                                 />
+                                {content && (
+                                    <motion.div 
+                                        drag 
+                                        dragConstraints={previewAreaRef}
+                                        dragElastic={0.1}
+                                        onDragEnd={(event, info) => {
+                                            if (previewAreaRef.current) {
+                                                const rect = previewAreaRef.current.getBoundingClientRect();
+                                                const x = ((info.point.x - rect.left) / rect.width) * 100;
+                                                const y = ((info.point.y - rect.top) / rect.height) * 100;
+                                                setTextPos({ 
+                                                    x: Math.min(Math.max(x, 5), 95), 
+                                                    y: Math.min(Math.max(y, 5), 95) 
+                                                });
+                                            }
+                                        }}
+                                        style={{ 
+                                            position: "absolute", 
+                                            left: `${textPos.x}%`, 
+                                            top: `${textPos.y}%`, 
+                                            transform: "translate(-50%, -50%)", 
+                                            background: useTextBg ? "rgba(0,0,0,0.45)" : "transparent", 
+                                            backdropFilter: useTextBg ? "blur(12px)" : "none",
+                                            padding: "12px 20px", 
+                                            borderRadius: "20px",
+                                            border: useTextBg ? "1px solid rgba(255,255,255,0.15)" : "none",
+                                            boxShadow: useTextBg ? "0 8px 32px rgba(0,0,0,0.2)" : "none",
+                                            cursor: "move",
+                                            width: "auto",
+                                            maxWidth: "90%",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center"
+                                        }}
+                                    >
+                                        <div style={{ color: textColor, fontSize: `${fontSize}rem`, fontWeight: "800", textAlign: "center", wordBreak: "break-word", textShadow: "0 2px 4px rgba(0,0,0,0.15)" }}>
+                                            {content}
+                                        </div>
+                                    </motion.div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -276,7 +324,7 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
                                     <button 
                                         key={i} 
                                         type="button"
-                                        onClick={() => setAudioUrl(song.url)} 
+                                        onClick={() => { setAudioUrl(song.url); setAudioTitle(song.name); }} 
                                         style={{ background: "rgba(255,255,255,0.15)", color: "white", border: "none", padding: "8px 14px", borderRadius: "16px", fontSize: "0.8rem", cursor: "pointer", whiteSpace: "nowrap", fontWeight: 600 }}
                                     >
                                         {song.name}
@@ -302,7 +350,7 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
                                 {searchResults.map((item) => (
                                     <div 
                                         key={item.id} 
-                                        onClick={() => { setAudioUrl(item.url); setSearchResults([]); setSearchQuery(""); }} 
+                                        onClick={() => { setAudioUrl(item.url); setAudioTitle(item.title); setSearchResults([]); setSearchQuery(""); }} 
                                         style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px", background: "rgba(255,255,255,0.08)", borderRadius: "10px", cursor: "pointer" }}
                                         onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.15)"}
                                         onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.08)"}
@@ -322,10 +370,27 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                         <span style={{ fontSize: "1rem" }}>🎵</span>
-                                        <span style={{ fontSize: "0.85rem", color: "white", fontWeight: 600 }}>Sonido seleccionado</span>
+                                        <span style={{ fontSize: "0.85rem", color: "white", fontWeight: 600, maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{audioTitle || "Sonido seleccionado"}</span>
                                     </div>
-                                    <button onClick={() => { setAudioUrl(""); setSearchQuery(""); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: "0.75rem" }}>Quitar</button>
+                                    <button onClick={() => { setAudioUrl(""); setAudioTitle(""); setSearchQuery(""); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: "0.75rem" }}>Quitar</button>
                                 </div>
+
+                                {/* Audio Preview Player */}
+                                {(() => {
+                                    const match = audioUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+                                    const ytId = (match && match[2].length === 11) ? match[2] : null;
+                                    if (ytId) {
+                                        const end = audioStart + audioDuration;
+                                        return (
+                                            <iframe 
+                                                src={`https://www.youtube.com/embed/${ytId}?autoplay=1&controls=0&mute=0&start=${audioStart}&end=${end}`} 
+                                                style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} 
+                                                allow="autoplay"
+                                            />
+                                        );
+                                    }
+                                    return <audio ref={audioPreviewRef} src={audioUrl} autoPlay loop style={{ display: "none" }} />;
+                                })()}
 
                                 <div style={{ display: "flex", gap: "16px" }}>
                                     <div style={{ flex: 1 }}>

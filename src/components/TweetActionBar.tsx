@@ -17,6 +17,7 @@ interface TweetActionBarProps {
 
 export function TweetActionBar({ tweet, userId, onLikeChange, onRetweetChange, onBookmarkChange }: TweetActionBarProps) {
     const { addToast } = useToast();
+    const router = useRouter();
     const [isPending, startTransition] = useTransition();
     
     // UI state for animation
@@ -49,6 +50,10 @@ export function TweetActionBar({ tweet, userId, onLikeChange, onRetweetChange, o
     const handleLike = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        if (!userId) {
+            router.push("/login");
+            return;
+        }
         if (!liked) {
             setIsAnimatingLike(true);
             setTimeout(() => setIsAnimatingLike(false), 800);
@@ -76,6 +81,10 @@ export function TweetActionBar({ tweet, userId, onLikeChange, onRetweetChange, o
     const handleRetweet = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        if (!userId) {
+            router.push("/login");
+            return;
+        }
         
         const wasRt = retweeted;
         const newRt = !wasRt;
@@ -100,6 +109,10 @@ export function TweetActionBar({ tweet, userId, onLikeChange, onRetweetChange, o
     const handleBookmark = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        if (!userId) {
+            router.push("/login");
+            return;
+        }
 
         const wasBookmarked = bookmarked;
         const newBookmarked = !wasBookmarked;
@@ -132,7 +145,7 @@ export function TweetActionBar({ tweet, userId, onLikeChange, onRetweetChange, o
         <>
             <div className="tweet-actions" style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", padding: "12px 0", maxWidth: "100%", justifyContent: "space-around" }}>
                 {/* Reply */}
-                <button className="action-btn reply" onClick={(e) => { e.stopPropagation(); document.querySelector<HTMLTextAreaElement>(".compose-tweet textarea")?.focus(); }}>
+                <button className="action-btn reply" onClick={(e) => { e.stopPropagation(); if (!userId) router.push("/login"); else document.querySelector<HTMLTextAreaElement>(".compose-tweet textarea")?.focus(); }}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
                     </svg>
@@ -151,7 +164,7 @@ export function TweetActionBar({ tweet, userId, onLikeChange, onRetweetChange, o
                 </button>
 
                 {/* Quote */}
-                <button className="action-btn" style={{ color: "var(--text-secondary)" }} onClick={(e) => { e.stopPropagation(); setShowQuoteModal(true); }} title="Quote">
+                <button className="action-btn" style={{ color: "var(--text-secondary)" }} onClick={(e) => { e.stopPropagation(); if (!userId) router.push("/login"); else setShowQuoteModal(true); }} title="Quote">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>

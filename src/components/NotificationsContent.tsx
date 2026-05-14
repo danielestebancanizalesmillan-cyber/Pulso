@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { pusherClient } from "@/lib/pusher-client";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
+import { markNotificationsRead } from "@/app/actions/user";
 
 const icons: Record<string, React.ReactNode> = {
     like: (
@@ -46,6 +47,9 @@ export function NotificationsContent({ notifications: initialNotifications }: { 
 
     useEffect(() => {
         if (!session?.user?.id) return;
+
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        markNotificationsRead().catch(console.error);
 
         const channel = pusherClient.subscribe(`user-${session.user.id}`);
         
