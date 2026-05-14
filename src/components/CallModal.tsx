@@ -27,7 +27,7 @@ function useIsMobile() {
 }
 
 export function CallModal({ isOpen, onClose, isIncoming = false, isAudioOnly = false, callerName = "Usuario", conversationId, userId }: CallModalProps) {
-    const [status, setStatus] = useState<"idle" | "calling" | "connected" | "ended">("idle");
+    const [status, setStatus] = useState<"idle" | "calling" | "connected" | "ended">(isIncoming ? "idle" : "calling");
     const [mounted, setMounted] = useState(false);
     const isMobile = useIsMobile();
     
@@ -81,11 +81,10 @@ export function CallModal({ isOpen, onClose, isIncoming = false, isAudioOnly = f
 
 
                 if (isIncoming) {
-                    // Receiver: Stay idle to show buttons
+                    // Receiver: Stay idle to show Accept/Decline buttons
                     setStatus("idle");
                 } else {
-                    // Emitter: Wait for 'ready' signal from receiver
-                    setStatus("calling");
+                    // Emitter: Already in "calling" status from initial state
                     // We no longer create the offer here immediately
                 }
             } catch (err) {
@@ -255,7 +254,7 @@ export function CallModal({ isOpen, onClose, isIncoming = false, isAudioOnly = f
                         <div style={{ color: "white", fontSize: "1.4rem", fontWeight: 700, background: "rgba(255,255,255,0.08)", padding: "10px 24px", borderRadius: "30px", backdropFilter: "blur(4px)" }}>
                             {status === "calling" 
                                 ? (isIncoming ? `Conectando llamada de ${callerName}...` : `Llamando a ${callerName}...`) 
-                                : `Llamada entrante de ${callerName}`}
+                                : (isIncoming ? `Llamada entrante de ${callerName}` : `Llamando a ${callerName}...`)}
                         </div>
 
                         {isAudioOnly && <div style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Solo Audio</div>}

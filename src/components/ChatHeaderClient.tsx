@@ -27,7 +27,7 @@ export function ChatHeaderClient({ partner, conversationId, userId }: ChatHeader
         const channel = pusher.subscribe(`chat-${conversationId}`);
 
         channel.bind("incoming-call", (data: any) => {
-            if (data.senderId !== userId) {
+            if (data.senderId !== userId && !isCallOpen) {
                 setIsIncoming(true);
                 setIsAudioOnly(data.isAudioOnly || false);
                 setIsCallOpen(true);
