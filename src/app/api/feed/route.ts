@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { USER_SELECT } from "@/lib/constants";
@@ -85,7 +86,7 @@ export async function GET(req: Request) {
         ...mutedByMe.map(m => m.mutedId)
     ];
 
-    let where: any = { 
+    const where: Prisma.TweetWhereInput = { 
         parentId: null,
         authorId: { notIn: excludeUserIds }
     };
@@ -116,7 +117,7 @@ export async function GET(req: Request) {
             cursor: cursor ? { id: cursor } : undefined,
             where,
             orderBy: { createdAt: "desc" },
-            include: TWEET_INCLUDE as any,
+            include: TWEET_INCLUDE as Prisma.TweetInclude,
         }),
         prisma.ad.findMany({
             where: { active: true },
@@ -124,10 +125,10 @@ export async function GET(req: Request) {
         })
     ]);
 
-    let finalTweets: any[] = [];
+    let finalTweets: (Prisma.TweetGetPayload<{ include: typeof TWEET_INCLUDE }> & { score?: number; isAd?: boolean })[] = [];
 
     if (type === "for-you" || !type) {
-        const scoredTweets = tweets.map((t: any) => {
+        const scoredTweets = tweets.map((t) => {
             const likesCount = t._count?.likes || 0;
             const retweetsCount = t._count?.retweets || 0;
             const repliesCount = t._count?.replies || 0;
@@ -151,7 +152,7 @@ export async function GET(req: Request) {
             return { ...t, score: decayedScore };
         });
 
-        scoredTweets.sort((a, b) => b.score - a.score);
+        scoredTweets.sort((a: { score: number }, b: { score: number }) => b.score - a.score);
         finalTweets = scoredTweets.slice(0, limit);
     } else {
         finalTweets = tweets.slice(0, limit);
