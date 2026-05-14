@@ -4,9 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
-import { v4 as uuidv4 } from "uuid";
-import { sendVerificationEmail } from "@/lib/mail";
-import { isEmailDisposable } from "@/app/actions/utils/email";
 import { pusherServer } from "@/lib/pusher";
 
 export async function registerUser(data: {
@@ -24,11 +21,6 @@ export async function registerUser(data: {
     if (existing) {
         if (existing.email?.toLowerCase() === emailLower) throw new Error("Email already taken");
         throw new Error("Username already taken");
-    }
-
-    // Check for disposable email
-    if (isEmailDisposable(data.email)) {
-        throw new Error("Please use a permanent email address");
     }
 
     const user = await prisma.user.create({
@@ -71,7 +63,7 @@ export async function verifyEmail(token: string) {
         where: { id: existingUser.id },
         data: {
             emailVerified: new Date(),
-            email: existingToken.email, // In case of email change flow, but here it's for verification
+            email: existingToken.email,
         }
     });
 
@@ -229,7 +221,6 @@ export async function setupUsername(username: string) {
 
     const usernameLower = username.toLowerCase();
 
-    // Check if username is already taken
     const existing = await prisma.user.findUnique({
         where: { username: usernameLower }
     });
@@ -253,26 +244,27 @@ export async function resendVerification() {
 
     if (user?.emailVerified) throw new Error("Email already verified");
 
-    // Clear old tokens
-    await prisma.emailVerification.deleteMany({
-        where: { email: session.user.email }
-    });
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+    if (!apiKey) throw new Error("Firebase API key is missing");
 
-    // Generate New Token
-    const token = uuidv4();
-    const expires = new Date(new Date().getTime() + 3600 * 1000);
+    const res = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${apiKey}`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                requestType: "VERIFY_EMAIL",
+                email: session.user.email,
+            })
+        }
+    );
 
-    await prisma.emailVerification.create({
-        data: {
-            email: session.user.email,
-            token,
-            expires,
-        },
-    });
+    const data = await res.json();
+    if (!res.ok) {
+        throw new Error(data.error?.message || "Failed to send verification email");
+    }
 
-    await sendVerificationEmail(session.user.email, token);
-
-    return { success: "Verification email sent!" };
+    return { success: "Verification email sent via Firebase!" };
 }
 
 export async function toggleBlock(targetId: string) {
@@ -290,7 +282,6 @@ export async function toggleBlock(targetId: string) {
         await prisma.block.create({
             data: { blockerId: session.user.id, blockedId: targetId },
         });
-        // Also unfollow if blocked
         await prisma.follow.deleteMany({
             where: {
                 OR: [
