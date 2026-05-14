@@ -49,7 +49,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
             <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", background: "var(--bg-main)" }}>
 
                 {/* Chat Partner Header */}
-                <div style={{ padding: "32px 16px", display: "flex", flexDirection: "column", alignItems: "center", borderBottom: "1px solid var(--border)", marginBottom: "16px" }}>
+                <div style={{ padding: "32px 16px", display: "flex", flexDirection: "column", alignItems: "center", borderBottom: "1px solid var(--border)", marginBottom: "16px", position: "relative", zIndex: 1 }}>
                     <Avatar user={partner} size="lg" />
                     <div style={{ fontWeight: 700, fontSize: "1.1rem", marginTop: 8 }}>{partner.name}</div>
                     <div style={{ color: "var(--text-secondary)", fontSize: "0.95rem" }}>@{partner.username}</div>

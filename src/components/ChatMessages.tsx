@@ -424,7 +424,7 @@ export function ChatMessages({ initialMessages, conversationId, userId }: ChatMe
     }, [messages]);
 
     return (
-        <div ref={scrollRef} className="message-container" style={{ flex: 1, overflowY: "auto", padding: "40px 16px 16px 16px", display: "flex", flexDirection: "column", gap: "12px", background: "var(--bg-main)", position: "relative" }}>
+        <div ref={scrollRef} className="message-container" style={{ flex: 1, overflowY: "auto", padding: "80px 16px 16px 16px", display: "flex", flexDirection: "column", gap: "12px", background: "var(--bg-main)", position: "relative" }}>
             {messages.length === 0 ? (
                 <div className="empty-state">{t("noMessagesYet")}</div>
             ) : (
