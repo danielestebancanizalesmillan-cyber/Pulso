@@ -108,6 +108,33 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
         return () => clearInterval(timer);
     }, [currentIndex, durationCount]);
 
+    // Auto-play audio when item changes
+    useEffect(() => {
+        if (currentItem.audioUrl) {
+            const t = setTimeout(() => {
+                // Initial check to avoid double playing
+                if (!audioPlaying && !audioLoading) {
+                    toggleAudio();
+                }
+            }, 300);
+            return () => clearTimeout(t);
+        }
+    }, [currentIndex]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.src = ""; // Force stop
+            }
+            if (ytPlayerRef.current?.destroy) {
+                try { ytPlayerRef.current.destroy(); } catch {}
+                ytPlayerRef.current = null;
+            }
+        };
+    }, []);
+
     const handleNext = () => {
         if (currentIndex < items.length - 1) {
             setCurrentIndex(currentIndex + 1);

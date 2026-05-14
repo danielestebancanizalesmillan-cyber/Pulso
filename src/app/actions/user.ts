@@ -160,6 +160,9 @@ export async function updateProfile(data: {
     coverImage?: string;
     countryCode?: string;
     username?: string;
+    profileAudioUrl?: string;
+    profileAudioTitle?: string;
+    profileAudioStart?: number;
 }) {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
@@ -193,6 +196,9 @@ export async function updateProfile(data: {
             ...(data.avatar ? { avatar: data.avatar } : {}),
             ...(data.coverImage ? { coverImage: data.coverImage } : {}),
             countryCode: data.countryCode || undefined,
+            profileAudioUrl: data.profileAudioUrl,
+            profileAudioTitle: data.profileAudioTitle,
+            profileAudioStart: data.profileAudioStart,
         },
     });
 

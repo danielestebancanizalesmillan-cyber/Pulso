@@ -26,6 +26,9 @@ export default function EditProfilePage() {
         location: user?.location || "",
         website: user?.website || "",
         countryCode: user?.countryCode || "GLOBAL",
+        profileAudioUrl: user?.profileAudioUrl || "",
+        profileAudioTitle: user?.profileAudioTitle || "",
+        profileAudioStart: user?.profileAudioStart || 0,
     });
 
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -51,6 +54,9 @@ export default function EditProfilePage() {
                     location: data.location || "",
                     website: data.website || "",
                     countryCode: data.countryCode || "GLOBAL",
+                    profileAudioUrl: data.profileAudioUrl || "",
+                    profileAudioTitle: data.profileAudioTitle || "",
+                    profileAudioStart: data.profileAudioStart || 0,
                 }));
                 if (data.avatar) setAvatarPreview(data.avatar);
                 if (data.coverImage) setCoverPreview(data.coverImage);
@@ -147,6 +153,9 @@ export default function EditProfilePage() {
                     location: form.location,
                     website: form.website,
                     countryCode: form.countryCode,
+                    profileAudioUrl: form.profileAudioUrl,
+                    profileAudioTitle: form.profileAudioTitle,
+                    profileAudioStart: parseInt(form.profileAudioStart as any) || 0,
                     ...(avatarUrl ? { avatar: avatarUrl } : {}),
                     ...(coverUrl ? { coverImage: coverUrl } : {}),
                 });
@@ -241,6 +250,52 @@ export default function EditProfilePage() {
                                     required minLength={4} maxLength={15}
                                     style={{ paddingLeft: 32 }}
                                 />
+                            </div>
+                        </div>
+                        {/* Música del Perfil */}
+                        <div className="form-group" style={{ marginTop: 32 }}>
+                            <label className="form-label" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "1rem", fontWeight: 800 }}>
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                                Música del perfil
+                            </label>
+                            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: 12 }}>
+                                Elige una canción para que suene cuando alguien visite tu perfil.
+                            </p>
+                            
+                            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                                <div>
+                                    <label style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 4 }}>URL de la canción (YouTube o MP3)</label>
+                                    <input 
+                                        className="form-input" 
+                                        type="text" 
+                                        value={form.profileAudioUrl} 
+                                        onChange={set("profileAudioUrl")} 
+                                        placeholder="Ej: https://youtube.com/watch?v=..." 
+                                    />
+                                </div>
+                                
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: 12 }}>
+                                    <div>
+                                        <label style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 4 }}>Título de la canción</label>
+                                        <input 
+                                            className="form-input" 
+                                            type="text" 
+                                            value={form.profileAudioTitle} 
+                                            onChange={set("profileAudioTitle")} 
+                                            placeholder="Ej: Starboy - The Weeknd" 
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 4 }}>Inicio (seg)</label>
+                                        <input 
+                                            className="form-input" 
+                                            type="number" 
+                                            value={form.profileAudioStart} 
+                                            onChange={set("profileAudioStart")} 
+                                            placeholder="0" 
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

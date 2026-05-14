@@ -141,7 +141,7 @@ export function ProfileContent({
     };
 
     const toggleProfileAudio = async () => {
-        const ytId = getYouTubeId(latestStatus?.audioUrl);
+        const ytId = getYouTubeId(user?.profileAudioUrl);
 
                 if (ytPlayer && typeof ytPlayer.playVideo === "function") {
             if (isPlayingAudio) ytPlayer.pauseVideo();
@@ -167,7 +167,7 @@ export function ProfileContent({
                         enablejsapi: 1,
                                 origin: window.location.origin,
                         playsinline: 1,
-                        start: latestStatus.audioStart || 0,
+                        start: user.profileAudioStart || 0,
                     },
                     events: {
                         onReady: (e: any) => {
@@ -189,7 +189,7 @@ export function ProfileContent({
                 audioRef.current.pause();
             } else {
                 setupNativeAudioEffects();
-                audioRef.current.currentTime = latestStatus?.audioStart || 0;
+                audioRef.current.currentTime = user?.profileAudioStart || 0;
                 audioRef.current.play().catch(console.error);
             }
             setIsPlayingAudio(!isPlayingAudio);
@@ -329,11 +329,11 @@ export function ProfileContent({
                     </div>
 
                     {/* Auto-reproducir musica si el estado tiene */}
-                    {latestStatus && latestStatus.audioUrl && (
+                    {user && user.profileAudioUrl && (
                         <>
                             <div id="yt-player-ambient" style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} />
-                            {!latestStatus.audioUrl.includes("youtube.com") && !latestStatus.audioUrl.includes("youtu.be") && (
-                                <audio ref={audioRef} src={latestStatus.audioUrl} crossOrigin="anonymous" loop style={{ display: "none" }} />
+                            {!user.profileAudioUrl.includes("youtube.com") && !user.profileAudioUrl.includes("youtu.be") && (
+                                <audio ref={audioRef} src={user.profileAudioUrl} crossOrigin="anonymous" loop style={{ display: "none" }} />
                             )}
                         </>
                     )}

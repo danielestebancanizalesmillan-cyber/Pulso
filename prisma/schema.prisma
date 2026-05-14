@@ -26,6 +26,9 @@ model User {
   location               String?
   website                String?
   image                  String?
+  profileAudioUrl        String?
+  profileAudioTitle      String?
+  profileAudioStart      Int?                  @default(0)
   pinnedTweetId          String?
   birthDate              DateTime?
   showSensitiveContent   Boolean               @default(false)
