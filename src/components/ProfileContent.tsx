@@ -14,6 +14,7 @@ import { StatusViewerModal } from "./StatusViewerModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { CreateStatusModal } from "./CreateStatusModal";
 import { PostContentTranslator } from "./PostContentTranslator";
+import { MediaLightbox } from "./MediaLightbox";
 
 function getYouTubeId(url?: string | null) {
     if (!url) return null;
@@ -69,10 +70,11 @@ export function ProfileContent({
 }) {
     const { t, locale } = useTranslation();
     const [showMoreMenu, setShowMoreMenu] = useState(false);
-    
+
     const [isPlayingAudio, setIsPlayingAudio] = useState(false);
     const [isLoadingAudio, setIsLoadingAudio] = useState(false);
     const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+    const [lightboxCoverImage, setLightboxCoverImage] = useState<string | null>(null);
 
     // Status / History States
     const [statuses, setStatuses] = useState<any[]>([]);
@@ -271,7 +273,7 @@ export function ProfileContent({
                 </div>
             </div>
 
-            <div className="profile-cover">
+            <div className="profile-cover" style={{ cursor: user.coverImage ? "pointer" : "default" }} onClick={() => user.coverImage && setLightboxCoverImage(user.coverImage)}>
                 {user.coverImage && <img src={user.coverImage} className="profile-cover-img" alt="Cover" />}
             </div>
 
@@ -550,6 +552,14 @@ export function ProfileContent({
 
             {showCreateStatus && (
                 <CreateStatusModal onClose={() => { setShowCreateStatus(false); getUserStatuses(user.id).then(setStatuses); }} />
+            )}
+
+            {lightboxImage && (
+                <MediaLightbox images={[{ url: lightboxImage }]} initialIndex={0} onClose={() => setLightboxImage(null)} />
+            )}
+
+            {lightboxCoverImage && (
+                <MediaLightbox images={[{ url: lightboxCoverImage }]} initialIndex={0} onClose={() => setLightboxCoverImage(null)} />
             )}
         </>
     );

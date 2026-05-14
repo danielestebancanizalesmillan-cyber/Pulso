@@ -152,6 +152,7 @@ export default function EditProfilePage() {
                 });
 
                 await update();
+                router.refresh();
                 setSuccess(true);
                 setTimeout(() => router.push(`/${form.username || user?.username}`), 1200);
             } catch (e: any) {
