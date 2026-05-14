@@ -158,9 +158,9 @@ export async function GET(req: Request) {
     }
 
     // Inject Ads every 5 tweets for non-verified users
-    const isVerified = (session.user as any).isVerified;
+    const isVerified = (session.user as { isVerified?: boolean })?.isVerified;
     if (!isVerified && ads.length > 0) {
-        const result: any[] = [];
+        const result: typeof finalTweets = [];
         finalTweets.forEach((tweet, index) => {
             result.push(tweet);
             if ((index + 1) % 5 === 0) {
