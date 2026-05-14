@@ -57,11 +57,13 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
                 </div>
 
                 {/* Messages container with Real-time */}
-                <ChatMessages
-                    initialMessages={conversation.messages as any}
-                    conversationId={conversation.id}
-                    userId={userId}
-                />
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative", zIndex: 10 }}>
+                    <ChatMessages
+                        initialMessages={conversation.messages as any}
+                        conversationId={conversation.id}
+                        userId={userId}
+                    />
+                </div>
             </div>
 
             {/* Chat Input */}

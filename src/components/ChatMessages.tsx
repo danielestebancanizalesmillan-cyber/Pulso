@@ -241,7 +241,7 @@ function MessageItem({ msg, userId, t, setMessages, onMediaClick, isE2eReady }: 
                         padding: "8px 12px", 
                         borderRadius: "24px", 
                         boxShadow: "0 8px 32px rgba(0,0,0,0.25)", 
-                        zIndex: 1000, 
+                        zIndex: 10000, 
                         border: "1px solid var(--border)",
                         animation: "fadeIn 0.2s ease"
                     }}>
@@ -281,7 +281,7 @@ function MessageItem({ msg, userId, t, setMessages, onMediaClick, isE2eReady }: 
                         padding: "6px", 
                         borderRadius: "12px", 
                         boxShadow: "0 8px 32px rgba(0,0,0,0.25)", 
-                        zIndex: 1001, 
+                        zIndex: 10001, 
                         border: "1px solid var(--border)", 
                         display: "flex", 
                         flexDirection: "column", 
@@ -424,7 +424,7 @@ export function ChatMessages({ initialMessages, conversationId, userId }: ChatMe
     }, [messages]);
 
     return (
-        <div ref={scrollRef} className="message-container" style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", background: "var(--bg-main)", position: "relative" }}>
+        <div ref={scrollRef} className="message-container" style={{ flex: 1, overflowY: "auto", padding: "40px 16px 16px 16px", display: "flex", flexDirection: "column", gap: "12px", background: "var(--bg-main)", position: "relative" }}>
             {messages.length === 0 ? (
                 <div className="empty-state">{t("noMessagesYet")}</div>
             ) : (
