@@ -59,7 +59,8 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
         loadingRef.current = true;
         setLoading(true);
         try {
-            const cursor = tweetsRef.current.length > 0 ? tweetsRef.current[tweetsRef.current.length - 1].id : null;
+            const lastRealTweet = [...tweetsRef.current].reverse().find(t => !t.isAd);
+            const cursor = lastRealTweet ? lastRealTweet.id : null;
             if (!endpoint) {
                 console.error("InfiniteFeed: No endpoint provided");
                 return;
