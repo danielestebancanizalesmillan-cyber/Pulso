@@ -94,6 +94,7 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
                                         <option value="NONE">Ninguna</option>
                                         <option value="BLUE">Azul (Personal)</option>
                                         <option value="GOLD">Dorado (Empresa)</option>
+                                        <option value="GREY">Gris (Servidor Público/Estatal)</option>
                                     </select>
                                 </td>
                                 <td style={{ padding: "16px", fontSize: "0.85rem", color: "#64748b" }}>
