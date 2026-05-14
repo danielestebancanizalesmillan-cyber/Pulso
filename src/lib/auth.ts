@@ -271,5 +271,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
             return token;
         }
+    },
+    events: {
+        async signIn({ user, account, profile }: any) {
+            // Automatically verify email if provider is Google or profile is verified
+            if (account?.provider === "google" || (profile as any)?.email_verified) {
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { emailVerified: new Date() }
+                });
+            }
+        }
     }
 });
