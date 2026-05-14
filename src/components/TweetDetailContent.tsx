@@ -271,24 +271,6 @@ export function TweetDetailContent({ tweet: initialTweet, userId }: { tweet: any
                                             }}
                                             autoplay={true}
                                         />
-                                        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.2)" }}>
-                                            <div style={{ 
-                                                background: "var(--blue)", 
-                                                color: "white", 
-                                                borderRadius: "50%", 
-                                                width: 64,
-                                                height: 64,
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                flexShrink: 0,
-                                                boxShadow: "0 4px 12px rgba(0,0,0,0.3)"
-                                            }}>
-                                                <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor" style={{ marginLeft: 4 }}>
-                                                    <path d="M8 5v14l11-7z" />
-                                                </svg>
-                                            </div>
-                                        </div>
                                     </div>
                                 ) : img.type === 'audio' ? (
                                     <div style={{ width: "100%", padding: 12, background: "rgba(0,0,0,0.06)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>

@@ -776,24 +776,6 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                                                     }}
                                                     autoplay={autoplayVideos}
                                                 />
-                                                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.2)" }}>
-                                                    <div style={{ 
-                                                        background: "var(--blue)", 
-                                                        color: "white", 
-                                                        borderRadius: "50%", 
-                                                        width: 48,
-                                                        height: 48,
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center",
-                                                        flexShrink: 0,
-                                                        boxShadow: "0 4px 12px rgba(0,0,0,0.3)"
-                                                    }}>
-                                                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" style={{ marginLeft: 2 }}>
-                                                            <path d="M8 5v14l11-7z" />
-                                                        </svg>
-                                                    </div>
-                                                </div>
                                             </div>
                                         ) : img.type === 'audio' ? (
                                             <div style={{ width: "100%", padding: 12, background: "rgba(0,0,0,0.06)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1298,6 +1280,7 @@ export const VideoPlayer = ({ src, style, autoplay }: { src: string, style?: any
             style={style} 
             autoPlay
             muted 
+            controls
             playsInline 
             loop 
         />
