@@ -81,15 +81,12 @@ export function CallModal({ isOpen, onClose, isIncoming = false, isAudioOnly = f
 
 
                 if (isIncoming) {
-                    setStatus("calling"); // Wait for offer
+                    // Receiver: Stay idle to show buttons
+                    setStatus("idle");
                 } else {
+                    // Emitter: Wait for 'ready' signal from receiver
                     setStatus("calling");
-                    const offer = await currentPeer.createOffer();
-                    
-                    if ((currentPeer.connectionState as string) === "closed") return;
-
-                    await currentPeer.setLocalDescription(offer);
-                    sendCallSignal(conversationId, { type: "offer", sdp: offer });
+                    // We no longer create the offer here immediately
                 }
             } catch (err) {
                 console.error("Media error:", err);
@@ -131,13 +128,26 @@ export function CallModal({ isOpen, onClose, isIncoming = false, isAudioOnly = f
             if (!currentPeer || (currentPeer.connectionState as string) === "closed") return;
 
             try {
-                if (data.type === "offer") {
+                if (data.type === "ready") {
+                    if (!isIncoming) {
+                        // I'm the emitter, receiver is ready. Now I send the offer.
+                        const offer = await currentPeer.createOffer();
+                        await currentPeer.setLocalDescription(offer);
+                        sendCallSignal(conversationId, { type: "offer", sdp: offer });
+                    }
+                } else if (data.type === "offer") {
                     await currentPeer.setRemoteDescription(new RTCSessionDescription(data.sdp));
-                    if (isIncoming) setStatus("idle");
                     
                     while (iceCandidatesQueue.current.length > 0) {
                         const cand = iceCandidatesQueue.current.shift();
                         await currentPeer.addIceCandidate(new RTCIceCandidate(cand!));
+                    }
+                    
+                    // After setting offer, if I'm the receiver, I should generate the answer
+                    if (isIncoming) {
+                        const answer = await currentPeer.createAnswer();
+                        await currentPeer.setLocalDescription(answer);
+                        sendCallSignal(conversationId, { type: "answer", sdp: answer });
                     }
                 } else if (data.type === "answer") {
                     await currentPeer.setRemoteDescription(new RTCSessionDescription(data.sdp));
@@ -189,12 +199,9 @@ export function CallModal({ isOpen, onClose, isIncoming = false, isAudioOnly = f
         if (!currentPeer || (currentPeer.connectionState as string) === "closed") return;
         try {
             setStatus("calling");
-            const answer = await currentPeer.createAnswer();
-            if (currentPeer.connectionState === "closed") return;
-
-            await currentPeer.setLocalDescription(answer);
-            sendCallSignal(conversationId, { type: "answer", sdp: answer });
-            setStatus("connected");
+            // Instead of creating answer here, we tell the sender we are ready
+            // The sender will then send an offer, and we will answer that in the signal handler
+            sendCallSignal(conversationId, { type: "ready" });
         } catch (err) {
             console.error("Accept Error:", err);
         }
