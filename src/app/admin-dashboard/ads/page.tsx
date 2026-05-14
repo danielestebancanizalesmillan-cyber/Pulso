@@ -72,58 +72,77 @@ export default function AdminAdsPage() {
         }
     };
 
-    if (loading) return <div style={{ padding: "20px", color: "var(--text-primary)" }}>Cargando anuncios...</div>;
+    if (loading) return <div style={{ padding: "20px", color: "#1e293b" }}>Cargando anuncios...</div>;
 
     return (
-        <div style={{ padding: "24px", color: "var(--text-primary)", maxWidth: "1000px", margin: "0 auto" }}>
+        <div style={{ padding: "24px", color: "#1e293b", maxWidth: "1000px", margin: "0 auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-                <h1 style={{ fontSize: "1.8rem", fontWeight: 800 }}>Gestión de Anuncios</h1>
+                <h1 style={{ fontSize: "1.8rem", fontWeight: 800, color: "#0f172a" }}>Gestión de Anuncios</h1>
                 <button 
-                    onClick={() => { setShowForm(true); setEditingAd(null); }}
-                    style={{ background: "var(--blue)", color: "white", padding: "8px 20px", borderRadius: "20px", border: "none", fontWeight: 700, cursor: "pointer" }}
+                    onClick={() => { setShowForm(!showForm); setEditingAd(null); }}
+                    style={{ background: "#3b82f6", color: "white", padding: "10px 24px", borderRadius: "12px", border: "none", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)" }}
                 >
-                    Nuevo Anuncio
+                    {showForm ? "Cerrar Formulario" : "Nuevo Anuncio"}
                 </button>
             </div>
 
             {showForm && (
-                <div style={{ background: "var(--bg-card)", padding: "24px", borderRadius: "16px", marginBottom: "24px", border: "1px solid var(--border)" }}>
-                    <h2 style={{ marginBottom: "16px" }}>{editingAd ? "Editar Anuncio" : "Crear Anuncio"}</h2>
-                    <form onSubmit={handleSubmit} style={{ display: "grid", gap: "16px" }}>
-                        <input 
-                            type="text" placeholder="Título" value={formData.title} 
-                            onChange={e => setFormData({ ...formData, title: e.target.value })} 
-                            style={{ padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "inherit" }} required
-                        />
-                        <textarea 
-                            placeholder="Descripción" value={formData.description} 
-                            onChange={e => setFormData({ ...formData, description: e.target.value })} 
-                            style={{ padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "inherit", minHeight: "80px" }} required
-                        />
-                        <input 
-                            type="text" placeholder="URL de Imagen (opcional)" value={formData.imageUrl} 
-                            onChange={e => setFormData({ ...formData, imageUrl: e.target.value })} 
-                            style={{ padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "inherit" }}
-                        />
-                        <input 
-                            type="text" placeholder="Link de destino" value={formData.link} 
-                            onChange={e => setFormData({ ...formData, link: e.target.value })} 
-                            style={{ padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "inherit" }} required
-                        />
-                        <input 
-                            type="text" placeholder="Texto del botón (CTA)" value={formData.cta} 
-                            onChange={e => setFormData({ ...formData, cta: e.target.value })} 
-                            style={{ padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "inherit" }}
-                        />
-                        <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <input type="checkbox" checked={formData.active} onChange={e => setFormData({ ...formData, active: e.target.checked })} />
-                            Activo
-                        </label>
-                        <div style={{ display: "flex", gap: "12px" }}>
-                            <button type="submit" style={{ background: "var(--blue)", color: "white", padding: "10px 20px", borderRadius: "20px", border: "none", fontWeight: 700, cursor: "pointer" }}>
-                                {editingAd ? "Actualizar" : "Crear"}
+                <div style={{ background: "#ffffff", padding: "32px", borderRadius: "16px", marginBottom: "32px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
+                    <h2 style={{ marginBottom: "20px", fontSize: "1.25rem", fontWeight: 700, color: "#1e293b" }}>{editingAd ? "Editar Anuncio" : "Crear Anuncio"}</h2>
+                    <form onSubmit={handleSubmit} style={{ display: "grid", gap: "20px" }}>
+                        <div style={{ display: "grid", gap: "8px" }}>
+                            <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>Título del Anuncio</label>
+                            <input 
+                                type="text" placeholder="Ej: ¡Oferta Especial!" value={formData.title} 
+                                onChange={e => setFormData({ ...formData, title: e.target.value })} 
+                                style={{ padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b", fontSize: "1rem" }} required
+                            />
+                        </div>
+                        <div style={{ display: "grid", gap: "8px" }}>
+                            <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>Descripción</label>
+                            <textarea 
+                                placeholder="Describe brevemente el anuncio..." value={formData.description} 
+                                onChange={e => setFormData({ ...formData, description: e.target.value })} 
+                                style={{ padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b", fontSize: "1rem", minHeight: "100px" }} required
+                            />
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                            <div style={{ display: "grid", gap: "8px" }}>
+                                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>URL de Imagen</label>
+                                <input 
+                                    type="text" placeholder="https://..." value={formData.imageUrl} 
+                                    onChange={e => setFormData({ ...formData, imageUrl: e.target.value })} 
+                                    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b" }}
+                                />
+                            </div>
+                            <div style={{ display: "grid", gap: "8px" }}>
+                                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>Enlace de Destino</label>
+                                <input 
+                                    type="text" placeholder="https://..." value={formData.link} 
+                                    onChange={e => setFormData({ ...formData, link: e.target.value })} 
+                                    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b" }} required
+                                />
+                            </div>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignItems: "center" }}>
+                            <div style={{ display: "grid", gap: "8px" }}>
+                                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>Texto del Botón (CTA)</label>
+                                <input 
+                                    type="text" placeholder="Más información" value={formData.cta} 
+                                    onChange={e => setFormData({ ...formData, cta: e.target.value })} 
+                                    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b" }}
+                                />
+                            </div>
+                            <label style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "0.95rem", fontWeight: 600, cursor: "pointer", marginTop: "24px" }}>
+                                <input type="checkbox" checked={formData.active} onChange={e => setFormData({ ...formData, active: e.target.checked })} style={{ width: "20px", height: "20px" }} />
+                                Anuncio Activo
+                            </label>
+                        </div>
+                        <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
+                            <button type="submit" style={{ background: "#3b82f6", color: "white", padding: "12px 32px", borderRadius: "12px", border: "none", fontWeight: 700, cursor: "pointer", fontSize: "1rem" }}>
+                                {editingAd ? "Guardar Cambios" : "Crear Anuncio"}
                             </button>
-                            <button type="button" onClick={() => setShowForm(false)} style={{ background: "transparent", border: "1px solid var(--border)", color: "inherit", padding: "10px 20px", borderRadius: "20px", cursor: "pointer" }}>
+                            <button type="button" onClick={() => setShowForm(false)} style={{ background: "transparent", border: "1px solid #e2e8f0", color: "#64748b", padding: "12px 32px", borderRadius: "12px", cursor: "pointer", fontSize: "1rem" }}>
                                 Cancelar
                             </button>
                         </div>
@@ -131,29 +150,43 @@ export default function AdminAdsPage() {
                 </div>
             )}
 
-            <div style={{ display: "grid", gap: "16px" }}>
+            <div style={{ display: "grid", gap: "20px" }}>
+                {ads.length === 0 && !loading && (
+                    <div style={{ textAlign: "center", padding: "60px", background: "#ffffff", borderRadius: "16px", border: "1px dashed #cbd5e1", color: "#64748b" }}>
+                        No hay anuncios creados todavía. ¡Crea el primero!
+                    </div>
+                )}
                 {ads.map(ad => (
-                    <div key={ad.id} style={{ background: "var(--bg-card)", padding: "16px", borderRadius: "12px", border: "1px solid var(--border)", display: "flex", gap: "16px", alignItems: "center" }}>
-                        {ad.imageUrl && (
-                            <img src={ad.imageUrl} style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px" }} alt="" />
+                    <div key={ad.id} style={{ background: "#ffffff", padding: "20px", borderRadius: "16px", border: "1px solid #e2e8f0", display: "flex", gap: "20px", alignItems: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}>
+                        {ad.imageUrl ? (
+                            <img src={ad.imageUrl} style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "12px", background: "#f1f5f9" }} alt="" />
+                        ) : (
+                            <div style={{ width: "100px", height: "100px", background: "#f1f5f9", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8" }}>
+                                Sin Imagen
+                            </div>
                         )}
                         <div style={{ flex: 1 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <h3 style={{ fontSize: "1.1rem" }}>{ad.title}</h3>
-                                {!ad.active && <span style={{ background: "var(--red)", color: "white", fontSize: "0.6rem", padding: "2px 6px", borderRadius: "4px" }}>Inactivo</span>}
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "4px" }}>
+                                <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#1e293b" }}>{ad.title}</h3>
+                                {ad.active ? (
+                                    <span style={{ background: "#dcfce7", color: "#15803d", fontSize: "0.7rem", padding: "3px 10px", borderRadius: "20px", fontWeight: 700 }}>Activo</span>
+                                ) : (
+                                    <span style={{ background: "#fee2e2", color: "#b91c1c", fontSize: "0.7rem", padding: "3px 10px", borderRadius: "20px", fontWeight: 700 }}>Inactivo</span>
+                                )}
                             </div>
-                            <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>{ad.description}</p>
+                            <p style={{ fontSize: "0.95rem", color: "#475569", marginBottom: "8px" }}>{ad.description}</p>
+                            <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>Link: <span style={{ color: "#3b82f6" }}>{ad.link}</span></div>
                         </div>
-                        <div style={{ display: "flex", gap: "8px" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                             <button 
-                                onClick={() => { setEditingAd(ad); setFormData({ ...ad }); setShowForm(true); }}
-                                style={{ background: "transparent", border: "1px solid var(--border)", color: "inherit", padding: "6px 12px", borderRadius: "16px", cursor: "pointer" }}
+                                onClick={() => { setEditingAd(ad); setFormData({ ...ad }); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                style={{ background: "#f1f5f9", border: "none", color: "#1e293b", padding: "10px 20px", borderRadius: "10px", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}
                             >
                                 Editar
                             </button>
                             <button 
                                 onClick={() => handleDelete(ad.id)}
-                                style={{ background: "transparent", border: "1px solid var(--red)", color: "var(--red)", padding: "6px 12px", borderRadius: "16px", cursor: "pointer" }}
+                                style={{ background: "transparent", border: "1px solid #fee2e2", color: "#ef4444", padding: "10px 20px", borderRadius: "10px", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}
                             >
                                 Borrar
                             </button>
