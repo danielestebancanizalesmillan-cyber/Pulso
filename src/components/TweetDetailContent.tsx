@@ -7,7 +7,7 @@ import { PostContentTranslator } from "@/components/PostContentTranslator";
 import { ViewCounter } from "@/components/ViewCounter";
 import { TweetActionBar } from "@/components/TweetActionBar";
 import { ComposeTweet } from "@/components/ComposeTweet";
-import { TweetCard, CountWithAnimation } from "@/components/TweetCard";
+import { TweetCard, CountWithAnimation, VideoPlayer } from "@/components/TweetCard";
 import { MediaLightbox } from "@/components/MediaLightbox";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -260,17 +260,16 @@ export function TweetDetailContent({ tweet: initialTweet, userId }: { tweet: any
                             >
                                 {img.type === 'video' ? (
                                     <div style={{ position: "relative", height: "100%" }}>
-                                        <video 
+                                        <VideoPlayer 
                                             src={img.url} 
                                             style={{
                                                 width: "100%",
-                                                height: detailedTweet.images.length === 1 ? "auto" : (detailedTweet.images.length === 2 ? 400 : 250),
-                                                maxHeight: detailedTweet.images.length === 1 ? 600 : 400,
+                                                height: detailedTweet.images.length === 1 ? "auto" : (detailedTweet.images.length === 2 ? 350 : 220),
+                                                maxHeight: detailedTweet.images.length === 1 ? 500 : 350,
                                                 objectFit: "cover",
                                                 borderRadius: "inherit"
                                             }}
-                                            muted
-                                            playsInline
+                                            autoplay={true}
                                         />
                                         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.2)" }}>
                                             <div style={{ 
@@ -301,8 +300,8 @@ export function TweetDetailContent({ tweet: initialTweet, userId }: { tweet: any
                                         alt={t("tweet")}
                                         style={{
                                             width: "100%",
-                                            height: detailedTweet.images.length === 1 ? "auto" : (detailedTweet.images.length === 2 ? 400 : 250),
-                                            maxHeight: detailedTweet.images.length === 1 ? 600 : 400,
+                                            height: detailedTweet.images.length === 1 ? "auto" : (detailedTweet.images.length === 2 ? 350 : 220),
+                                            maxHeight: detailedTweet.images.length === 1 ? 500 : 350,
                                             objectFit: "cover"
                                         }}
                                     />

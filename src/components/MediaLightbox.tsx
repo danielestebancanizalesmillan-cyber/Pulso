@@ -107,6 +107,7 @@ export function MediaLightbox({ images, initialIndex, onClose, tweet, userId }: 
                                 src={currentMedia.url}
                                 controls
                                 autoPlay
+                                muted
                                 style={{ maxWidth: "100%", maxHeight: "80vh", borderRadius: "12px", boxShadow: "0 20px 50px rgba(0,0,0,0.5)" }}
                             />
                         ) : currentMedia.type === 'audio' ? (

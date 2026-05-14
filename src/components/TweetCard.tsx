@@ -143,6 +143,7 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
     const [isAnimatingLike, setIsAnimatingLike] = useState(false);
     const userId = currentUserId || (session?.user as any)?.id;
     const isOwner = tweet.authorId === userId;
+    const isReply = !!tweet.parentId;
     const [lightboxMedia, setLightboxMedia] = useState<{ images: any[], index: number } | null>(null);
     const [showViews, setShowViews] = useState(true);
     const [autoplayVideos, setAutoplayVideos] = useState(true);
@@ -750,7 +751,8 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                                 overflow: "hidden",
                                 border: "1px solid var(--border)",
                                 filter: (shouldBlurWhole || shouldBlurMediaOnly) ? "blur(25px)" : "none",
-                                pointerEvents: (shouldBlurWhole || shouldBlurMediaOnly) ? "none" : "auto"
+                                pointerEvents: (shouldBlurWhole || shouldBlurMediaOnly) ? "none" : "auto",
+                                maxWidth: isReply ? "380px" : "100%"
                             }}>
                                 {tweet.images.map((img: any, idx: number) => (
                                     <div 
@@ -767,8 +769,8 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                                                     src={img.url} 
                                                     style={{
                                                         width: "100%",
-                                                        height: tweet.images.length === 1 ? "auto" : (tweet.images.length === 2 ? 280 : 150),
-                                                        maxHeight: tweet.images.length === 1 ? 500 : 280,
+                                                        height: tweet.images.length === 1 ? "auto" : (tweet.images.length === 2 ? (isReply ? 200 : 280) : (isReply ? 120 : 150)),
+                                                        maxHeight: tweet.images.length === 1 ? (isReply ? 300 : 500) : (isReply ? 200 : 280),
                                                         objectFit: "cover",
                                                         borderRadius: "inherit"
                                                     }}
@@ -803,8 +805,8 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                                                 alt={`Tweet media ${idx}`}
                                                 style={{
                                                     width: "100%",
-                                                    height: tweet.images.length === 1 ? "auto" : (tweet.images.length === 2 ? 280 : 150),
-                                                    maxHeight: tweet.images.length === 1 ? 500 : 280,
+                                                    height: tweet.images.length === 1 ? "auto" : (tweet.images.length === 2 ? (isReply ? 200 : 280) : (isReply ? 120 : 150)),
+                                                    maxHeight: tweet.images.length === 1 ? (isReply ? 300 : 500) : (isReply ? 200 : 280),
                                                     objectFit: "cover"
                                                 }}
                                             />
@@ -1262,16 +1264,15 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
     );
 }
 
-const VideoPlayer = ({ src, style, autoplay }: { src: string, style?: any, autoplay: boolean }) => {
+export const VideoPlayer = ({ src, style, autoplay }: { src: string, style?: any, autoplay: boolean }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     
     useEffect(() => {
         const vid = videoRef.current;
         if (!vid) return;
-        if (!autoplay) {
-            vid.pause();
-            return;
-        }
+        
+        // Per user request: force auto-play even if setting is off
+        // if (!autoplay) { ... } 
 
         const observer = new IntersectionObserver(
             ([entry]) => {
@@ -1295,6 +1296,7 @@ const VideoPlayer = ({ src, style, autoplay }: { src: string, style?: any, autop
             ref={videoRef} 
             src={src} 
             style={style} 
+            autoPlay
             muted 
             playsInline 
             loop 
