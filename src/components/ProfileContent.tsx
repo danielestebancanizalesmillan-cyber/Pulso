@@ -15,6 +15,33 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CreateStatusModal } from "./CreateStatusModal";
 import { PostContentTranslator } from "./PostContentTranslator";
 
+function getYouTubeId(url?: string | null) {
+    if (!url) return null;
+    const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+    return match && match[2].length === 11 ? match[2] : null;
+}
+
+function loadYouTubeApi() {
+    return new Promise<void>((resolve) => {
+        if ((window as any).YT?.Player) {
+            resolve();
+            return;
+        }
+
+        const previousReady = (window as any).onYouTubeIframeAPIReady;
+        (window as any).onYouTubeIframeAPIReady = () => {
+            previousReady?.();
+            resolve();
+        };
+
+        if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+            const tag = document.createElement("script");
+            tag.src = "https://www.youtube.com/iframe_api";
+            document.head.appendChild(tag);
+        }
+    });
+}
+
 export function ProfileContent({ 
     user, 
     tweets, 
@@ -44,6 +71,7 @@ export function ProfileContent({
     const [showMoreMenu, setShowMoreMenu] = useState(false);
     
     const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+    const [isLoadingAudio, setIsLoadingAudio] = useState(false);
     const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
     // Status / History States
@@ -67,94 +95,102 @@ export function ProfileContent({
     const hasStatus = statuses.length > 0;
 
     useEffect(() => {
-        if (!hasStatus || !latestStatus?.audioUrl) return;
+        setIsPlayingAudio(false);
+        setIsLoadingAudio(false);
+        sourceNodeRef.current = null;
 
-        // Reset anterior si existe
         if (ytPlayer && ytPlayer.destroy) {
-            try { ytPlayer.destroy(); } catch(e){}
+            try { ytPlayer.destroy(); } catch {}
             setYtPlayer(null);
         }
+    }, [latestStatus?.id]);
 
-        const match = latestStatus.audioUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-        const ytId = (match && match[2].length === 11) ? match[2] : null;
+    const setupNativeAudioEffects = () => {
+        if (!audioRef.current) return;
+        audioRef.current.volume = 0.15;
+
+        try {
+            const ctx = audioContextRef.current || new (window.AudioContext || (window as any).webkitAudioContext)();
+            if (!audioContextRef.current) audioContextRef.current = ctx;
+            if (ctx.state === "suspended") ctx.resume();
+
+            if (!sourceNodeRef.current) {
+                const source = ctx.createMediaElementSource(audioRef.current);
+                sourceNodeRef.current = source;
+
+                const delay = ctx.createDelay();
+                const feedback = ctx.createGain();
+                const delayVolume = ctx.createGain();
+
+                delay.delayTime.value = 0.35;
+                feedback.gain.value = 0.3;
+                delayVolume.gain.value = 0.35;
+
+                source.connect(ctx.destination);
+                source.connect(delay);
+                delay.connect(feedback);
+                feedback.connect(delay);
+                delay.connect(delayVolume);
+                delayVolume.connect(ctx.destination);
+            }
+        } catch (error) {
+            console.warn("AudioContext setup failed or already connected:", error);
+        }
+    };
+
+    const toggleProfileAudio = async () => {
+        const ytId = getYouTubeId(latestStatus?.audioUrl);
+
+        if (ytPlayer && typeof ytPlayer.playVideo === "function") {
+            if (isPlayingAudio) ytPlayer.pauseVideo();
+            else ytPlayer.playVideo();
+            setIsPlayingAudio(!isPlayingAudio);
+            return;
+        }
 
         if (ytId) {
-            const loadYT = () => {
-                new (window as any).YT.Player('yt-player-ambient', {
-                    height: '1',
-                    width: '1',
+            setIsLoadingAudio(true);
+            try {
+                await loadYouTubeApi();
+                new (window as any).YT.Player("yt-player-ambient", {
+                    height: "1",
+                    width: "1",
                     videoId: ytId,
-                    playerVars: { 
-                        autoplay: 0, 
-                        controls: 0, 
-                        mute: 0,
-                        start: latestStatus.audioStart || 0 
+                    host: "https://www.youtube-nocookie.com",
+                    playerVars: {
+                        autoplay: 1,
+                        controls: 0,
+                        disablekb: 1,
+                        enablejsapi: 1,
+                        origin: window.location.origin,
+                        playsinline: 1,
+                        start: latestStatus.audioStart || 0,
                     },
                     events: {
                         onReady: (e: any) => {
-                            e.target.setVolume(15); // Ambiente reducido
+                            e.target.setVolume(15);
+                            e.target.unMute?.();
+                            e.target.playVideo();
                             setYtPlayer(e.target);
+                            setIsPlayingAudio(true);
+                            setIsLoadingAudio(false);
                         }
                     }
                 });
-            };
-
-            if (!(window as any).YT) {
-                const tag = document.createElement('script');
-                tag.src = "https://www.youtube.com/iframe_api";
-                const firstScript = document.getElementsByTagName('script')[0];
-                firstScript.parentNode?.insertBefore(tag, firstScript);
-                (window as any).onYouTubeIframeAPIReady = loadYT;
-            } else {
-                loadYT();
-            }
-        } else if (audioRef.current) {
-            audioRef.current.volume = 0.15; // Ambiente reducido (15%)
-
-            // 🔊 Efecto Eco (Web Audio API) 🔊
-            try {
-                const ctx = audioContextRef.current || new (window.AudioContext || (window as any).webkitAudioContext)();
-                if (!audioContextRef.current) audioContextRef.current = ctx;
-
-                if (ctx.state === 'suspended') {
-                    ctx.resume();
-                }
-
-                if (!sourceNodeRef.current && audioRef.current) {
-                    const source = ctx.createMediaElementSource(audioRef.current);
-                    sourceNodeRef.current = source;
-
-                    const delay = ctx.createDelay();
-                    const feedback = ctx.createGain();
-                    const delayVolume = ctx.createGain();
-
-                    delay.delayTime.value = 0.35; // 350ms de retraso
-                    feedback.gain.value = 0.3;    // Decaimiento del eco
-                    delayVolume.gain.value = 0.35; // Volumen del eco en sí
-
-                    // Conexiones
-                    source.connect(ctx.destination); // Sonido directo
-                    source.connect(delay);           // Enviar a retraso
-                    delay.connect(feedback);         // Realimentación
-                    feedback.connect(delay);         // Bucle de eco
-                    delay.connect(delayVolume);      // Al control de volumen del eco
-                    delayVolume.connect(ctx.destination); // A los altavoces
-                }
             } catch (error) {
-                console.warn("AudioContext setup failed or already connected:", error);
+                console.error("Profile YouTube audio failed:", error);
+                setIsLoadingAudio(false);
             }
-        }
-    }, [latestStatus, hasStatus]);
-
-    const toggleProfileAudio = () => {
-        if (ytPlayer && typeof ytPlayer.playVideo === 'function') {
-            if (isPlayingAudio) ytPlayer.pauseVideo();
-            else ytPlayer.playVideo();
         } else if (audioRef.current) {
-            if (isPlayingAudio) audioRef.current.pause();
-            else audioRef.current.play().catch(console.error);
+            if (isPlayingAudio) {
+                audioRef.current.pause();
+            } else {
+                setupNativeAudioEffects();
+                audioRef.current.currentTime = latestStatus?.audioStart || 0;
+                audioRef.current.play().catch(console.error);
+            }
+            setIsPlayingAudio(!isPlayingAudio);
         }
-        setIsPlayingAudio(!isPlayingAudio);
     };
 
     const handleViewHistory = (e: any) => {
@@ -355,10 +391,11 @@ export function ProfileContent({
                 {latestStatus?.audioUrl && (
                     <button
                         onClick={toggleProfileAudio}
+                        disabled={isLoadingAudio}
                         className="btn btn-outline"
-                        style={{ marginTop: 12, padding: "8px 14px", borderRadius: "999px", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: 8 }}
+                        style={{ marginTop: 12, padding: "8px 14px", borderRadius: "999px", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: 8, opacity: isLoadingAudio ? 0.7 : 1 }}
                     >
-                        <span>{isPlayingAudio ? "Pausar musica" : "Reproducir musica"}</span>
+                        <span>{isLoadingAudio ? "Cargando..." : isPlayingAudio ? "Pausar musica" : "Reproducir musica"}</span>
                     </button>
                 )}
 

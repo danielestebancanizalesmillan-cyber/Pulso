@@ -45,7 +45,7 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
     const { data: session } = useSession();
     const [currentIndex, setCurrentIndex] = useState(0);
     const [progress, setProgress] = useState(0);
-    const [audioReady, setAudioReady] = useState(false);
+    const [audioLoading, setAudioLoading] = useState(false);
     const [audioPlaying, setAudioPlaying] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
     const ytPlayerRef = useRef<any>(null);
@@ -73,56 +73,22 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
     const ytId = getYouTubeId(currentItem.audioUrl);
 
     useEffect(() => {
-        setAudioReady(false);
+        return () => {
+            if (ytPlayerRef.current?.destroy) {
+                try { ytPlayerRef.current.destroy(); } catch {}
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        setProgress(0);
+        setAudioLoading(false);
         setAudioPlaying(false);
 
         if (ytPlayerRef.current?.destroy) {
             try { ytPlayerRef.current.destroy(); } catch {}
             ytPlayerRef.current = null;
         }
-
-        if (!currentItem.audioUrl || !ytId) return;
-
-        let cancelled = false;
-        loadYouTubeApi().then(() => {
-            if (cancelled || !window.YT?.Player) return;
-
-            ytPlayerRef.current = new window.YT.Player(ytContainerId.current, {
-                height: "1",
-                width: "1",
-                videoId: ytId,
-                playerVars: {
-                    autoplay: 0,
-                    controls: 0,
-                    disablekb: 1,
-                    enablejsapi: 1,
-                    origin: window.location.origin,
-                    playsinline: 1,
-                    start: currentItem.audioStart || 0,
-                },
-                events: {
-                    onReady: (event: any) => {
-                        event.target.setVolume(80);
-                        setAudioReady(true);
-                    },
-                    onStateChange: (event: any) => {
-                        setAudioPlaying(event.data === window.YT.PlayerState.PLAYING);
-                    }
-                }
-            });
-        });
-
-        return () => {
-            cancelled = true;
-            if (ytPlayerRef.current?.destroy) {
-                try { ytPlayerRef.current.destroy(); } catch {}
-                ytPlayerRef.current = null;
-            }
-        };
-    }, [currentItem.id, currentItem.audioUrl, currentItem.audioStart, ytId]);
-
-    useEffect(() => {
-        setProgress(0);
         
         // Setup Audio Start Time Snippet
         if (audioRef.current && currentItem.audioStart) {
@@ -179,7 +145,7 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
         }
     };
 
-    const toggleAudio = () => {
+    const toggleAudio = async () => {
         if (ytId && ytPlayerRef.current) {
             if (audioPlaying) {
                 ytPlayerRef.current.pauseVideo();
@@ -189,6 +155,47 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                 ytPlayerRef.current.unMute?.();
                 ytPlayerRef.current.playVideo();
                 setAudioPlaying(true);
+            }
+            return;
+        }
+
+        if (ytId) {
+            setAudioLoading(true);
+            try {
+                await loadYouTubeApi();
+                if (!window.YT?.Player) throw new Error("YouTube API unavailable");
+
+                ytPlayerRef.current = new window.YT.Player(ytContainerId.current, {
+                    height: "1",
+                    width: "1",
+                    videoId: ytId,
+                    host: "https://www.youtube-nocookie.com",
+                    playerVars: {
+                        autoplay: 1,
+                        controls: 0,
+                        disablekb: 1,
+                        enablejsapi: 1,
+                        origin: window.location.origin,
+                        playsinline: 1,
+                        start: currentItem.audioStart || 0,
+                    },
+                    events: {
+                        onReady: (event: any) => {
+                            event.target.setVolume(80);
+                            event.target.unMute?.();
+                            event.target.playVideo();
+                            setAudioPlaying(true);
+                            setAudioLoading(false);
+                        },
+                        onStateChange: (event: any) => {
+                            setAudioPlaying(event.data === window.YT.PlayerState.PLAYING);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("YouTube audio setup failed:", error);
+                toast.error("No se pudo activar el audio de YouTube");
+                setAudioLoading(false);
             }
             return;
         }
@@ -313,10 +320,10 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                         </div>
                         <button
                             onClick={toggleAudio}
-                            disabled={Boolean(ytId) && !audioReady}
-                            style={{ background: "white", color: "black", border: "none", borderRadius: "999px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 800, cursor: (ytId && !audioReady) ? "wait" : "pointer" }}
+                            disabled={audioLoading}
+                            style={{ background: "white", color: "black", border: "none", borderRadius: "999px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 800, cursor: audioLoading ? "wait" : "pointer" }}
                         >
-                            {audioPlaying ? "Pausar" : "Audio"}
+                            {audioLoading ? "..." : audioPlaying ? "Pausar" : "Audio"}
                         </button>
                         {ytId ? (
                             <div id={ytContainerId.current} style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} />
