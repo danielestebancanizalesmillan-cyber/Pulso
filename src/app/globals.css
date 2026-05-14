@@ -505,7 +505,7 @@ img {
 .column-header {
   position: sticky;
   top: 0;
-  z-index: 99999;
+  z-index: 100;
   background: var(--bg-primary);
   opacity: 0.98;
   backdrop-filter: blur(12px);
@@ -1402,14 +1402,15 @@ img {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 99999;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 5000;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: 32px 16px;
-  backdrop-filter: blur(2px);
-  animation: fadeIn 0.15s ease both;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out both;
 }
 
 .modal {

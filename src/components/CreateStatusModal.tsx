@@ -103,8 +103,14 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
                 uploadedUrl = newBlob.url;
             }
 
-            const baseStyleOptions = { textPos, fontSize, useTextBg, textColor, audioTitle: audioTitle || null };
-            const styleOptions = (type === "TEXT" || content) ? JSON.stringify(baseStyleOptions) : JSON.stringify({ audioTitle: audioTitle || null });
+            const baseStyleOptions = { 
+                textPos, 
+                fontSize, 
+                useTextBg, 
+                textColor, 
+                audioTitle: audioTitle || null 
+            };
+            const styleOptions = JSON.stringify(baseStyleOptions);
 
             await createStatus(
                 type, 
@@ -127,7 +133,7 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
     };
 
     return (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
             <motion.div 
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -302,7 +308,7 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
                     </div>
 
                     {/* Text Style Controls */}
-                    {type === "TEXT" && (
+                    {(type === "TEXT" || (type === "IMAGE" && content)) && (
                         <div style={{ background: "rgba(255,255,255,0.12)", backdropFilter: "blur(16px)", padding: "12px", borderRadius: "18px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", border: "1px solid rgba(255,255,255,0.2)", position: "relative", zIndex: 2 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1 }}>
                                 <span style={{ fontSize: "0.75rem", color: "white", fontWeight: "600" }}>Tamaño:</span>

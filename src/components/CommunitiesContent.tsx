@@ -90,7 +90,7 @@ export function CommunitiesContent({ myCommunities, discoverCommunities, userId 
             </div>
 
             {showCreateModal && (
-                <div className="modal-overlay" onClick={() => setShowCreateModal(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 99999 }}>
+                <div className="modal-overlay" onClick={() => setShowCreateModal(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5000 }}>
                     <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 500, width: "95%", background: "var(--bg-secondary)", borderRadius: "16px", boxShadow: "var(--shadow-lg)", border: "1px solid var(--border)" }}>
                         <div className="modal-header">
                             <button className="icon-btn" onClick={() => setShowCreateModal(false)}>
