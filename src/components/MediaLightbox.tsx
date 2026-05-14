@@ -109,6 +109,10 @@ export function MediaLightbox({ images, initialIndex, onClose, tweet, userId }: 
                                 autoPlay
                                 style={{ maxWidth: "100%", maxHeight: "80vh", borderRadius: "12px", boxShadow: "0 20px 50px rgba(0,0,0,0.5)" }}
                             />
+                        ) : currentMedia.type === 'audio' ? (
+                            <div style={{ width: "100%", maxWidth: 800, padding: 20, background: "rgba(0,0,0,0.6)", borderRadius: 12 }}>
+                                <audio src={currentMedia.url} controls style={{ width: "100%" }} />
+                            </div>
                         ) : (
                             <img
                                 src={currentMedia.url}

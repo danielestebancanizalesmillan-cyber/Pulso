@@ -187,7 +187,7 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
         const files = Array.from(e.target.files || []);
         if (files.length === 0) return;
 
-        const newMedia = [...filesToUpload, ...files.map(f => ({ file: f, type: f.type.startsWith('video/') ? 'video' : 'image' }))].slice(0, 4);
+        const newMedia = [...filesToUpload, ...files.map(f => ({ file: f, type: f.type.startsWith('video/') ? 'video' : f.type.startsWith('audio/') ? 'audio' : 'image' }))].slice(0, 4);
 
         const validMedia: { file: File, type: string }[] = [];
 
@@ -383,6 +383,10 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                                         playsInline
                                         style={{ width: "100%", height: mediaPayloads.length > 2 ? 150 : 300, objectFit: "contain", borderRadius: 16, background: "black" }} 
                                     />
+                                ) : payload.type === 'audio' ? (
+                                    <div style={{ width: "100%", padding: 12, background: "rgba(0,0,0,0.6)", borderRadius: 12, display: "flex", alignItems: "center", gap: 12 }}>
+                                        <audio src={payload.url} controls style={{ width: "100%" }} />
+                                    </div>
                                 ) : (
                                     <img src={payload.url} alt={`Upload preview ${idx}`} style={{ width: "100%", height: mediaPayloads.length > 2 ? 150 : 300, objectFit: "cover", borderRadius: 16 }} />
                                 )}
