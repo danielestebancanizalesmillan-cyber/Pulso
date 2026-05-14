@@ -793,6 +793,10 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                                                     </div>
                                                 </div>
                                             </div>
+                                        ) : img.type === 'audio' ? (
+                                            <div style={{ width: "100%", padding: 12, background: "rgba(0,0,0,0.06)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                                <audio src={img.url} controls style={{ width: "100%" }} />
+                                            </div>
                                         ) : (
                                             <img
                                                 src={img.url}
