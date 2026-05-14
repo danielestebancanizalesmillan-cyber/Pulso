@@ -13,7 +13,7 @@ import { MapPin, X } from "lucide-react";
 
 import { upload } from "@vercel/blob/client";
 
-const MAX = 280;
+// Character limit moved inside component for dynamic calculation based on verification status
 
 interface ComposeTweetProps {
     placeholder?: string;
@@ -28,6 +28,8 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
     const { data: session } = useSession();
     const { addToast } = useToast();
     const { t } = useTranslation();
+    const isVerified = (session?.user as any)?.isVerified;
+    const MAX = isVerified ? 2000 : 280;
     const activePlaceholder = placeholder || t("whatsHappening");
     
     const [content, setContent] = useState("");

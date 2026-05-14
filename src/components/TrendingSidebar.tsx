@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import { TrendingSkeleton } from "./TweetSkeleton";
 import { REGIONS } from "@/lib/constants";
+import { useSession } from "next-auth/react";
+import { AdComponent, MOCK_ADS } from "./AdComponent";
 
 export function TrendingSidebar() {
     const pathname = usePathname();
@@ -14,6 +16,8 @@ export function TrendingSidebar() {
     const [loading, setLoading] = useState(true);
     const [showTrends, setShowTrends] = useState(true);
     const [trendRegion, setTrendRegion] = useState("GLOBAL");
+    const { data: session } = useSession();
+    const isVerified = (session?.user as any)?.isVerified;
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
@@ -121,6 +125,9 @@ export function TrendingSidebar() {
                         <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setIsModalOpen(false)}>{t("done") || "Listo"}</button>
                     </div>
                 </div>
+            )}
+            {!isVerified && (
+                <AdComponent {...MOCK_ADS[2]} />
             )}
         </div>
     );

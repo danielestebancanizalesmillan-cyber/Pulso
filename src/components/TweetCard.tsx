@@ -464,7 +464,13 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
         <motion.article
             className="tweet-card"
             onClick={() => router.push(`/tweet/${tweet.id}`)}
-            style={{ position: "relative", overflow: "hidden" }}
+            style={{ 
+                position: "relative", 
+                overflow: "hidden",
+                borderLeft: tweet.author?.isVerified ? "3px solid var(--blue)" : "1px solid var(--border)",
+                background: tweet.author?.isVerified ? "rgba(29, 155, 240, 0.02)" : "transparent",
+                transition: "background 0.2s, border-color 0.2s"
+            }}
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}

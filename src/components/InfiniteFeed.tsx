@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import React from "react";
 import { TweetCard } from "./TweetCard";
 import PusherClient from "pusher-js";
 import { StatusCarousel } from "./StatusCarousel";
@@ -8,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TweetSkeleton } from "./TweetSkeleton";
 import { useTranslation } from "@/lib/i18n";
 import { useSession } from "next-auth/react";
+import { AdComponent, MOCK_ADS } from "./AdComponent";
 
 interface InfiniteFeedProps {
     initialTweets?: any[];
@@ -19,7 +21,7 @@ interface InfiniteFeedProps {
 
 export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab = "for-you", countryCode }: InfiniteFeedProps) {
     const { t } = useTranslation();
-    const { status } = useSession();
+    const { status, data } = useSession();
     const [tweets, setTweets] = useState<any[]>(initialTweets);
     const [newTweetsArrived, setNewTweetsArrived] = useState<any[]>([]);
     const tweetsRef = useRef<any[]>(initialTweets);
@@ -83,7 +85,6 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
                 hasMoreRef.current = false;
             } else {
                 setTweets((prev) => {
-                    // Filter out any tweets that already exist in the state
                     const filtered = newTweets.filter((nt: any) => !prev.some((pt: any) => pt.id === nt.id));
                     if (filtered.length === 0 && newTweets.length > 0) {
                         setHasMore(false);
@@ -182,7 +183,6 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
                     }
                 })
                 .catch(err => console.error(err));
-
         });
 
         actionsChannel.bind("reply-update", ({ tweetId }: { tweetId: string }) => {
@@ -212,7 +212,6 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
         });
 
         actionsChannel.bind("poll-update", ({ pollId }: { pollId: string }) => {
-            // Find which tweet this poll belongs to and refresh it
             setTweets(prev => {
                 const tweetToUpdate = prev.find(t => t.poll?.id === pollId);
                 if (tweetToUpdate) {
@@ -278,8 +277,6 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
         return () => observer.disconnect();
     }, [hasMore, loading, loadMore]);
 
-    // Removed early return to prevent breaking observer triggers
-
     return (
         <div className="feed" style={{ position: "relative" }}>
             {status === "authenticated" && <StatusCarousel />}
@@ -317,13 +314,18 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
                 ))
             ) : (
                 <AnimatePresence initial={false}>
-                    {tweets.map((t) => (
-                        <TweetCard key={t.id} tweet={t} currentUserId={currentUserId} />
+                    {tweets.map((t, index) => (
+                        <React.Fragment key={t.id}>
+                            <TweetCard tweet={t} currentUserId={currentUserId} />
+                            {/* Inject Ad every 6 items, skip if user is verified */}
+                            {(index + 1) % 6 === 0 && !(data?.user as any)?.isVerified && (
+                                <AdComponent {...MOCK_ADS[Math.floor(index / 6) % MOCK_ADS.length]} />
+                            )}
+                        </React.Fragment>
                     ))}
                 </AnimatePresence>
             )}
 
-            {/* Observer Target */}
             {hasMore && (
                 <div ref={observerTarget} style={{ padding: "24px", display: "flex", justifyContent: "center" }}>
                     <div className="spinner" />

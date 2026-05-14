@@ -19,6 +19,7 @@ declare module "next-auth" {
             showSensitiveContent?: boolean;
             countryCode?: string | null;
             role?: string;
+            isVerified?: boolean;
             accountLabel?: string | null;
             coverImage?: string | null;
         } & DefaultSession["user"]
@@ -32,6 +33,7 @@ declare module "next-auth" {
         showSensitiveContent?: boolean;
         countryCode?: string | null;
         role?: string;
+        isVerified?: boolean;
         accountLabel?: string | null;
         coverImage?: string | null;
     }
@@ -46,6 +48,7 @@ declare module "next-auth/jwt" {
         showSensitiveContent?: boolean;
         countryCode?: string | null;
         role?: string;
+        isVerified?: boolean;
         accountLabel?: string | null;
         coverImage?: string | null;
     }
@@ -205,6 +208,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     emailVerified: user.emailVerified,
                     countryCode: user.countryCode,
                     role: user.role,
+                    isVerified: user.isVerified,
                     accountLabel: user.accountLabel,
                     coverImage: user.coverImage,
                     birthDate: user.birthDate,
@@ -224,6 +228,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 token.avatar = user.avatar;
                 token.countryCode = user.countryCode;
                 token.role = user.role;
+                token.isVerified = user.isVerified;
                 token.accountLabel = user.accountLabel;
                 token.coverImage = user.coverImage;
                 token.birthDate = user.birthDate;
@@ -243,7 +248,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                             accountLabel: true, 
                             birthDate: true, 
                             showSensitiveContent: true, 
-                            countryCode: true 
+                            countryCode: true,
+                            isVerified: true
                         }
                     });
                     if (dbUser) {
@@ -257,6 +263,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         token.birthDate = dbUser.birthDate;
                         token.showSensitiveContent = dbUser.showSensitiveContent;
                         token.countryCode = dbUser.countryCode;
+                        token.isVerified = dbUser.isVerified;
                     }
                 } catch (e) {
                     console.error("JWT sync error:", e);
