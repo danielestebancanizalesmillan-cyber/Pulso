@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { Shield, Users, Award, AlertTriangle, LayoutDashboard, ArrowLeft } from "lucide-react";
+import { Shield, Users, Award, AlertTriangle, LayoutDashboard, ArrowLeft, Megaphone } from "lucide-react";
 import AdminLoginPage from "./login/page"; // Importamos el componente de login para mostrarlo inline si está bloqueado
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -46,6 +46,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 <nav style={{ padding: "20px 12px", flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
                     <AdminNavLink href="/admin-dashboard" icon={<LayoutDashboard size={20} />} label="Dashboard" />
                     <AdminNavLink href="/admin-dashboard/users" icon={<Users size={20} />} label="Usuarios" />
+                    <AdminNavLink href="/admin-dashboard/ads" icon={<Megaphone size={20} />} label="Anuncios" />
                     <AdminNavLink href="/admin-dashboard/verifications" icon={<Award size={20} />} label="Verificaciones" />
                     <AdminNavLink href="/admin-dashboard/reports" icon={<AlertTriangle size={20} />} label="Reportes" />
                 </nav>
