@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "no-referrer-when-downgrade" },
           {
             key: "Content-Security-Policy",
+            // TEMPORARY: Allow 'unsafe-eval' to diagnose CSP/eval issues with third-party widgets.
+            // Remove 'unsafe-eval' as soon as debugging is complete.
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.pusher.com https://www.youtube-nocookie.com",
