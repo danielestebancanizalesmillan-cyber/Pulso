@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { upload } from "@vercel/blob/client";
 
 export default function AdminAdsPage() {
     const { data: session, status } = useSession();
@@ -11,15 +12,29 @@ export default function AdminAdsPage() {
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingAd, setEditingAd] = useState<any>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState("");
+
     const [formData, setFormData] = useState({
         title: "",
         description: "",
         imageUrl: "",
         videoUrl: "",
+        avatarUrl: "",
         link: "",
         cta: "Más información",
         active: true
     });
+
+    const [inputModes, setInputModes] = useState({
+        avatar: "url", // "url" | "file"
+        image: "url",
+        video: "url"
+    });
+
+    const avatarInputRef = useRef<HTMLInputElement>(null);
+    const imageInputRef = useRef<HTMLInputElement>(null);
+    const videoInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (status === "unauthenticated" || (status === "authenticated" && session?.user?.role !== "ADMIN")) {
@@ -41,25 +56,61 @@ export default function AdminAdsPage() {
         }
     };
 
+    const handleFileUpload = async (file: File) => {
+        const newBlob = await upload(file.name, file, {
+            access: 'public',
+            handleUploadUrl: '/api/upload',
+        });
+        return newBlob.url;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const method = editingAd ? "PUT" : "POST";
-        const body = editingAd ? { ...formData, id: editingAd.id } : formData;
+        
+        setIsUploading(true);
+        let finalData = { ...formData };
 
         try {
+            // Handle file uploads if any
+            if (inputModes.avatar === "file" && avatarInputRef.current?.files?.[0]) {
+                setUploadProgress("Subiendo avatar...");
+                finalData.avatarUrl = await handleFileUpload(avatarInputRef.current.files[0]);
+            }
+            if (inputModes.image === "file" && imageInputRef.current?.files?.[0]) {
+                setUploadProgress("Subiendo imagen...");
+                finalData.imageUrl = await handleFileUpload(imageInputRef.current.files[0]);
+            }
+            if (inputModes.video === "file" && videoInputRef.current?.files?.[0]) {
+                setUploadProgress("Subiendo video...");
+                finalData.videoUrl = await handleFileUpload(videoInputRef.current.files[0]);
+            }
+
+            setUploadProgress("Guardando anuncio...");
+
+            const method = editingAd ? "PUT" : "POST";
+            const body = editingAd ? { ...finalData, id: editingAd.id } : finalData;
+
             const res = await fetch("/api/admin/ads", {
                 method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)
             });
+            
             if (res.ok) {
                 fetchAds();
                 setShowForm(false);
                 setEditingAd(null);
-                setFormData({ title: "", description: "", imageUrl: "", videoUrl: "", link: "", cta: "Más información", active: true });
+                setFormData({ title: "", description: "", imageUrl: "", videoUrl: "", avatarUrl: "", link: "", cta: "Más información", active: true });
+                if (avatarInputRef.current) avatarInputRef.current.value = "";
+                if (imageInputRef.current) imageInputRef.current.value = "";
+                if (videoInputRef.current) videoInputRef.current.value = "";
             }
         } catch (error) {
             console.error(error);
+            alert("Error al subir los archivos o guardar el anuncio.");
+        } finally {
+            setIsUploading(false);
+            setUploadProgress("");
         }
     };
 
@@ -74,6 +125,30 @@ export default function AdminAdsPage() {
     };
 
     if (loading) return <div style={{ padding: "20px", color: "#1e293b" }}>Cargando anuncios...</div>;
+
+    const renderMediaInput = (label: string, field: "avatar" | "image" | "video", stateField: "avatarUrl" | "imageUrl" | "videoUrl", ref: React.RefObject<HTMLInputElement | null>, accept: string) => (
+        <div style={{ display: "grid", gap: "8px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>{label}</label>
+                <div style={{ display: "flex", gap: "4px" }}>
+                    <button type="button" onClick={() => setInputModes({ ...inputModes, [field]: "url" })} style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "10px", border: "1px solid #cbd5e1", background: inputModes[field] === "url" ? "#e2e8f0" : "transparent", cursor: "pointer", color: "#475569" }}>URL</button>
+                    <button type="button" onClick={() => setInputModes({ ...inputModes, [field]: "file" })} style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "10px", border: "1px solid #cbd5e1", background: inputModes[field] === "file" ? "#e2e8f0" : "transparent", cursor: "pointer", color: "#475569" }}>Archivo</button>
+                </div>
+            </div>
+            {inputModes[field] === "url" ? (
+                <input 
+                    type="text" placeholder="https://..." value={formData[stateField] || ""} 
+                    onChange={e => setFormData({ ...formData, [stateField]: e.target.value })} 
+                    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b" }}
+                />
+            ) : (
+                <input 
+                    type="file" ref={ref} accept={accept}
+                    style={{ padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b", fontSize: "0.9rem" }}
+                />
+            )}
+        </div>
+    );
 
     return (
         <div style={{ padding: "24px", color: "#1e293b", maxWidth: "1000px", margin: "0 auto" }}>
@@ -91,40 +166,32 @@ export default function AdminAdsPage() {
                 <div style={{ background: "#ffffff", padding: "32px", borderRadius: "16px", marginBottom: "32px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
                     <h2 style={{ marginBottom: "20px", fontSize: "1.25rem", fontWeight: 700, color: "#1e293b" }}>{editingAd ? "Editar Anuncio" : "Crear Anuncio"}</h2>
                     <form onSubmit={handleSubmit} style={{ display: "grid", gap: "20px" }}>
-                        <div style={{ display: "grid", gap: "8px" }}>
-                            <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>Título del Anuncio</label>
-                            <input 
-                                type="text" placeholder="Ej: ¡Oferta Especial!" value={formData.title} 
-                                onChange={e => setFormData({ ...formData, title: e.target.value })} 
-                                style={{ padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b", fontSize: "1rem" }} required
-                            />
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                            <div style={{ display: "grid", gap: "8px" }}>
+                                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>Título del Anuncio (Nombre visible)</label>
+                                <input 
+                                    type="text" placeholder="Ej: Pulso Premium" value={formData.title} 
+                                    onChange={e => setFormData({ ...formData, title: e.target.value })} 
+                                    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b", fontSize: "1rem" }} required
+                                />
+                            </div>
+                            {renderMediaInput("Foto de Perfil (Avatar)", "avatar", "avatarUrl", avatarInputRef, "image/*")}
                         </div>
+                        
                         <div style={{ display: "grid", gap: "8px" }}>
-                            <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>Descripción</label>
+                            <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>Descripción (Texto del post)</label>
                             <textarea 
                                 placeholder="Describe brevemente el anuncio..." value={formData.description} 
                                 onChange={e => setFormData({ ...formData, description: e.target.value })} 
                                 style={{ padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b", fontSize: "1rem", minHeight: "100px" }} required
                             />
                         </div>
+
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                            <div style={{ display: "grid", gap: "8px" }}>
-                                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>URL de Imagen</label>
-                                <input 
-                                    type="text" placeholder="https://..." value={formData.imageUrl} 
-                                    onChange={e => setFormData({ ...formData, imageUrl: e.target.value })} 
-                                    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b" }}
-                                />
-                            </div>
-                            <div style={{ display: "grid", gap: "8px" }}>
-                                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>URL de Video (opcional)</label>
-                                <input 
-                                    type="text" placeholder="https://..." value={formData.videoUrl} 
-                                    onChange={e => setFormData({ ...formData, videoUrl: e.target.value })} 
-                                    style={{ padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#1e293b" }}
-                                />
-                            </div>
+                            {renderMediaInput("URL/Archivo de Imagen", "image", "imageUrl", imageInputRef, "image/*")}
+                            {renderMediaInput("URL/Archivo de Video", "video", "videoUrl", videoInputRef, "video/*")}
                         </div>
+
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignItems: "center" }}>
                             <div style={{ display: "grid", gap: "8px" }}>
                                 <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>Enlace de Destino</label>
@@ -143,15 +210,24 @@ export default function AdminAdsPage() {
                                 />
                             </div>
                         </div>
+
                         <label style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "0.95rem", fontWeight: 600, cursor: "pointer", marginTop: "12px" }}>
                             <input type="checkbox" checked={formData.active} onChange={e => setFormData({ ...formData, active: e.target.checked })} style={{ width: "20px", height: "20px" }} />
                             Anuncio Activo
                         </label>
+
+                        {isUploading && (
+                            <div style={{ padding: "12px", background: "#dbeafe", color: "#1e40af", borderRadius: "8px", fontSize: "0.9rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>
+                                <div className="spinner" style={{ width: "16px", height: "16px", border: "2px solid #1e40af", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
+                                {uploadProgress}
+                            </div>
+                        )}
+
                         <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
-                            <button type="submit" style={{ background: "#3b82f6", color: "white", padding: "12px 32px", borderRadius: "12px", border: "none", fontWeight: 700, cursor: "pointer", fontSize: "1rem" }}>
+                            <button type="submit" disabled={isUploading} style={{ background: isUploading ? "#94a3b8" : "#3b82f6", color: "white", padding: "12px 32px", borderRadius: "12px", border: "none", fontWeight: 700, cursor: isUploading ? "not-allowed" : "pointer", fontSize: "1rem" }}>
                                 {editingAd ? "Guardar Cambios" : "Crear Anuncio"}
                             </button>
-                            <button type="button" onClick={() => setShowForm(false)} style={{ background: "transparent", border: "1px solid #e2e8f0", color: "#64748b", padding: "12px 32px", borderRadius: "12px", cursor: "pointer", fontSize: "1rem" }}>
+                            <button type="button" disabled={isUploading} onClick={() => setShowForm(false)} style={{ background: "transparent", border: "1px solid #e2e8f0", color: "#64748b", padding: "12px 32px", borderRadius: "12px", cursor: isUploading ? "not-allowed" : "pointer", fontSize: "1rem" }}>
                                 Cancelar
                             </button>
                         </div>
@@ -166,41 +242,46 @@ export default function AdminAdsPage() {
                     </div>
                 )}
                 {ads.map(ad => (
-                    <div key={ad.id} style={{ background: "#ffffff", padding: "20px", borderRadius: "16px", border: "1px solid #e2e8f0", display: "flex", gap: "20px", alignItems: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}>
-                        {ad.videoUrl ? (
-                            <div style={{ width: "100px", height: "100px", background: "#000", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
-                                <video src={ad.videoUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                <div style={{ position: "absolute", background: "rgba(0,0,0,0.5)", color: "white", fontSize: "0.6rem", padding: "2px 6px", borderRadius: "4px" }}>VIDEO</div>
-                            </div>
-                        ) : ad.imageUrl ? (
-                            <img src={ad.imageUrl} style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "12px", background: "#f1f5f9" }} alt="" />
-                        ) : (
-                            <div style={{ width: "100px", height: "100px", background: "#f1f5f9", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8" }}>
-                                Sin Imagen
-                            </div>
-                        )}
+                    <div key={ad.id} style={{ background: "#ffffff", padding: "20px", borderRadius: "16px", border: "1px solid #e2e8f0", display: "flex", gap: "20px", alignItems: "flex-start", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                            <img src={ad.avatarUrl || "/favicon.ico"} style={{ width: "48px", height: "48px", objectFit: "cover", borderRadius: "50%", background: "#f1f5f9" }} alt="Avatar" />
+                        </div>
                         <div style={{ flex: 1 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "4px" }}>
-                                <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#1e293b" }}>{ad.title}</h3>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#1e293b" }}>{ad.title}</h3>
+                                <span style={{ background: "#f1f5f9", color: "#64748b", fontSize: "0.65rem", padding: "2px 6px", borderRadius: "4px", fontWeight: 700, textTransform: "uppercase" }}>Promocionado</span>
                                 {ad.active ? (
-                                    <span style={{ background: "#dcfce7", color: "#15803d", fontSize: "0.7rem", padding: "3px 10px", borderRadius: "20px", fontWeight: 700 }}>Activo</span>
+                                    <span style={{ background: "#dcfce7", color: "#15803d", fontSize: "0.65rem", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>Activo</span>
                                 ) : (
-                                    <span style={{ background: "#fee2e2", color: "#b91c1c", fontSize: "0.7rem", padding: "3px 10px", borderRadius: "20px", fontWeight: 700 }}>Inactivo</span>
+                                    <span style={{ background: "#fee2e2", color: "#b91c1c", fontSize: "0.65rem", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>Inactivo</span>
                                 )}
                             </div>
-                            <p style={{ fontSize: "0.95rem", color: "#475569", marginBottom: "8px" }}>{ad.description}</p>
-                            <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>Link: <span style={{ color: "#3b82f6" }}>{ad.link}</span></div>
+                            <p style={{ fontSize: "0.95rem", color: "#475569", marginBottom: "12px" }}>{ad.description}</p>
+                            
+                            {(ad.imageUrl || ad.videoUrl) && (
+                                <div style={{ marginBottom: "12px", borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0", background: "#0f172a", width: "fit-content", maxWidth: "100%" }}>
+                                    {ad.videoUrl ? (
+                                        <video src={ad.videoUrl} style={{ maxHeight: "200px", maxWidth: "100%", display: "block" }} controls muted />
+                                    ) : (
+                                        <img src={ad.imageUrl} style={{ maxHeight: "200px", maxWidth: "100%", display: "block", objectFit: "cover" }} alt="" />
+                                    )}
+                                </div>
+                            )}
+                            
+                            <div style={{ fontSize: "0.85rem", color: "#64748b", background: "#f8fafc", padding: "8px 12px", borderRadius: "8px", display: "inline-block", border: "1px solid #e2e8f0" }}>
+                                CTA: <strong>{ad.cta}</strong> → <a href={ad.link} target="_blank" rel="noreferrer" style={{ color: "#3b82f6", textDecoration: "none" }}>{ad.link}</a>
+                            </div>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                             <button 
                                 onClick={() => { setEditingAd(ad); setFormData({ ...ad }); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                style={{ background: "#f1f5f9", border: "none", color: "#1e293b", padding: "10px 20px", borderRadius: "10px", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}
+                                style={{ background: "#f1f5f9", border: "none", color: "#1e293b", padding: "8px 16px", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem" }}
                             >
                                 Editar
                             </button>
                             <button 
                                 onClick={() => handleDelete(ad.id)}
-                                style={{ background: "transparent", border: "1px solid #fee2e2", color: "#ef4444", padding: "10px 20px", borderRadius: "10px", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}
+                                style={{ background: "transparent", border: "1px solid #fee2e2", color: "#ef4444", padding: "8px 16px", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem" }}
                             >
                                 Borrar
                             </button>

@@ -493,6 +493,7 @@ model Ad {
   description String
   imageUrl    String?
   videoUrl    String?
+  avatarUrl   String?
   link        String
   cta         String   @default("Más información")
   active      Boolean  @default(true)

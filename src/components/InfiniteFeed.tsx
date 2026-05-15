@@ -10,6 +10,7 @@ import { TweetSkeleton } from "./TweetSkeleton";
 import { useTranslation } from "@/lib/i18n";
 import { useSession } from "next-auth/react";
 import { AdComponent, MOCK_ADS } from "./AdComponent";
+import { AdPostCard } from "./AdPostCard";
 
 interface InfiniteFeedProps {
     initialTweets?: any[];
@@ -318,14 +319,7 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
                     {tweets.map((t, index) => (
                         <React.Fragment key={t.id}>
                             {t.isAd ? (
-                                <AdComponent 
-                                    title={t.title} 
-                                    description={t.description} 
-                                    image={t.imageUrl} 
-                                    video={t.videoUrl} 
-                                    url={t.link} 
-                                    cta={t.cta} 
-                                />
+                                <AdPostCard ad={t} />
                             ) : (
                                 <TweetCard tweet={t} currentUserId={currentUserId} />
                             )}
