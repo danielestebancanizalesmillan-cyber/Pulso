@@ -18,9 +18,21 @@ interface AdPostCardProps {
 export function AdPostCard({ ad }: AdPostCardProps) {
     const handleAction = () => {
         if (ad.link) {
-            window.open(ad.link, "_blank", "noopener,noreferrer");
+            let finalLink = ad.link;
+            if (!/^https?:\/\//i.test(finalLink)) {
+                finalLink = "https://" + finalLink;
+            }
+            window.open(finalLink, "_blank", "noopener,noreferrer");
         }
     };
+
+    const getYoutubeVideoId = (url: string) => {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
+
+    const ytId = ad.videoUrl ? getYoutubeVideoId(ad.videoUrl) : null;
 
     return (
         <motion.div 
@@ -98,7 +110,18 @@ export function AdPostCard({ ad }: AdPostCardProps) {
                         background: "var(--bg-secondary)",
                         maxHeight: "500px"
                     }}>
-                        {ad.videoUrl ? (
+                        {ytId ? (
+                            <iframe 
+                                width="100%" 
+                                height="315" 
+                                src={`https://www.youtube.com/embed/${ytId}?autoplay=0&controls=1`} 
+                                title="YouTube video player" 
+                                frameBorder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowFullScreen
+                                style={{ display: "block", border: "none" }}
+                            />
+                        ) : ad.videoUrl ? (
                             <video 
                                 src={ad.videoUrl} 
                                 controls 

@@ -150,6 +150,12 @@ export default function AdminAdsPage() {
         </div>
     );
 
+    const getYoutubeVideoId = (url: string) => {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
+
     return (
         <div style={{ padding: "24px", color: "#1e293b", maxWidth: "1000px", margin: "0 auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
@@ -241,7 +247,9 @@ export default function AdminAdsPage() {
                         No hay anuncios creados todavía. ¡Crea el primero!
                     </div>
                 )}
-                {ads.map(ad => (
+                {ads.map(ad => {
+                    const ytId = ad.videoUrl ? getYoutubeVideoId(ad.videoUrl) : null;
+                    return (
                     <div key={ad.id} style={{ background: "#ffffff", padding: "20px", borderRadius: "16px", border: "1px solid #e2e8f0", display: "flex", gap: "20px", alignItems: "flex-start", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                             <img src={ad.avatarUrl || "/favicon.ico"} style={{ width: "48px", height: "48px", objectFit: "cover", borderRadius: "50%", background: "#f1f5f9" }} alt="Avatar" />
@@ -260,7 +268,18 @@ export default function AdminAdsPage() {
                             
                             {(ad.imageUrl || ad.videoUrl) && (
                                 <div style={{ marginBottom: "12px", borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0", background: "#0f172a", width: "fit-content", maxWidth: "100%" }}>
-                                    {ad.videoUrl ? (
+                                    {ytId ? (
+                                        <iframe 
+                                            width="400" 
+                                            height="225" 
+                                            src={`https://www.youtube.com/embed/${ytId}`} 
+                                            title="YouTube video player" 
+                                            frameBorder="0" 
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                            allowFullScreen
+                                            style={{ display: "block", border: "none" }}
+                                        />
+                                    ) : ad.videoUrl ? (
                                         <video src={ad.videoUrl} style={{ maxHeight: "200px", maxWidth: "100%", display: "block" }} controls muted />
                                     ) : (
                                         <img src={ad.imageUrl} style={{ maxHeight: "200px", maxWidth: "100%", display: "block", objectFit: "cover" }} alt="" />
@@ -287,7 +306,8 @@ export default function AdminAdsPage() {
                             </button>
                         </div>
                     </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );
