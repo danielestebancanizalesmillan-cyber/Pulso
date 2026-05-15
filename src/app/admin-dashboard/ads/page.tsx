@@ -281,7 +281,7 @@ export default function AdminAdsPage() {
                                             src={`https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1`} 
                                             title="YouTube video player" 
                                             frameBorder="0" 
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                                             allowFullScreen
                                             referrerPolicy="no-referrer-when-downgrade"
                                             style={{ display: "block", border: "none" }}
