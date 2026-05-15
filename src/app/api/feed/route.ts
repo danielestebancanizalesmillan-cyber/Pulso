@@ -53,7 +53,7 @@ const TWEET_INCLUDE = {
         }
     },
     _count: { select: { likes: true, replies: true, retweets: true, bookmarks: true } },
-};
+} satisfies Prisma.TweetInclude;
 
 export async function GET(req: Request) {
     const session = await auth();
@@ -117,7 +117,7 @@ export async function GET(req: Request) {
             cursor: cursor ? { id: cursor } : undefined,
             where,
             orderBy: { createdAt: "desc" },
-            include: TWEET_INCLUDE as Prisma.TweetInclude,
+            include: TWEET_INCLUDE,
         }),
         prisma.ad.findMany({
             where: { active: true },
@@ -125,7 +125,7 @@ export async function GET(req: Request) {
         })
     ]);
 
-    let finalTweets: (Prisma.TweetGetPayload<{ include: typeof TWEET_INCLUDE }> & { score?: number; isAd?: boolean })[] = [];
+    let finalTweets: any[] = [];
 
     if (type === "for-you" || !type) {
         const scoredTweets = tweets.map((t) => {
