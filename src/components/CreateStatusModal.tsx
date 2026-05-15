@@ -43,7 +43,6 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
 
     // Audio Preview refs
     const audioPreviewRef = useRef<HTMLAudioElement>(null);
-    const [previewPlaying, setPreviewPlaying] = useState(false);
 
     // Text Styling & Position States
     const [textPos, setTextPos] = useState({ x: 50, y: 50 }); // percentages (0-100)
@@ -388,39 +387,15 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
                                     const ytId = (match && match[2].length === 11) ? match[2] : null;
                                     if (ytId) {
                                         const end = audioStart + audioDuration;
-                                        if (!previewPlaying) {
-                                            return (
-                                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                                    <button onClick={() => setPreviewPlaying(true)} style={{ padding: '8px 12px', borderRadius: 12, border: 'none', background: 'white', color: '#000', fontWeight: 700, cursor: 'pointer' }}>Play Preview</button>
-                                                    <span style={{ color: 'rgba(255,255,255,0.8)' }}>YouTube preview (click to play)</span>
-                                                </div>
-                                            );
-                                        }
                                         return (
                                             <iframe 
-                                                src={`https://www.youtube.com/embed/${ytId}?autoplay=1&controls=1&mute=0&start=${audioStart}&end=${end}`} 
-                                                style={{ width: '100%', height: 160, borderRadius: 12 }} 
+                                                src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&controls=0&mute=0&start=${audioStart}&end=${end}`} 
+                                                style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} 
                                                 allow="autoplay; encrypted-media; clipboard-write; accelerometer; gyroscope; picture-in-picture"
                                             />
                                         );
                                     }
-                                    return (
-                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                            <button onClick={() => {
-                                                if (!audioPreviewRef.current) return;
-                                                if (previewPlaying) {
-                                                    audioPreviewRef.current.pause();
-                                                    setPreviewPlaying(false);
-                                                } else {
-                                                    audioPreviewRef.current.currentTime = audioStart || 0;
-                                                    audioPreviewRef.current.play().then(() => setPreviewPlaying(true)).catch(() => {
-                                                        toast.error('La reproducción de vista previa falló.');
-                                                    });
-                                                }
-                                            }} style={{ padding: '8px 12px', borderRadius: 12, border: 'none', background: 'white', color: '#000', fontWeight: 700, cursor: 'pointer' }}>{previewPlaying ? 'Pause' : 'Play Preview'}</button>
-                                            <audio ref={audioPreviewRef} src={audioUrl} crossOrigin="anonymous" loop style={{ width: 1, height: 1, opacity: 0 }} />
-                                        </div>
-                                    );
+                                    return <audio ref={audioPreviewRef} src={audioUrl} crossOrigin="anonymous" autoPlay loop style={{ display: "none" }} />;
                                 })()}
 
                                 <div style={{ display: "flex", gap: "16px" }}>
