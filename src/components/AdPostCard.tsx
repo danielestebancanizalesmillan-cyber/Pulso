@@ -111,16 +111,19 @@ export function AdPostCard({ ad }: AdPostCardProps) {
                         maxHeight: "500px"
                     }}>
                         {ytId ? (
-                            <iframe 
-                                width="100%" 
-                                height="315" 
-                                src={`https://www.youtube.com/embed/${ytId}?autoplay=0&controls=1`} 
-                                title="YouTube video player" 
-                                frameBorder="0" 
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                allowFullScreen
-                                style={{ display: "block", border: "none" }}
-                            />
+                            <div onClick={e => e.stopPropagation()}>
+                                <iframe 
+                                    width="100%" 
+                                    height="315" 
+                                    src={`https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1`} 
+                                    title="YouTube video player" 
+                                    frameBorder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                    allowFullScreen
+                                    referrerPolicy="no-referrer-when-downgrade"
+                                    style={{ display: "block", border: "none" }}
+                                />
+                            </div>
                         ) : ad.videoUrl ? (
                             <video 
                                 src={ad.videoUrl} 

@@ -60,15 +60,42 @@ export function AdComponent({ title, description, image, video, cta, url, type =
                         {description}
                     </p>
                     
-                    {video ? (
-                        <div style={{ marginTop: "10px", borderRadius: "12px", overflow: "hidden", border: "1px solid var(--border)", background: "#000" }}>
-                            <video src={video} autoPlay muted loop playsInline style={{ width: "100%", display: "block" }} />
-                        </div>
-                    ) : image && (
-                        <div style={{ marginTop: "10px", borderRadius: "12px", overflow: "hidden", border: "1px solid var(--border)" }}>
-                            <img src={image} alt="Ad" style={{ width: "100%", display: "block" }} />
-                        </div>
-                    )}
+                    {(() => {
+                        const ytMatch = video?.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|u\/\w\/))([^#&?]{11})/);
+                        const ytId = ytMatch?.[1];
+                        if (ytId) {
+                            return (
+                                <div style={{ marginTop: "10px", borderRadius: "12px", overflow: "hidden", border: "1px solid var(--border)" }} onClick={e => e.stopPropagation()}>
+                                    <iframe
+                                        width="100%"
+                                        height="180"
+                                        src={`https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1`}
+                                        title="YouTube video player"
+                                        frameBorder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allowFullScreen
+                                        referrerPolicy="no-referrer-when-downgrade"
+                                        style={{ display: "block", border: "none" }}
+                                    />
+                                </div>
+                            );
+                        }
+                        if (video) {
+                            return (
+                                <div style={{ marginTop: "10px", borderRadius: "12px", overflow: "hidden", border: "1px solid var(--border)", background: "#000" }}>
+                                    <video src={video} autoPlay muted loop playsInline style={{ width: "100%", display: "block" }} />
+                                </div>
+                            );
+                        }
+                        if (image) {
+                            return (
+                                <div style={{ marginTop: "10px", borderRadius: "12px", overflow: "hidden", border: "1px solid var(--border)" }}>
+                                    <img src={image} alt="Ad" style={{ width: "100%", display: "block" }} />
+                                </div>
+                            );
+                        }
+                        return null;
+                    })()}
                     
                     <button style={{ 
                         marginTop: "12px", 
