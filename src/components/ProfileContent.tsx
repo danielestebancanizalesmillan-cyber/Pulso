@@ -158,8 +158,8 @@ export function ProfileContent({
                     height: "1",
                     width: "1",
                     videoId: ytId,
-                            // Use the privacy-enhanced YouTube host to reduce cookies and avoid origin/postMessage mismatches
-                            host: "https://www.youtube-nocookie.com",
+                            // Use the standard YouTube host to avoid origin/postMessage mismatches
+                            host: "https://www.youtube.com",
                     playerVars: {
                         autoplay: 1,
                         controls: 0,

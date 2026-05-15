@@ -43,7 +43,7 @@ export default async function RootLayout({
           {children}
           <RealtimeProvider />
         </Providers>
-        <Script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" strategy="lazyOnload" crossOrigin="anonymous" />
+        <Script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" strategy="lazyOnload" />
         {/* Leaflet is vendored via npm (imported CSS above). Import Leaflet in client components where required. */}
         <Script id="gt-init" strategy="lazyOnload">
           {`
