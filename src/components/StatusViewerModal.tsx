@@ -184,7 +184,7 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                 await loadYouTubeApi();
                 if (!window.YT?.Player) throw new Error("YouTube API unavailable");
 
-                const playerHost = "https://www.youtube.com";
+                const playerHost = "https://www.youtube-nocookie.com";
 
                 ytPlayerRef.current = new window.YT.Player(ytContainerId.current, {
                     height: "1",
