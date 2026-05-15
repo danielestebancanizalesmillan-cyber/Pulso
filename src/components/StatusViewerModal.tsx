@@ -349,6 +349,15 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                     </motion.div>
                 </div>
 
+                {/* Play overlay for mobile / blocked autoplay fallback */}
+                {currentItem.audioUrl && !audioPlaying && !audioLoading && (
+                    <div onClick={(e) => { e.stopPropagation(); toggleAudio(); }} style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 6 }}>
+                        <button aria-label="Play audio" style={{ width: 72, height: 72, borderRadius: 36, border: 'none', background: 'rgba(255,255,255,0.95)', color: '#000', fontWeight: 800, fontSize: 16, cursor: 'pointer' }}>
+                            ▶
+                        </button>
+                    </div>
+                )}
+
                 {/* Bottom audio controller slider toolbar track action view */}
                 {currentItem.audioUrl && (
                     <div style={{ position: "relative", zIndex: 2, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(10px)", padding: "10px 16px", borderRadius: "12px", display: "flex", alignItems: "center", gap: "8px", color: "white", marginBottom: "30px", border: "1px solid rgba(255,255,255,0.1)" }}>
