@@ -202,12 +202,6 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                     },
                     events: {
                         onReady: (event: any) => {
-                            try {
-                                const iframeEl = typeof event.target.getIframe === 'function' ? event.target.getIframe() : null;
-                                if (iframeEl && iframeEl.setAttribute) {
-                                    iframeEl.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
-                                }
-                            } catch (e) {}
                             try { event.target.setVolume(80); } catch {}
                             try { event.target.unMute?.(); } catch {}
                             try { event.target.playVideo(); } catch (e) {}
@@ -348,15 +342,6 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                         </p>
                     </motion.div>
                 </div>
-
-                {/* Play overlay for mobile / blocked autoplay fallback */}
-                {currentItem.audioUrl && !audioPlaying && !audioLoading && (
-                    <div onClick={(e) => { e.stopPropagation(); toggleAudio(); }} style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 6 }}>
-                        <button aria-label="Play audio" style={{ width: 72, height: 72, borderRadius: 36, border: 'none', background: 'rgba(255,255,255,0.95)', color: '#000', fontWeight: 800, fontSize: 16, cursor: 'pointer' }}>
-                            ▶
-                        </button>
-                    </div>
-                )}
 
                 {/* Bottom audio controller slider toolbar track action view */}
                 {currentItem.audioUrl && (

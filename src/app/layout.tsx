@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import "./globals.css";
-import 'leaflet/dist/leaflet.css';
 import { Providers } from "./providers";
 import { RealtimeProvider } from "@/components/RealtimeProvider";
 import Script from "next/script";
@@ -44,7 +43,8 @@ export default async function RootLayout({
           <RealtimeProvider />
         </Providers>
         <Script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" strategy="lazyOnload" />
-        {/* Leaflet is vendored via npm (imported CSS above). Import Leaflet in client components where required. */}
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossOrigin="" />
+        <Script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossOrigin="" strategy="beforeInteractive" />
         <Script id="gt-init" strategy="lazyOnload">
           {`
             window.googleTranslateElementInit = function() {

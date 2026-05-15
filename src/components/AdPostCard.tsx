@@ -115,7 +115,7 @@ export function AdPostCard({ ad }: AdPostCardProps) {
                                 <iframe 
                                     width="100%" 
                                     height="315" 
-                                    src={`https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1`} 
+                                    src={`https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1`} 
                                     title="YouTube video player" 
                                     frameBorder="0" 
                                     allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
