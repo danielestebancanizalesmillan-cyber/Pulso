@@ -108,18 +108,8 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
         return () => clearInterval(timer);
     }, [currentIndex, durationCount]);
 
-    // Auto-play audio when item changes
-    useEffect(() => {
-        if (currentItem.audioUrl) {
-            const t = setTimeout(() => {
-                // Initial check to avoid double playing
-                if (!audioPlaying && !audioLoading) {
-                    toggleAudio();
-                }
-            }, 300);
-            return () => clearTimeout(t);
-        }
-    }, [currentIndex]);
+    // Start audio only after a user interaction (prevent background autoplay blocks)
+    // User should click the viewer (or the audio button) to start playback.
 
     // Cleanup on unmount
     useEffect(() => {
@@ -256,7 +246,7 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
             <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); if (currentItem.audioUrl && !audioPlaying && !audioLoading) { toggleAudio(); } }}
                 style={{ position: "relative", width: "100%", maxWidth: "450px", height: "100%", padding: "16px", display: "flex", flexDirection: "column", overflow: "hidden" }}
             >
                 {/* ☁️ Background layer ☁️ */}
@@ -366,7 +356,8 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                         {ytId ? (
                             <div id={ytContainerId.current} style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} />
                         ) : (
-                            <audio ref={audioRef} src={currentItem.audioUrl} loop style={{ display: "none" }} />
+                            // Keep element present but avoid `display:none` so mobile browsers treat play() as user-initiated when called from a click handler
+                            <audio ref={audioRef} src={currentItem.audioUrl} loop style={{ width: 1, height: 1, opacity: 0 }} />
                         )}
                     </div>
                 )}
