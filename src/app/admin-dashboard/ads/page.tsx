@@ -119,14 +119,18 @@ export default function AdminAdsPage() {
         try {
             const res = await fetch(`/api/admin/ads?id=${id}`, { method: "DELETE" });
             if (!res.ok) {
-                const err = await res.json();
-                alert(`Error al borrar: ${err.error || res.status}`);
+                let errMsg = `HTTP ${res.status}`;
+                try {
+                    const err = await res.json();
+                    errMsg = err.error || errMsg;
+                } catch {}
+                alert(`Error al borrar: ${errMsg}`);
                 return;
             }
             fetchAds();
         } catch (error) {
             console.error(error);
-            alert("Error de red al intentar borrar el anuncio.");
+            alert("Error de conexión. Verifica tu internet e intenta de nuevo.");
         }
     };
 

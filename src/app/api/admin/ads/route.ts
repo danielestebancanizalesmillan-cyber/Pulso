@@ -64,16 +64,21 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-    if (!await isAdmin()) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    try {
+        if (!await isAdmin()) {
+            return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+        }
+
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get("id");
+
+        if (!id) return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+
+        await prisma.ad.delete({ where: { id } });
+
+        return NextResponse.json({ success: true });
+    } catch (e: any) {
+        console.error("DELETE /api/admin/ads error:", e);
+        return NextResponse.json({ error: e?.message || "Error interno del servidor" }, { status: 500 });
     }
-
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-
-    if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
-
-    await prisma.ad.delete({ where: { id } });
-
-    return NextResponse.json({ success: true });
 }
