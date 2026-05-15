@@ -30,10 +30,12 @@ export async function GET(req: NextRequest) {
         parentId: null,
     };
 
+    const hashtagSearch = cleanQ.replace(/^#/, '').toLowerCase();
+
     if (cleanQ) {
         tweetWhere.OR = [
-            { content: { contains: cleanQ } },
-            { hashtags: { some: { text: { contains: cleanQ.toLowerCase() } } } }
+            { content: { contains: cleanQ, mode: "insensitive" } },
+            { hashtags: { some: { text: { contains: hashtagSearch, mode: "insensitive" } } } }
         ];
     }
 
@@ -55,8 +57,8 @@ export async function GET(req: NextRequest) {
         prisma.user.findMany({
             where: {
                 OR: [
-                    { name: { contains: cleanQ || q } },
-                    { username: { contains: cleanQ || q } },
+                    { name: { contains: cleanQ || q, mode: "insensitive" } },
+                    { username: { contains: cleanQ || q, mode: "insensitive" } },
                 ],
                 NOT: { id: session.user.id },
             },
@@ -84,7 +86,7 @@ export async function GET(req: NextRequest) {
             },
         }),
         prisma.hashtag.findMany({
-            where: { text: { contains: (cleanQ || q).toLowerCase() } },
+            where: { text: { contains: hashtagSearch || q.replace(/^#/, '').toLowerCase(), mode: "insensitive" } },
             take: 5,
             select: { text: true, _count: { select: { tweets: true } } },
         }),

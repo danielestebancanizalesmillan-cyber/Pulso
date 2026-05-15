@@ -78,7 +78,8 @@ export async function GET(req: Request) {
                 const tweetTexts = recentTweets.map(t => t.content).join("\n---\n");
                 const prompt = `
 Analiza el contenido de estos tweets (2026) y extrae los **5 temas o palabras clave más relevantes** que estén en tendencia.
-Responde **ÚNICAMENTE** en formato JSON como un array de objetos: [ { "name": "#ejemplo", "count": 10, "categoryKey": "trendTech" } ]
+IMPORTANTE: NO conviertas oraciones ni frases en hashtags unidos (ejemplo: NO uses "#HolaComoEstas", mantenlo como "Hola como estas"). Solo usa el formato hashtag si la palabra es originamente un hashtag en el texto.
+Responde **ÚNICAMENTE** en formato JSON como un array de objetos: [ { "name": "tema o palabra", "count": 10, "categoryKey": "trendTech" } ]
 
 Tweets:
 ${tweetTexts}
