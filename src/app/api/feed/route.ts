@@ -119,7 +119,8 @@ export async function GET(req: Request) {
             orderBy: { createdAt: "desc" },
             include: TWEET_INCLUDE,
         }),
-        prisma.ad.findMany({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (prisma as any).ad.findMany({
             where: { active: true },
             take: 2 // Get a few ads to inject
         })
@@ -128,7 +129,8 @@ export async function GET(req: Request) {
     let finalTweets: any[] = [];
 
     if (type === "for-you" || !type) {
-        const scoredTweets = tweets.map((t) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const scoredTweets = tweets.map((t: any) => {
             const likesCount = t._count?.likes || 0;
             const retweetsCount = t._count?.retweets || 0;
             const repliesCount = t._count?.replies || 0;
