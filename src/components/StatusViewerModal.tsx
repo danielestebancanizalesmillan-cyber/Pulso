@@ -202,6 +202,12 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                     },
                     events: {
                         onReady: (event: any) => {
+                            try {
+                                const iframeEl = typeof event.target.getIframe === 'function' ? event.target.getIframe() : null;
+                                if (iframeEl && iframeEl.setAttribute) {
+                                    iframeEl.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+                                }
+                            } catch (e) {}
                             try { event.target.setVolume(80); } catch {}
                             try { event.target.unMute?.(); } catch {}
                             try { event.target.playVideo(); } catch (e) {}
