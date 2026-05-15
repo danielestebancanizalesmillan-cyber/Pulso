@@ -2,9 +2,19 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+async function isAdmin(): Promise<boolean> {
     const session = await auth();
-    if (session?.user?.role !== "ADMIN") {
+    if (!session?.user?.id) return false;
+    // Always check DB directly — session token may not carry the role field
+    const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { role: true }
+    });
+    return user?.role === "ADMIN";
+}
+
+export async function GET() {
+    if (!await isAdmin()) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -16,8 +26,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-    const session = await auth();
-    if (session?.user?.role !== "ADMIN") {
+    if (!await isAdmin()) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -40,8 +49,7 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-    const session = await auth();
-    if (session?.user?.role !== "ADMIN") {
+    if (!await isAdmin()) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -56,8 +64,7 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-    const session = await auth();
-    if (session?.user?.role !== "ADMIN") {
+    if (!await isAdmin()) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

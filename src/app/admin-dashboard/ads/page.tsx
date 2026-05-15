@@ -117,10 +117,16 @@ export default function AdminAdsPage() {
     const handleDelete = async (id: string) => {
         if (!confirm("¿Borrar anuncio?")) return;
         try {
-            await fetch(`/api/admin/ads?id=${id}`, { method: "DELETE" });
+            const res = await fetch(`/api/admin/ads?id=${id}`, { method: "DELETE" });
+            if (!res.ok) {
+                const err = await res.json();
+                alert(`Error al borrar: ${err.error || res.status}`);
+                return;
+            }
             fetchAds();
         } catch (error) {
             console.error(error);
+            alert("Error de red al intentar borrar el anuncio.");
         }
     };
 
