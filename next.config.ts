@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https: http:",
               "media-src 'self' blob: https:",
-              "frame-src https://www.youtube-nocookie.com https://www.youtube.com",
+              "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com",
               "connect-src 'self' https: wss: blob:",
             ].join("; ")
           },

@@ -398,7 +398,7 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
                                         }
                                         return (
                                             <iframe 
-                                                src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&controls=1&mute=0&start=${audioStart}&end=${end}`} 
+                                                src={`https://www.youtube.com/embed/${ytId}?autoplay=1&controls=1&mute=0&start=${audioStart}&end=${end}`} 
                                                 style={{ width: '100%', height: 160, borderRadius: 12 }} 
                                                 allow="autoplay; encrypted-media; clipboard-write; accelerometer; gyroscope; picture-in-picture"
                                             />
