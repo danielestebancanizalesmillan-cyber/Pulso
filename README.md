@@ -31,4 +31,4 @@ Pulso está construido sobre los cimientos más sólidos del desarrollo web mode
 Pulso no es solo una aplicación, es una comunidad en constante evolución. Regístrate hoy y empieza a sentir el latido de la red.
 
 ---
-Desarrollado por el equipo de Pulso.
+Desarrollado por el equipo de Pulso.❤️
