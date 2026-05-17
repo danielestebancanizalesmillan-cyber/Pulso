@@ -81,6 +81,9 @@ export function GlobalAmbientPlayer() {
     const [ytId, setYtId] = useState<string | null>(null);
 
     useEffect(() => {
+        // Preemptively load YouTube API to avoid user gesture timeouts on mobile
+        loadYouTubeApi().catch(console.error);
+
         window.__globalAudioState = {
             isPlaying: false,
             url: null,
@@ -100,6 +103,26 @@ export function GlobalAmbientPlayer() {
         ) => {
             window.__globalAudioState = { isPlaying, url, userId, title, isStatus, previous };
             window.dispatchEvent(new CustomEvent("global-audio-state-change"));
+        };
+
+        const handleUnlock = () => {
+            const audio = audioRef.current;
+            if (audio) {
+                const prevSrc = audio.src;
+                audio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+                audio.play()
+                    .then(() => {
+                        audio.pause();
+                        if (prevSrc) {
+                            audio.src = prevSrc;
+                        } else {
+                            audio.removeAttribute("src");
+                        }
+                    })
+                    .catch((err) => {
+                        console.warn("Mobile audio context unlock failed:", err);
+                    });
+            }
         };
 
         const handlePlay = async (e: Event) => {
@@ -325,6 +348,7 @@ export function GlobalAmbientPlayer() {
         window.addEventListener("resume-global-audio", handleResume);
         window.addEventListener("restore-global-audio", handleRestore);
         window.addEventListener("temp-pause-global-audio", handleTempPause);
+        window.addEventListener("unlock-mobile-audio", handleUnlock);
 
         return () => {
             window.removeEventListener("play-global-audio", handlePlay);
@@ -332,6 +356,7 @@ export function GlobalAmbientPlayer() {
             window.removeEventListener("resume-global-audio", handleResume);
             window.removeEventListener("restore-global-audio", handleRestore);
             window.removeEventListener("temp-pause-global-audio", handleTempPause);
+            window.removeEventListener("unlock-mobile-audio", handleUnlock);
         };
     }, []);
 

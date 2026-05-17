@@ -165,6 +165,25 @@ export function ProfileContent({
     const handleViewHistory = (e: any) => {
         e.stopPropagation(); 
         setShowAvatarMenu(false);
+        
+        // Synchronously unlock native audio context on mobile tap
+        window.dispatchEvent(new CustomEvent("unlock-mobile-audio"));
+        
+        const firstItem = statuses?.[0];
+        if (firstItem && firstItem.audioUrl) {
+            window.dispatchEvent(new CustomEvent("play-global-audio", {
+                detail: {
+                    url: firstItem.audioUrl,
+                    title: firstItem.audioTitle,
+                    start: firstItem.audioStart,
+                    userId: firstItem.id,
+                    isStatus: true
+                }
+            }));
+        } else {
+            window.dispatchEvent(new CustomEvent("temp-pause-global-audio"));
+        }
+        
         setViewerOpen(true);
     };
 

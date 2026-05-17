@@ -159,6 +159,21 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
 
     const handleNext = () => {
         if (currentIndex < items.length - 1) {
+            const nextItem = items[currentIndex + 1];
+            window.dispatchEvent(new CustomEvent("unlock-mobile-audio"));
+            if (nextItem.audioUrl) {
+                window.dispatchEvent(new CustomEvent("play-global-audio", {
+                    detail: {
+                        url: nextItem.audioUrl,
+                        title: nextItem.audioTitle,
+                        start: nextItem.audioStart,
+                        userId: nextItem.id,
+                        isStatus: true
+                    }
+                }));
+            } else {
+                window.dispatchEvent(new CustomEvent("temp-pause-global-audio"));
+            }
             setCurrentIndex(currentIndex + 1);
         } else {
             onClose();
@@ -167,6 +182,21 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
 
     const handlePrev = () => {
         if (currentIndex > 0) {
+            const prevItem = items[currentIndex - 1];
+            window.dispatchEvent(new CustomEvent("unlock-mobile-audio"));
+            if (prevItem.audioUrl) {
+                window.dispatchEvent(new CustomEvent("play-global-audio", {
+                    detail: {
+                        url: prevItem.audioUrl,
+                        title: prevItem.audioTitle,
+                        start: prevItem.audioStart,
+                        userId: prevItem.id,
+                        isStatus: true
+                    }
+                }));
+            } else {
+                window.dispatchEvent(new CustomEvent("temp-pause-global-audio"));
+            }
             setCurrentIndex(currentIndex - 1);
         }
     };

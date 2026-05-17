@@ -42,11 +42,31 @@ export function StatusCarousel() {
 
     const myStatuses = groupedStatuses.find(g => g.userId === session?.user?.id);
 
+    const handleOpenGroup = (group: any) => {
+        // Synchronously unlock native audio context on mobile tap
+        window.dispatchEvent(new CustomEvent("unlock-mobile-audio"));
+        const firstItem = group.items?.[0];
+        if (firstItem && firstItem.audioUrl) {
+            window.dispatchEvent(new CustomEvent("play-global-audio", {
+                detail: {
+                    url: firstItem.audioUrl,
+                    title: firstItem.audioTitle,
+                    start: firstItem.audioStart,
+                    userId: firstItem.id,
+                    isStatus: true
+                }
+            }));
+        } else {
+            window.dispatchEvent(new CustomEvent("temp-pause-global-audio"));
+        }
+        setActiveViewer(group);
+    };
+
     return (
         <div style={{ display: "flex", gap: "12px", padding: "12px", borderBottom: "1px solid var(--border)", overflowX: "auto", whiteSpace: "nowrap", background: "var(--bg-primary)" }} className="no-scrollbar">
             {/* My Status Trigger */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", flexShrink: 0 }}>
-                <div style={{ position: "relative", width: "56px", height: "56px", borderRadius: "50%", padding: "2px", border: myStatuses ? "2px solid var(--blue)" : "2px dashed var(--text-secondary)", cursor: "pointer" }} onClick={() => myStatuses ? setActiveViewer(myStatuses) : setShowCreate(true)}>
+                <div style={{ position: "relative", width: "56px", height: "56px", borderRadius: "50%", padding: "2px", border: myStatuses ? "2px solid var(--blue)" : "2px dashed var(--text-secondary)", cursor: "pointer" }} onClick={() => myStatuses ? handleOpenGroup(myStatuses) : setShowCreate(true)}>
                     <Avatar user={session?.user} size="lg" />
                     <div 
                         onClick={(e) => { e.stopPropagation(); setShowCreate(true); }} 
@@ -62,7 +82,7 @@ export function StatusCarousel() {
             {groupedStatuses.filter(g => g.userId !== session?.user?.id).map(group => {
                 const allSeen = group.items.every((item: any) => item.views && item.views.length > 0);
                 return (
-                    <div key={group.userId} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer", flexShrink: 0 }} onClick={() => setActiveViewer(group)}>
+                    <div key={group.userId} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer", flexShrink: 0 }} onClick={() => handleOpenGroup(group)}>
                         <div style={{ 
                             width: "56px", height: "56px", borderRadius: "50%", padding: "2px", 
                             background: allSeen ? "var(--border)" : "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
