@@ -36,10 +36,22 @@ function loadYouTubeApi() {
             resolve();
         };
 
-        if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+        const existing = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+        if (!existing) {
             const tag = document.createElement("script");
             tag.src = "https://www.youtube.com/iframe_api";
             document.head.appendChild(tag);
+        } else {
+            const interval = setInterval(() => {
+                if ((window as any).YT?.Player) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 100);
+            setTimeout(() => {
+                clearInterval(interval);
+                resolve();
+            }, 5000);
         }
     });
 }
@@ -163,7 +175,6 @@ export function ProfileContent({
                 audioRef.current.pause();
             } else {
                 setupNativeAudioEffects();
-                audioRef.current.load();
                 audioRef.current.currentTime = user?.profileAudioStart || 0;
                 audioRef.current.play().catch(console.error);
             }

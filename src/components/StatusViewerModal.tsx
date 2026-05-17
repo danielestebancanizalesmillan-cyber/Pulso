@@ -33,10 +33,22 @@ function loadYouTubeApi() {
             resolve();
         };
 
-        if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+        const existing = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+        if (!existing) {
             const tag = document.createElement("script");
             tag.src = "https://www.youtube.com/iframe_api";
             document.head.appendChild(tag);
+        } else {
+            const interval = setInterval(() => {
+                if (window.YT?.Player) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 100);
+            setTimeout(() => {
+                clearInterval(interval);
+                resolve();
+            }, 5000);
         }
     });
 }
@@ -107,6 +119,13 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
 
         return () => clearInterval(timer);
     }, [currentIndex, durationCount]);
+
+    // Load new audio source dynamically when item changes to allow background buffering
+    useEffect(() => {
+        if (audioRef.current && currentItem.audioUrl) {
+            audioRef.current.load();
+        }
+    }, [currentIndex, currentItem.audioUrl]);
 
     // Auto-play audio when item changes
     useEffect(() => {
@@ -222,7 +241,6 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                 try {
                     const url = currentItem.audioUrl || "";
                     if (audioRef.current && url) {
-                        audioRef.current.load();
                         audioRef.current.currentTime = currentItem.audioStart || 0;
                         audioRef.current.play().then(() => setAudioPlaying(true)).catch(() => {
                             toast.error("La reproducción alternativa falló. Abre el audio en otra pestaña.");
@@ -238,7 +256,6 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
             audioRef.current.pause();
             setAudioPlaying(false);
         } else {
-            audioRef.current.load();
             audioRef.current.currentTime = currentItem.audioStart || 0;
             audioRef.current.play().then(() => setAudioPlaying(true)).catch((error) => {
                 console.error("Status audio playback failed:", error);
