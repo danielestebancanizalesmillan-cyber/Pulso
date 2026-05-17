@@ -2481,3 +2481,40 @@ body.high-contrast {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--blue-rgb), 0.5);
 }
+
+/* Mobile Compose Box Responsiveness Fixes */
+@media (max-width: 680px) {
+  .compose-box {
+    padding: 12px 10px !important;
+    gap: 8px !important;
+  }
+
+  .compose-tools {
+    flex-wrap: wrap !important;
+    gap: 2px !important;
+  }
+
+  .compose-tools .icon-btn {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .compose-actions {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .compose-right {
+    margin-left: auto !important;
+  }
+
+  .suggestions-list {
+    max-width: 100% !important;
+  }
+
+  .poll-editor input {
+    font-size: 0.9rem !important;
+    padding: 10px !important;
+  }
+}
+
