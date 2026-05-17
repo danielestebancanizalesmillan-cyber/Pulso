@@ -11,6 +11,13 @@ declare global {
             url: string | null;
             userId: string | null;
             title: string | null;
+            isStatus?: boolean;
+            previous?: {
+                url: string | null;
+                userId: string | null;
+                title: string | null;
+                isPlaying: boolean;
+            } | null;
         };
     }
 }
@@ -79,16 +86,38 @@ export function GlobalAmbientPlayer() {
             url: null,
             userId: null,
             title: null,
+            isStatus: false,
+            previous: null,
         };
 
-        const updateState = (isPlaying: boolean, url: string | null, userId: string | null, title: string | null) => {
-            window.__globalAudioState = { isPlaying, url, userId, title };
+        const updateState = (
+            isPlaying: boolean,
+            url: string | null,
+            userId: string | null,
+            title: string | null,
+            isStatus: boolean = false,
+            previous: any = null
+        ) => {
+            window.__globalAudioState = { isPlaying, url, userId, title, isStatus, previous };
             window.dispatchEvent(new CustomEvent("global-audio-state-change"));
         };
 
         const handlePlay = async (e: Event) => {
             const customEvent = e as CustomEvent;
-            const { url, title, start, userId } = customEvent.detail;
+            const { url, title, start, userId, isStatus } = customEvent.detail;
+
+            // If a profile song was playing and we trigger status music,
+            // push current track to the restoration stack
+            const current = window.__globalAudioState;
+            let previous = current?.previous || null;
+            if (isStatus && current && !current.isStatus && current.url) {
+                previous = {
+                    url: current.url,
+                    userId: current.userId,
+                    title: current.title,
+                    isPlaying: current.isPlaying
+                };
+            }
 
             // Stop current native playback
             if (audioRef.current) {
@@ -103,7 +132,7 @@ export function GlobalAmbientPlayer() {
             const isYt = getYouTubeId(url);
             if (isYt) {
                 setYtId(isYt);
-                updateState(true, url, userId, title);
+                updateState(true, url, userId, title, !!isStatus, previous);
 
                 try {
                     await loadYouTubeApi();
@@ -138,19 +167,20 @@ export function GlobalAmbientPlayer() {
                                 },
                                 onStateChange: (event: any) => {
                                     const playing = event.data === window.YT.PlayerState.PLAYING;
-                                    updateState(playing, url, userId, title);
+                                    const curr = window.__globalAudioState;
+                                    updateState(playing, url, userId, title, !!isStatus, curr?.previous || null);
                                 }
                             }
                         });
                     }
                 } catch (error) {
                     console.error("Global YouTube setup failed:", error);
-                    updateState(false, null, null, null);
+                    updateState(false, null, null, null, false, null);
                 }
             } else {
                 setYtId(null);
                 if (audioRef.current) {
-                    // Set src and defer seek/play until metadata loads successfully
+                    // Set src and seek on loaded metadata
                     audioRef.current.src = url;
                     audioRef.current.volume = 0.4;
                     
@@ -159,11 +189,12 @@ export function GlobalAmbientPlayer() {
                             audioRef.current.currentTime = start || 0;
                             audioRef.current.play()
                                 .then(() => {
-                                    updateState(true, url, userId, title);
+                                    const curr = window.__globalAudioState;
+                                    updateState(true, url, userId, title, !!isStatus, curr?.previous || null);
                                 })
                                 .catch((err) => {
                                     console.error("Global native playback failed:", err);
-                                    updateState(false, null, null, null);
+                                    updateState(false, null, null, null, false, null);
                                 });
                         }
                     };
@@ -181,7 +212,7 @@ export function GlobalAmbientPlayer() {
                 try { ytPlayerRef.current.pauseVideo(); } catch {}
             }
             const current = window.__globalAudioState;
-            updateState(false, current?.url || null, current?.userId || null, current?.title || null);
+            updateState(false, current?.url || null, current?.userId || null, current?.title || null, !!current?.isStatus, current?.previous || null);
         };
 
         const handleResume = () => {
@@ -192,29 +223,59 @@ export function GlobalAmbientPlayer() {
             if (isYt) {
                 if (ytPlayerRef.current && typeof ytPlayerRef.current.playVideo === "function") {
                     ytPlayerRef.current.playVideo();
-                    updateState(true, current.url, current.userId, current.title);
+                    updateState(true, current.url, current.userId, current.title, !!current.isStatus, current.previous || null);
                 }
             } else {
                 if (audioRef.current) {
                     audioRef.current.play()
                         .then(() => {
-                            updateState(true, current.url, current.userId, current.title);
+                            updateState(true, current.url, current.userId, current.title, !!current.isStatus, current.previous || null);
                         })
                         .catch(() => {
-                            updateState(false, null, null, null);
+                            updateState(false, null, null, null, false, null);
                         });
                 }
+            }
+        };
+
+        const handleRestore = () => {
+            const current = window.__globalAudioState;
+            const prev = current?.previous;
+
+            // Stop current playback
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.src = "";
+            }
+            if (ytPlayerRef.current && typeof ytPlayerRef.current.pauseVideo === "function") {
+                try { ytPlayerRef.current.pauseVideo(); } catch {}
+            }
+
+            if (prev && prev.url) {
+                window.dispatchEvent(new CustomEvent("play-global-audio", {
+                    detail: {
+                        url: prev.url,
+                        title: prev.title,
+                        start: 0,
+                        userId: prev.userId,
+                        isStatus: false
+                    }
+                }));
+            } else {
+                updateState(false, null, null, null, false, null);
             }
         };
 
         window.addEventListener("play-global-audio", handlePlay);
         window.addEventListener("pause-global-audio", handlePause);
         window.addEventListener("resume-global-audio", handleResume);
+        window.addEventListener("restore-global-audio", handleRestore);
 
         return () => {
             window.removeEventListener("play-global-audio", handlePlay);
             window.removeEventListener("pause-global-audio", handlePause);
             window.removeEventListener("resume-global-audio", handleResume);
+            window.removeEventListener("restore-global-audio", handleRestore);
         };
     }, []);
 

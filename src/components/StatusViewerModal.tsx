@@ -59,9 +59,6 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
     const [progress, setProgress] = useState(0);
     const [audioLoading, setAudioLoading] = useState(false);
     const [audioPlaying, setAudioPlaying] = useState(false);
-    const audioRef = useRef<HTMLAudioElement>(null);
-    const ytPlayerRef = useRef<any>(null);
-    const ytContainerId = useRef(`status-yt-${Math.random().toString(36).slice(2)}`);
 
     const items = group.items;
     const currentItem = items[currentIndex];
@@ -82,22 +79,11 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
     // Dynamic duration based on audio selection
     const durationCount = currentItem.audioDuration || 5; 
     const stepInterval = (durationCount * 1000) / 100; // time in ms per 1% progress
-    const ytId = getYouTubeId(currentItem.audioUrl);
 
     useEffect(() => {
         setProgress(0);
         setAudioLoading(false);
         setAudioPlaying(false);
-
-        if (ytPlayerRef.current?.destroy) {
-            try { ytPlayerRef.current.destroy(); } catch {}
-            ytPlayerRef.current = null;
-        }
-        
-        // Setup Audio Start Time Snippet
-        if (audioRef.current && currentItem.audioStart) {
-            audioRef.current.currentTime = currentItem.audioStart;
-        }
 
         if (session?.user?.id && !isOwner) {
             markStatusViewed(currentItem.id).catch(console.error);
@@ -120,37 +106,43 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
         return () => clearInterval(timer);
     }, [currentIndex, durationCount]);
 
-    // Load new audio source dynamically when item changes to allow background buffering
+    // Sync with global player state
     useEffect(() => {
-        if (audioRef.current && currentItem.audioUrl) {
-            audioRef.current.load();
-        }
-    }, [currentIndex, currentItem.audioUrl]);
+        const syncState = () => {
+            const state = window.__globalAudioState;
+            setAudioPlaying(!!(state?.isPlaying && state?.userId === currentItem.id));
+        };
 
-    // Auto-play audio when item changes
+        syncState();
+
+        window.addEventListener("global-audio-state-change", syncState);
+        return () => {
+            window.removeEventListener("global-audio-state-change", syncState);
+        };
+    }, [currentItem.id]);
+
+    // Auto-play status audio de fondo when slide changes
     useEffect(() => {
         if (currentItem.audioUrl) {
             const t = setTimeout(() => {
-                // Initial check to avoid double playing
-                if (!audioPlaying && !audioLoading) {
-                    toggleAudio();
-                }
+                window.dispatchEvent(new CustomEvent("play-global-audio", {
+                    detail: {
+                        url: currentItem.audioUrl,
+                        title: currentItem.audioTitle,
+                        start: currentItem.audioStart,
+                        userId: currentItem.id,
+                        isStatus: true
+                    }
+                }));
             }, 300);
             return () => clearTimeout(t);
         }
-    }, [currentIndex]);
+    }, [currentIndex, currentItem.id]);
 
-    // Cleanup on unmount
+    // Restore profile background music on unmount
     useEffect(() => {
         return () => {
-            if (audioRef.current) {
-                audioRef.current.pause();
-                audioRef.current.src = ""; // Force stop
-            }
-            if (ytPlayerRef.current?.destroy) {
-                try { ytPlayerRef.current.destroy(); } catch {}
-                ytPlayerRef.current = null;
-            }
+            window.dispatchEvent(new CustomEvent("restore-global-audio"));
         };
     }, []);
 
@@ -183,84 +175,26 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
         }
     };
 
-    const toggleAudio = async () => {
-        if (ytId && ytPlayerRef.current) {
-            if (audioPlaying) {
-                ytPlayerRef.current.pauseVideo();
-                setAudioPlaying(false);
-            } else {
-                ytPlayerRef.current.seekTo(currentItem.audioStart || 0, true);
-                ytPlayerRef.current.unMute?.();
-                ytPlayerRef.current.playVideo();
-                setAudioPlaying(true);
-            }
-            return;
-        }
+    const toggleAudio = () => {
+        if (!currentItem.audioUrl) return;
 
-        if (ytId) {
-            setAudioLoading(true);
-            try {
-                await loadYouTubeApi();
-                if (!window.YT?.Player) throw new Error("YouTube API unavailable");
-
-                const playerHost = "https://www.youtube.com";
-
-                ytPlayerRef.current = new window.YT.Player(ytContainerId.current, {
-                    height: "1",
-                    width: "1",
-                    videoId: ytId,
-                    host: playerHost,
-                    playerVars: {
-                        autoplay: 1,
-                        controls: 0,
-                        disablekb: 1,
-                        enablejsapi: 1,
-                        origin: window.location.origin,
-                        playsinline: 1,
-                        start: currentItem.audioStart || 0,
-                    },
-                    events: {
-                        onReady: (event: any) => {
-                            try { event.target.setVolume(80); } catch {}
-                            try { event.target.unMute?.(); } catch {}
-                            try { event.target.playVideo(); } catch (e) {}
-                            setAudioPlaying(true);
-                            setAudioLoading(false);
-                        },
-                        onStateChange: (event: any) => {
-                            setAudioPlaying(event.data === window.YT.PlayerState.PLAYING);
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error("YouTube audio setup failed:", error);
-                toast.error("No se pudo activar el audio de YouTube");
-                setAudioLoading(false);
-
-                // Fallback: try to play native audio if available
-                try {
-                    const url = currentItem.audioUrl || "";
-                    if (audioRef.current && url) {
-                        audioRef.current.currentTime = currentItem.audioStart || 0;
-                        audioRef.current.play().then(() => setAudioPlaying(true)).catch(() => {
-                            toast.error("La reproducción alternativa falló. Abre el audio en otra pestaña.");
-                        });
-                    }
-                } catch (e) { /* ignore fallback errors */ }
-            }
-            return;
-        }
-
-        if (!audioRef.current) return;
-        if (audioPlaying) {
-            audioRef.current.pause();
-            setAudioPlaying(false);
+        const state = window.__globalAudioState;
+        if (state?.isPlaying && state?.userId === currentItem.id) {
+            window.dispatchEvent(new CustomEvent("pause-global-audio"));
+        } else if (state?.userId === currentItem.id && !state?.isPlaying) {
+            window.dispatchEvent(new CustomEvent("resume-global-audio"));
         } else {
-            audioRef.current.currentTime = currentItem.audioStart || 0;
-            audioRef.current.play().then(() => setAudioPlaying(true)).catch((error) => {
-                console.error("Status audio playback failed:", error);
-                toast.error("Toca de nuevo para activar el audio");
-            });
+            setAudioLoading(true);
+            window.dispatchEvent(new CustomEvent("play-global-audio", {
+                detail: {
+                    url: currentItem.audioUrl,
+                    title: currentItem.audioTitle,
+                    start: currentItem.audioStart,
+                    userId: currentItem.id,
+                    isStatus: true
+                }
+            }));
+            setTimeout(() => setAudioLoading(false), 800);
         }
     };
 
@@ -376,11 +310,6 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                         >
                             {audioLoading ? "..." : audioPlaying ? "Pausar" : "Audio"}
                         </button>
-                        {ytId ? (
-                            <div id={ytContainerId.current} style={{ position: "fixed", top: "-1000px", left: "-1000px", width: "300px", height: "200px", zIndex: -9999, pointerEvents: "none" }} />
-                        ) : (
-                            <audio ref={audioRef} src={currentItem.audioUrl} loop style={{ display: "none" }} />
-                        )}
                     </div>
                 )}
 
