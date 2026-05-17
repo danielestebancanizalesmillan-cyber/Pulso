@@ -73,10 +73,10 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
             const res = await improveTweetWithAI(content);
             if (res.enhancedText) {
                 setContent(res.enhancedText);
-                addToast("Tweet mejorado con IA ✨", "success");
+                addToast("Pulso mejorado con IA ✦", "success");
             }
         } catch (e: any) {
-             addToast(e.message || "Error al mejorar tweet", "error");
+             addToast(e.message || "Error al mejorar pulso", "error");
         } finally {
             setIsImproving(false);
         }
@@ -361,7 +361,7 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                                 <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                                     <path d="M16.5 12c1.38 0 2.49-1.12 2.49-2.5S17.88 7 16.5 7C15.12 7 14 8.12 14 9.5s1.12 2.5 2.5 2.5zM9 11c1.66 0 2.99-1.34 2.99-3S10.66 5 9 5C7.34 5 6 6.34 6 8s1.34 3 3 3zm7.5 3c-1.83 0-5.5.92-5.5 2.75V19h11v-2.25c0-1.83-3.67-2.75-5.5-2.75zM9 13c-2.33 0-7 1.17-7 3.5V19h7v-2.25c0-.85.35-2.5 2.5-3.5-.83-.17-1.7-.25-2.5-.25z"/>
                                 </svg>
-                                <span>👥 Publicando en Comunidad</span>
+                                <span>Publicando en Comunidad</span>
                             </div>
                         ) : (
                             <select 
@@ -684,7 +684,9 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                             {isImproving ? (
                                 <span className="spinner-small" style={{ width: '16px', height: '16px', border: '2px solid var(--blue)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                             ) : (
-                                <span style={{ fontSize: '1.2rem' }}>✨</span>
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--blue)" }}>
+                                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/>
+                                </svg>
                             )}
                         </button>
                         <button 

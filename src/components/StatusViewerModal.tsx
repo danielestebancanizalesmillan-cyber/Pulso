@@ -124,18 +124,15 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
     // Auto-play status audio de fondo when slide changes
     useEffect(() => {
         if (currentItem.audioUrl) {
-            const t = setTimeout(() => {
-                window.dispatchEvent(new CustomEvent("play-global-audio", {
-                    detail: {
-                        url: currentItem.audioUrl,
-                        title: currentItem.audioTitle,
-                        start: currentItem.audioStart,
-                        userId: currentItem.id,
-                        isStatus: true
-                    }
-                }));
-            }, 300);
-            return () => clearTimeout(t);
+            window.dispatchEvent(new CustomEvent("play-global-audio", {
+                detail: {
+                    url: currentItem.audioUrl,
+                    title: currentItem.audioTitle,
+                    start: currentItem.audioStart,
+                    userId: currentItem.id,
+                    isStatus: true
+                }
+            }));
         }
     }, [currentIndex, currentItem.id]);
 
@@ -299,7 +296,13 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                 {/* Bottom audio controller slider toolbar track action view */}
                 {currentItem.audioUrl && (
                     <div style={{ position: "relative", zIndex: 2, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(10px)", padding: "10px 16px", borderRadius: "12px", display: "flex", alignItems: "center", gap: "8px", color: "white", marginBottom: "30px", border: "1px solid rgba(255,255,255,0.1)" }}>
-                        <div style={{ fontSize: "1.1rem" }}>🎵</div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.9 }}>
+                                <path d="M9 18V5l12-2v13" />
+                                <circle cx="6" cy="18" r="3" />
+                                <circle cx="18" cy="16" r="3" />
+                            </svg>
+                        </div>
                         <div style={{ fontSize: "0.85rem", opacity: 0.9, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {styleOpts?.audioTitle || "Reproduciendo música..."}
                         </div>

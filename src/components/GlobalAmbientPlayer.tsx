@@ -180,29 +180,35 @@ export function GlobalAmbientPlayer() {
             } else {
                 setYtId(null);
                 if (audioRef.current) {
-                    const playNative = () => {
-                        if (audioRef.current) {
-                            audioRef.current.currentTime = start || 0;
-                            audioRef.current.play()
-                                .then(() => {
-                                    const curr = window.__globalAudioState;
-                                    updateState(true, url, userId, title, !!isStatus, curr?.previous || null);
-                                })
-                                .catch((err) => {
-                                    console.error("Global native playback failed:", err);
-                                    updateState(false, null, null, null, false, null);
-                                });
+                    // Update target URL and volume synchronously
+                    audioRef.current.src = url;
+                    audioRef.current.volume = 0.4;
+
+                    // Set start time once metadata is loaded (safely async once unlocked/playing)
+                    audioRef.current.onloadedmetadata = () => {
+                        if (audioRef.current && start) {
+                            audioRef.current.currentTime = start;
                         }
                     };
 
-                    // If src is already set and metadata is loaded, play immediately!
-                    if (audioRef.current.src === url && audioRef.current.readyState >= 1) {
-                        playNative();
+                    // Trigger synchronous play immediately in the user gesture call stack
+                    const playPromise = audioRef.current.play();
+
+                    if (playPromise !== undefined) {
+                        playPromise
+                            .then(() => {
+                                const curr = window.__globalAudioState;
+                                updateState(true, url, userId, title, !!isStatus, curr?.previous || null);
+                            })
+                            .catch((err) => {
+                                console.error("Global native playback failed:", err);
+                                const curr = window.__globalAudioState;
+                                updateState(false, url, userId, title, !!isStatus, curr?.previous || null);
+                            });
                     } else {
-                        audioRef.current.src = url;
-                        audioRef.current.volume = 0.4;
-                        audioRef.current.onloadedmetadata = playNative;
-                        audioRef.current.load();
+                        // Fallback for older browsers
+                        const curr = window.__globalAudioState;
+                        updateState(true, url, userId, title, !!isStatus, curr?.previous || null);
                     }
                 }
             }
@@ -235,8 +241,10 @@ export function GlobalAmbientPlayer() {
                         .then(() => {
                             updateState(true, current.url, current.userId, current.title, !!current.isStatus, current.previous || null);
                         })
-                        .catch(() => {
-                            updateState(false, null, null, null, false, null);
+                        .catch((err) => {
+                            console.error("Global native resume failed:", err);
+                            const curr = window.__globalAudioState;
+                            updateState(false, current.url, current.userId, current.title, !!current.isStatus, curr?.previous || null);
                         });
                 }
             }

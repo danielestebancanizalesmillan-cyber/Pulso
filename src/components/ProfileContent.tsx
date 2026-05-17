@@ -105,7 +105,7 @@ export function ProfileContent({
     const latestStatus = statuses[0];
     const hasStatus = statuses.length > 0;
     
-    // Sync with the global player state and handle autoplay on mount
+    // Sync with the global player state
     useEffect(() => {
         const syncState = () => {
             const state = window.__globalAudioState;
@@ -114,7 +114,14 @@ export function ProfileContent({
 
         syncState(); // Initial check
 
-        // Automatically trigger play on mount if there is audio and not already playing this user's song
+        window.addEventListener("global-audio-state-change", syncState);
+        return () => {
+            window.removeEventListener("global-audio-state-change", syncState);
+        };
+    }, [user.id]);
+
+    // Handle autoplay on mount (runs separately to avoid early return breaking the event listener)
+    useEffect(() => {
         if (user?.profileAudioUrl) {
             const state = window.__globalAudioState;
             if (state?.userId !== user.id || !state?.isPlaying) {
@@ -131,12 +138,7 @@ export function ProfileContent({
                 return () => clearTimeout(t);
             }
         }
-
-        window.addEventListener("global-audio-state-change", syncState);
-        return () => {
-            window.removeEventListener("global-audio-state-change", syncState);
-        };
-    }, [user.id]);
+    }, [user.id, user?.profileAudioUrl]);
 
     const toggleProfileAudio = () => {
         if (!user?.profileAudioUrl) return;
@@ -292,7 +294,7 @@ export function ProfileContent({
                                             {isMuted ? (t("unmute") || "Unmute") : (t("mute") || "Mute")} @{user.username}
                                         </button>
                                         <button onClick={() => { setShowListsModal(true); setShowMoreMenu(false); }} className="dropdown-item">
-                                            👥 Administrar en Listas
+                                            Administrar en Listas
                                         </button>
                                         <button onClick={() => { toggleBlock(user.id); setShowMoreMenu(false); }} className="dropdown-item" style={{ color: "var(--red)" }}>
                                             {isBlocked ? (t("unblock") || "Unblock") : (t("block") || "Block")} @{user.username}
@@ -450,7 +452,10 @@ export function ProfileContent({
                 </div>
             ) : user.isPrivate && !isFollowing && !isOwn ? (
                 <div className="empty-state" style={{ marginTop: 80, padding: "0 20px" }}>
-                    <div style={{ fontSize: "3rem", marginBottom: 16 }}>🔒</div>
+                    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", marginBottom: 16 }}>
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
                     <h2 style={{ fontSize: "1.8rem", fontWeight: 800, marginBottom: 8 }}>Esta cuenta es privada</h2>
                     <p style={{ color: "var(--text-secondary)", maxWidth: 350, margin: "0 auto" }}>
                         Síguela para ver sus publicaciones y fotos.

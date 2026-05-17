@@ -97,7 +97,7 @@ export function NewMessageModal({ onClose }: { onClose: () => void }) {
                     
                     {!loading && !query.trim() && results.length > 0 && (
                         <div style={{ padding: "12px 16px 8px", fontSize: "0.80rem", fontWeight: 800, color: "var(--text-secondary)", borderBottom: "1px solid var(--border)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                            👥 Sugeridos para ti
+                            Sugeridos para ti
                         </div>
                     )}
                     
