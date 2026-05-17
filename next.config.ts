@@ -19,8 +19,8 @@ const nextConfig: NextConfig = {
             // Remove 'unsafe-eval' as soon as debugging is complete.
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.pusher.com https://www.youtube-nocookie.com",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.pusher.com https://www.youtube-nocookie.com https://www.youtube.com https://unpkg.com https://translate.google.com https://translate.googleapis.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://translate.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https: http:",
               "media-src 'self' blob: https:",
