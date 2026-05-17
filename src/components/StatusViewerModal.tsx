@@ -221,7 +221,8 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                 // Fallback: try to play native audio if available
                 try {
                     const url = currentItem.audioUrl || "";
-                    if (audioRef.current && /\.(mp3|ogg|wav|webm)$/i.test(url)) {
+                    if (audioRef.current && url) {
+                        audioRef.current.load();
                         audioRef.current.currentTime = currentItem.audioStart || 0;
                         audioRef.current.play().then(() => setAudioPlaying(true)).catch(() => {
                             toast.error("La reproducción alternativa falló. Abre el audio en otra pestaña.");
@@ -237,6 +238,7 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
             audioRef.current.pause();
             setAudioPlaying(false);
         } else {
+            audioRef.current.load();
             audioRef.current.currentTime = currentItem.audioStart || 0;
             audioRef.current.play().then(() => setAudioPlaying(true)).catch((error) => {
                 console.error("Status audio playback failed:", error);
@@ -358,7 +360,7 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                             {audioLoading ? "..." : audioPlaying ? "Pausar" : "Audio"}
                         </button>
                         {ytId ? (
-                            <div id={ytContainerId.current} style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} />
+                            <div id={ytContainerId.current} style={{ position: "fixed", top: "-1000px", left: "-1000px", width: "300px", height: "200px", zIndex: -9999, pointerEvents: "none" }} />
                         ) : (
                             <audio ref={audioRef} src={currentItem.audioUrl} loop style={{ display: "none" }} />
                         )}

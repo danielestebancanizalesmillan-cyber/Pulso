@@ -111,42 +111,7 @@ export function ProfileContent({
 
     const setupNativeAudioEffects = () => {
         if (!audioRef.current) return;
-        audioRef.current.volume = 0.15;
-
-        // Skip Web Audio API node connection for cross-origin URLs if they don't support CORS
-        const isExternalAudio = user?.profileAudioUrl?.startsWith("http") && !user?.profileAudioUrl?.includes(window.location.host);
-        if (isExternalAudio) {
-            console.log("External audio source detected; bypassing Web Audio API routing to prevent CORS silent blocks.");
-            return;
-        }
-
-        try {
-            const ctx = audioContextRef.current || new (window.AudioContext || (window as any).webkitAudioContext)();
-            if (!audioContextRef.current) audioContextRef.current = ctx;
-            if (ctx.state === "suspended") ctx.resume();
-
-            if (!sourceNodeRef.current) {
-                const source = ctx.createMediaElementSource(audioRef.current);
-                sourceNodeRef.current = source;
-
-                const delay = ctx.createDelay();
-                const feedback = ctx.createGain();
-                const delayVolume = ctx.createGain();
-
-                delay.delayTime.value = 0.35;
-                feedback.gain.value = 0.3;
-                delayVolume.gain.value = 0.35;
-
-                source.connect(ctx.destination);
-                source.connect(delay);
-                delay.connect(feedback);
-                feedback.connect(delay);
-                delay.connect(delayVolume);
-                delayVolume.connect(ctx.destination);
-            }
-        } catch (error) {
-            console.warn("AudioContext setup failed or already connected:", error);
-        }
+        audioRef.current.volume = 0.4;
     };
 
     const toggleProfileAudio = async () => {
@@ -180,7 +145,7 @@ export function ProfileContent({
                     },
                     events: {
                         onReady: (e: any) => {
-                            e.target.setVolume(15);
+                            e.target.setVolume(50);
                             e.target.unMute?.();
                             e.target.playVideo();
                             setYtPlayer(e.target);
@@ -198,6 +163,7 @@ export function ProfileContent({
                 audioRef.current.pause();
             } else {
                 setupNativeAudioEffects();
+                audioRef.current.load();
                 audioRef.current.currentTime = user?.profileAudioStart || 0;
                 audioRef.current.play().catch(console.error);
             }
@@ -319,16 +285,11 @@ export function ProfileContent({
                     {/* Auto-reproducir musica si el estado tiene */}
                     {user && user.profileAudioUrl && (
                         <>
-                            <div id="yt-player-ambient" style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} />
+                            <div id="yt-player-ambient" style={{ position: "fixed", top: "-1000px", left: "-1000px", width: "300px", height: "200px", zIndex: -9999, pointerEvents: "none" }} />
                             {!user.profileAudioUrl.includes("youtube.com") && !user.profileAudioUrl.includes("youtu.be") && (
                                 <audio 
                                     ref={audioRef} 
                                     src={user.profileAudioUrl} 
-                                    crossOrigin={
-                                        (user.profileAudioUrl.startsWith("http") && !user.profileAudioUrl.includes(window.location.host))
-                                            ? undefined 
-                                            : "anonymous"
-                                    } 
                                     loop 
                                     style={{ display: "none" }} 
                                 />
