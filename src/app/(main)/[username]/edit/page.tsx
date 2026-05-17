@@ -200,7 +200,7 @@ export default function EditProfilePage() {
                             <circle cx="12" cy="13" r="4" />
                         </svg>
                     </div>
-                    <input type="file" accept="image/*,image/gif" ref={coverInputRef} style={{ display: "none" }} onChange={handleFile("cover")} />
+                    <input id="cover-file-input" name="coverImage" type="file" accept="image/*,image/gif" ref={coverInputRef} style={{ display: "none" }} onChange={handleFile("cover")} />
                 </div>
 
                 <div style={{ padding: "0 24px" }}>
@@ -221,7 +221,7 @@ export default function EditProfilePage() {
                                 <circle cx="12" cy="13" r="4" />
                             </svg>
                         </div>
-                        <input type="file" accept="image/*,image/gif" ref={avatarInputRef} style={{ display: "none" }} onChange={handleFile("avatar")} />
+                        <input id="avatar-file-input" name="avatar" type="file" accept="image/*,image/gif" ref={avatarInputRef} style={{ display: "none" }} onChange={handleFile("avatar")} />
                     </div>
 
                     <div style={{ marginTop: 24 }}>
@@ -233,16 +233,18 @@ export default function EditProfilePage() {
 
                         {/* Nombre */}
                         <div className="form-group">
-                            <label className="form-label">{t("displayName")}</label>
-                            <input className="form-input" type="text" value={form.name} onChange={set("name")} required maxLength={50} />
+                            <label className="form-label" htmlFor="display-name">{t("displayName")}</label>
+                            <input id="display-name" name="name" className="form-input" type="text" value={form.name} onChange={set("name")} required maxLength={50} />
                         </div>
 
                         {/* Username */}
                         <div className="form-group">
-                            <label className="form-label">Nombre de usuario (@)</label>
+                            <label className="form-label" htmlFor="username">Nombre de usuario (@)</label>
                             <div style={{ position: "relative" }}>
                                 <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "var(--text-secondary)" }}>@</span>
                                 <input
+                                    id="username"
+                                    name="username"
                                     className="form-input"
                                     type="text"
                                     value={form.username}
@@ -264,8 +266,10 @@ export default function EditProfilePage() {
                             
                             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                                 <div>
-                                    <label style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 4 }}>URL de la canción (YouTube o MP3)</label>
+                                    <label htmlFor="profile-audio-url" style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 4 }}>URL de la canción (YouTube o MP3)</label>
                                     <input 
+                                        id="profile-audio-url"
+                                        name="profileAudioUrl"
                                         className="form-input" 
                                         type="text" 
                                         value={form.profileAudioUrl} 
@@ -276,8 +280,10 @@ export default function EditProfilePage() {
                                 
                                 <div style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: 12 }}>
                                     <div>
-                                        <label style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 4 }}>Título de la canción</label>
+                                        <label htmlFor="profile-audio-title" style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 4 }}>Título de la canción</label>
                                         <input 
+                                            id="profile-audio-title"
+                                            name="profileAudioTitle"
                                             className="form-input" 
                                             type="text" 
                                             value={form.profileAudioTitle} 
@@ -286,8 +292,10 @@ export default function EditProfilePage() {
                                         />
                                     </div>
                                     <div>
-                                        <label style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 4 }}>Inicio (seg)</label>
+                                        <label htmlFor="profile-audio-start" style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 4 }}>Inicio (seg)</label>
                                         <input 
+                                            id="profile-audio-start"
+                                            name="profileAudioStart"
                                             className="form-input" 
                                             type="number" 
                                             value={form.profileAudioStart} 
@@ -301,8 +309,10 @@ export default function EditProfilePage() {
 
                         {/* Bio */}
                         <div className="form-group">
-                            <label className="form-label">{t("bio")}</label>
+                            <label className="form-label" htmlFor="bio">{t("bio")}</label>
                             <textarea
+                                id="bio"
+                                name="bio"
                                 className="form-input"
                                 value={form.bio}
                                 onChange={set("bio") as any}
@@ -318,7 +328,7 @@ export default function EditProfilePage() {
 
                         {/* Ubicación + Región del feed */}
                         <div className="form-group">
-                            <label className="form-label" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <label className="form-label" htmlFor="location" style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                 <MapPin size={14} />
                                 Ubicación y región del feed
                             </label>
@@ -326,6 +336,8 @@ export default function EditProfilePage() {
                             {/* Campo de texto libre */}
                             <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
                                 <input
+                                    id="location"
+                                    name="location"
                                     className="form-input"
                                     type="text"
                                     value={form.location}
@@ -401,8 +413,8 @@ export default function EditProfilePage() {
 
                         {/* Website */}
                         <div className="form-group">
-                            <label className="form-label">{t("website")}</label>
-                            <input className="form-input" type="url" value={form.website} onChange={set("website")} maxLength={100} placeholder="https://example.com" />
+                            <label className="form-label" htmlFor="website">{t("website")}</label>
+                            <input id="website" name="website" className="form-input" type="url" value={form.website} onChange={set("website")} maxLength={100} placeholder="https://example.com" />
                         </div>
 
                         {error && <p className="form-error">⚠ {error}</p>}
