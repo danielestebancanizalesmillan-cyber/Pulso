@@ -4,6 +4,7 @@ import { useState, useTransition, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { updateProfile, getProfileData } from "@/app/actions/user";
+import { searchYouTube } from "@/app/actions/status";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
 import { REGIONS } from "@/lib/constants";
@@ -38,6 +39,28 @@ export default function EditProfilePage() {
     const [coverFile, setCoverFile] = useState<File | null>(null);
     const [coverPreview, setCoverPreview] = useState<string>(user?.coverImage || "");
     const coverInputRef = useRef<HTMLInputElement>(null);
+
+    // Music Search states
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setSearchResults([]);
+            return;
+        }
+        setIsSearching(true);
+        const t = setTimeout(() => {
+            searchYouTube(searchQuery)
+                .then((res) => {
+                    setSearchResults(res);
+                    setIsSearching(false);
+                })
+                .catch(() => setIsSearching(false));
+        }, 350); // 350ms debounce
+        return () => clearTimeout(t);
+    }, [searchQuery]);
 
     const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -266,6 +289,77 @@ export default function EditProfilePage() {
                             
                             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                                 <div>
+                                    <label htmlFor="profile-audio-search" style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                                        🔍 Buscar canción en YouTube
+                                    </label>
+                                    <input 
+                                        id="profile-audio-search"
+                                        className="form-input" 
+                                        type="text" 
+                                        value={searchQuery} 
+                                        onChange={(e) => setSearchQuery(e.target.value)} 
+                                        placeholder="Escribe el nombre de la canción o artista..." 
+                                        style={{ background: "var(--bg-secondary)" }}
+                                    />
+                                    {isSearching && (
+                                        <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                                            <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} />
+                                            Buscando canciones...
+                                        </div>
+                                    )}
+                                    {searchResults.length > 0 && (
+                                        <div style={{ 
+                                            background: "var(--bg-secondary)", 
+                                            border: "1px solid var(--border)", 
+                                            borderRadius: 12, 
+                                            marginTop: 8, 
+                                            maxHeight: 200, 
+                                            overflowY: "auto", 
+                                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                            position: "relative",
+                                            zIndex: 10
+                                        }}>
+                                            {searchResults.map((item: any) => (
+                                                <button
+                                                    key={item.url}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setForm(f => ({
+                                                            ...f,
+                                                            profileAudioUrl: item.url,
+                                                            profileAudioTitle: item.title,
+                                                        }));
+                                                        setSearchResults([]);
+                                                        setSearchQuery("");
+                                                    }}
+                                                    style={{
+                                                        width: "100%",
+                                                        padding: "10px 14px",
+                                                        textAlign: "left",
+                                                        background: "none",
+                                                        border: "none",
+                                                        color: "var(--text-primary)",
+                                                        cursor: "pointer",
+                                                        fontSize: "0.85rem",
+                                                        borderBottom: "1px solid var(--border)",
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                        gap: 2,
+                                                        boxSizing: "border-box",
+                                                        transition: "background 0.15s"
+                                                    }}
+                                                    onMouseEnter={(e) => e.currentTarget.style.background = "var(--bg-hover)"}
+                                                    onMouseLeave={(e) => e.currentTarget.style.background = "none"}
+                                                >
+                                                    <span style={{ fontWeight: 600 }}>{item.title}</span>
+                                                    <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{item.channelTitle || "YouTube"}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div style={{ marginTop: 8 }}>
                                     <label htmlFor="profile-audio-url" style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 4 }}>URL de la canción (YouTube o MP3)</label>
                                     <input 
                                         id="profile-audio-url"

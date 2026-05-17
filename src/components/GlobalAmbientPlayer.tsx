@@ -180,11 +180,7 @@ export function GlobalAmbientPlayer() {
             } else {
                 setYtId(null);
                 if (audioRef.current) {
-                    // Set src and seek on loaded metadata
-                    audioRef.current.src = url;
-                    audioRef.current.volume = 0.4;
-                    
-                    audioRef.current.onloadedmetadata = () => {
+                    const playNative = () => {
                         if (audioRef.current) {
                             audioRef.current.currentTime = start || 0;
                             audioRef.current.play()
@@ -198,8 +194,16 @@ export function GlobalAmbientPlayer() {
                                 });
                         }
                     };
-                    
-                    audioRef.current.load();
+
+                    // If src is already set and metadata is loaded, play immediately!
+                    if (audioRef.current.src === url && audioRef.current.readyState >= 1) {
+                        playNative();
+                    } else {
+                        audioRef.current.src = url;
+                        audioRef.current.volume = 0.4;
+                        audioRef.current.onloadedmetadata = playNative;
+                        audioRef.current.load();
+                    }
                 }
             }
         };
