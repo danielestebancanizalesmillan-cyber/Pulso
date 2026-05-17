@@ -165,9 +165,6 @@ export function ProfileContent({
     const handleViewHistory = (e: any) => {
         e.stopPropagation(); 
         setShowAvatarMenu(false);
-        
-        // Pause background music immediately when viewing states/history
-        window.dispatchEvent(new CustomEvent("pause-global-audio"));
         setViewerOpen(true);
     };
 

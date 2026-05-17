@@ -250,6 +250,27 @@ export function GlobalAmbientPlayer() {
             }
         };
 
+        const handleTempPause = () => {
+            const current = window.__globalAudioState;
+            if (current && !current.isStatus && current.url) {
+                const previous = {
+                    url: current.url,
+                    userId: current.userId,
+                    title: current.title,
+                    isPlaying: current.isPlaying
+                };
+
+                if (audioRef.current) {
+                    audioRef.current.pause();
+                }
+                if (ytPlayerRef.current && typeof ytPlayerRef.current.pauseVideo === "function") {
+                    try { ytPlayerRef.current.pauseVideo(); } catch {}
+                }
+
+                updateState(false, null, null, null, true, previous);
+            }
+        };
+
         const handleRestore = () => {
             const current = window.__globalAudioState;
             const prev = current?.previous;
@@ -264,15 +285,36 @@ export function GlobalAmbientPlayer() {
             }
 
             if (prev && prev.url) {
-                window.dispatchEvent(new CustomEvent("play-global-audio", {
-                    detail: {
-                        url: prev.url,
-                        title: prev.title,
-                        start: 0,
-                        userId: prev.userId,
-                        isStatus: false
+                if (prev.isPlaying) {
+                    window.dispatchEvent(new CustomEvent("play-global-audio", {
+                        detail: {
+                            url: prev.url,
+                            title: prev.title,
+                            start: 0,
+                            userId: prev.userId,
+                            isStatus: false
+                        }
+                    }));
+                } else {
+                    // Restore in paused state
+                    const isYt = getYouTubeId(prev.url);
+                    if (isYt) {
+                        setYtId(isYt);
+                        if (ytPlayerRef.current && typeof ytPlayerRef.current.cueVideoById === "function") {
+                            try {
+                                ytPlayerRef.current.cueVideoById({ videoId: isYt });
+                            } catch {}
+                        }
+                    } else {
+                        setYtId(null);
+                        if (audioRef.current) {
+                            audioRef.current.src = prev.url;
+                            audioRef.current.volume = 0.4;
+                            audioRef.current.currentTime = 0;
+                        }
                     }
-                }));
+                    updateState(false, prev.url, prev.userId, prev.title, false, null);
+                }
             } else {
                 updateState(false, null, null, null, false, null);
             }
@@ -282,12 +324,14 @@ export function GlobalAmbientPlayer() {
         window.addEventListener("pause-global-audio", handlePause);
         window.addEventListener("resume-global-audio", handleResume);
         window.addEventListener("restore-global-audio", handleRestore);
+        window.addEventListener("temp-pause-global-audio", handleTempPause);
 
         return () => {
             window.removeEventListener("play-global-audio", handlePlay);
             window.removeEventListener("pause-global-audio", handlePause);
             window.removeEventListener("resume-global-audio", handleResume);
             window.removeEventListener("restore-global-audio", handleRestore);
+            window.removeEventListener("temp-pause-global-audio", handleTempPause);
         };
     }, []);
 

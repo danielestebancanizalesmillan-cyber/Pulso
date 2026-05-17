@@ -59,6 +59,7 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
     const [progress, setProgress] = useState(0);
     const [audioLoading, setAudioLoading] = useState(false);
     const [audioPlaying, setAudioPlaying] = useState(false);
+    const elapsedRef = useRef(0);
 
     const items = group.items;
     const currentItem = items[currentIndex];
@@ -80,31 +81,43 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
     const durationCount = currentItem.audioDuration || 5; 
     const stepInterval = (durationCount * 1000) / 100; // time in ms per 1% progress
 
+    // Reset elapsed on slide change
     useEffect(() => {
+        elapsedRef.current = 0;
         setProgress(0);
         setAudioLoading(false);
         setAudioPlaying(false);
+    }, [currentIndex]);
 
+    // Timer effect that is pause-aware and ties slide progression to actual audio playback
+    useEffect(() => {
         if (session?.user?.id && !isOwner) {
             markStatusViewed(currentItem.id).catch(console.error);
         }
 
-        const startTime = Date.now();
+        const isMusicSlide = Boolean(currentItem.audioUrl);
+        const isPaused = isMusicSlide && !audioPlaying;
+
+        if (isPaused) {
+            return; // Pause visual progression!
+        }
+
         const durationMs = durationCount * 1000;
+        const tickRate = 30; // ms per tick
 
         const timer = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const percentage = Math.min((elapsed / durationMs) * 100, 100);
+            elapsedRef.current += tickRate;
+            const percentage = Math.min((elapsedRef.current / durationMs) * 100, 100);
             setProgress(percentage);
 
             if (percentage >= 100) {
                 clearInterval(timer);
                 handleNext();
             }
-        }, 30); // 30ms para animación ultra fluida
+        }, tickRate);
 
         return () => clearInterval(timer);
-    }, [currentIndex, durationCount]);
+    }, [currentIndex, durationCount, audioPlaying, currentItem.audioUrl, isOwner, session?.user?.id]);
 
     // Sync with global player state
     useEffect(() => {
@@ -136,8 +149,9 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
         }
     }, [currentIndex, currentItem.id]);
 
-    // Restore profile background music on unmount
+    // Temp pause any background music and restore on unmount
     useEffect(() => {
+        window.dispatchEvent(new CustomEvent("temp-pause-global-audio"));
         return () => {
             window.dispatchEvent(new CustomEvent("restore-global-audio"));
         };
