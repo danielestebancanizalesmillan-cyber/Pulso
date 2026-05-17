@@ -18,7 +18,20 @@ declare global {
 function getYouTubeId(url?: string | null) {
     if (!url) return null;
     const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-    return match && match[2].length === 11 ? match[2] : null;
+    if (match && match[2].length === 11) {
+        return match[2];
+    }
+    if (url.includes("youtu.be/")) {
+        const parts = url.split("youtu.be/");
+        const id = parts[1]?.split(/[?#&]/)[0];
+        if (id && id.length === 11) return id;
+    }
+    if (url.includes("v=")) {
+        const parts = url.split("v=");
+        const id = parts[1]?.split(/[?#&]/)[0];
+        if (id && id.length === 11) return id;
+    }
+    return null;
 }
 
 function loadYouTubeApi() {
@@ -137,18 +150,25 @@ export function GlobalAmbientPlayer() {
             } else {
                 setYtId(null);
                 if (audioRef.current) {
+                    // Set src and defer seek/play until metadata loads successfully
                     audioRef.current.src = url;
                     audioRef.current.volume = 0.4;
+                    
+                    audioRef.current.onloadedmetadata = () => {
+                        if (audioRef.current) {
+                            audioRef.current.currentTime = start || 0;
+                            audioRef.current.play()
+                                .then(() => {
+                                    updateState(true, url, userId, title);
+                                })
+                                .catch((err) => {
+                                    console.error("Global native playback failed:", err);
+                                    updateState(false, null, null, null);
+                                });
+                        }
+                    };
+                    
                     audioRef.current.load();
-                    audioRef.current.currentTime = start || 0;
-                    audioRef.current.play()
-                        .then(() => {
-                            updateState(true, url, userId, title);
-                        })
-                        .catch((err) => {
-                            console.error("Global native playback failed:", err);
-                            updateState(false, null, null, null);
-                        });
                 }
             }
         };
