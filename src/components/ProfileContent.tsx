@@ -95,6 +95,15 @@ export function ProfileContent({
     const [viewerOpen, setViewerOpen] = useState(false);
     const [showCreateStatus, setShowCreateStatus] = useState(false);
     const [showListsModal, setShowListsModal] = useState(false);
+
+    useEffect(() => {
+        if (user?.id) {
+            getUserStatuses(user.id).then(setStatuses).catch(console.error);
+        }
+    }, [user.id]);
+
+    const latestStatus = statuses[0];
+    const hasStatus = statuses.length > 0;
     
     // Sync with the global player state and handle autoplay on mount
     useEffect(() => {
