@@ -6,6 +6,7 @@ import { GlobalCompose } from "@/components/GlobalCompose";
 import { MobileTweetFAB } from "@/components/MobileTweetFAB";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { UsernameGuard } from "@/components/UsernameGuard";
+import { GlobalAmbientPlayer } from "@/components/GlobalAmbientPlayer";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
             {session && <GlobalCompose />}
             {session && <MobileTweetFAB />}
             {session && <KeyboardShortcuts />}
+            <GlobalAmbientPlayer />
         </UsernameGuard>
     );
 }

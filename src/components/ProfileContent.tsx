@@ -96,89 +96,58 @@ export function ProfileContent({
     const [showCreateStatus, setShowCreateStatus] = useState(false);
     const [showListsModal, setShowListsModal] = useState(false);
     
-    const audioRef = useRef<HTMLAudioElement>(null);
-    const [ytPlayer, setYtPlayer] = useState<any>(null);
-    const audioContextRef = useRef<AudioContext | null>(null);
-    const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
-
+    // Sync with the global player state and handle autoplay on mount
     useEffect(() => {
-        if (user?.id) {
-            getUserStatuses(user.id).then(setStatuses).catch(console.error);
+        const syncState = () => {
+            const state = window.__globalAudioState;
+            setIsPlayingAudio(!!(state?.isPlaying && state?.userId === user.id));
+        };
+
+        syncState(); // Initial check
+
+        // Automatically trigger play on mount if there is audio and not already playing this user's song
+        if (user?.profileAudioUrl) {
+            const state = window.__globalAudioState;
+            if (state?.userId !== user.id || !state?.isPlaying) {
+                const t = setTimeout(() => {
+                    window.dispatchEvent(new CustomEvent("play-global-audio", {
+                        detail: {
+                            url: user.profileAudioUrl,
+                            title: user.profileAudioTitle,
+                            start: user.profileAudioStart,
+                            userId: user.id
+                        }
+                    }));
+                }, 800);
+                return () => clearTimeout(t);
+            }
         }
+
+        window.addEventListener("global-audio-state-change", syncState);
+        return () => {
+            window.removeEventListener("global-audio-state-change", syncState);
+        };
     }, [user.id]);
 
-    const latestStatus = statuses[0];
-    const hasStatus = statuses.length > 0;
+    const toggleProfileAudio = () => {
+        if (!user?.profileAudioUrl) return;
 
-    useEffect(() => {
-        setIsPlayingAudio(false);
-        setIsLoadingAudio(false);
-        sourceNodeRef.current = null;
-
-        if (ytPlayer && ytPlayer.destroy) {
-            try { ytPlayer.destroy(); } catch {}
-            setYtPlayer(null);
-        }
-    }, [latestStatus?.id]);
-
-    const setupNativeAudioEffects = () => {
-        if (!audioRef.current) return;
-        audioRef.current.volume = 0.4;
-    };
-
-    const toggleProfileAudio = async () => {
-        const ytId = getYouTubeId(user?.profileAudioUrl);
-
-        if (ytPlayer && typeof ytPlayer.playVideo === "function") {
-            if (isPlayingAudio) ytPlayer.pauseVideo();
-            else ytPlayer.playVideo();
-            setIsPlayingAudio(!isPlayingAudio);
-            return;
-        }
-
-        if (ytId) {
+        const state = window.__globalAudioState;
+        if (state?.isPlaying && state?.userId === user.id) {
+            window.dispatchEvent(new CustomEvent("pause-global-audio"));
+        } else if (state?.userId === user.id && !state?.isPlaying) {
+            window.dispatchEvent(new CustomEvent("resume-global-audio"));
+        } else {
             setIsLoadingAudio(true);
-            try {
-                await loadYouTubeApi();
-                new (window as any).YT.Player("yt-player-ambient", {
-                    height: "1",
-                    width: "1",
-                    videoId: ytId,
-                    // Use the standard YouTube host to avoid origin/postMessage mismatches
-                    host: "https://www.youtube.com",
-                    playerVars: {
-                        autoplay: 1,
-                        controls: 0,
-                        disablekb: 1,
-                        enablejsapi: 1,
-                        origin: window.location.origin,
-                        playsinline: 1,
-                        start: user.profileAudioStart || 0,
-                    },
-                    events: {
-                        onReady: (e: any) => {
-                            e.target.setVolume(50);
-                            e.target.unMute?.();
-                            e.target.playVideo();
-                            setYtPlayer(e.target);
-                            setIsPlayingAudio(true);
-                            setIsLoadingAudio(false);
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error("Profile YouTube audio failed:", error);
-                setIsLoadingAudio(false);
-            }
-        } else if (audioRef.current) {
-            if (isPlayingAudio) {
-                audioRef.current.pause();
-            } else {
-                setupNativeAudioEffects();
-                audioRef.current.currentTime = user?.profileAudioStart || 0;
-                audioRef.current.play().catch(console.error);
-            }
-            setIsPlayingAudio(!isPlayingAudio);
+            window.dispatchEvent(new CustomEvent("play-global-audio", {
+                detail: {
+                    url: user.profileAudioUrl,
+                    title: user.profileAudioTitle,
+                    start: user.profileAudioStart,
+                    userId: user.id
+                }
+            }));
+            setTimeout(() => setIsLoadingAudio(false), 800);
         }
     };
 
@@ -186,14 +155,8 @@ export function ProfileContent({
         e.stopPropagation(); 
         setShowAvatarMenu(false);
         
-        // Stop profile audio immediately to preserve synchronous user gesture context
-        if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
-            try { ytPlayer.pauseVideo(); } catch {}
-        }
-        if (audioRef.current) {
-            try { audioRef.current.pause(); } catch {}
-        }
-        setIsPlayingAudio(false);
+        // Pause background music immediately when viewing states/history
+        window.dispatchEvent(new CustomEvent("pause-global-audio"));
         setViewerOpen(true);
     };
 
@@ -293,20 +256,6 @@ export function ProfileContent({
                         )}
                     </div>
 
-                    {/* Auto-reproducir musica si el estado tiene */}
-                    {user && user.profileAudioUrl && (
-                        <>
-                            <div id="yt-player-ambient" style={{ position: "fixed", top: "-1000px", left: "-1000px", width: "300px", height: "200px", zIndex: -9999, pointerEvents: "none" }} />
-                            {!user.profileAudioUrl.includes("youtube.com") && !user.profileAudioUrl.includes("youtu.be") && (
-                                <audio 
-                                    ref={audioRef} 
-                                    src={user.profileAudioUrl} 
-                                    loop 
-                                    style={{ display: "none" }} 
-                                />
-                            )}
-                        </>
-                    )}
 
                     <div style={{ display: "flex", gap: 8, paddingTop: 8 }}>
                         {isOwn ? (
