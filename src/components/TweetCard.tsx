@@ -969,6 +969,22 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                                                             borderRadius: "inherit"
                                                         }}
                                                     />
+                                                ) : img.type === 'audio' ? (
+                                                    <div 
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        style={{ width: "100%", padding: 12, background: "rgba(0,0,0,0.06)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}
+                                                    >
+                                                        <audio 
+                                                            src={img.url} 
+                                                            crossOrigin={
+                                                                (img.url.startsWith("http") && !img.url.includes(window.location.host))
+                                                                    ? undefined 
+                                                                    : "anonymous"
+                                                            } 
+                                                            controls 
+                                                            style={{ width: "100%" }} 
+                                                        />
+                                                    </div>
                                                 ) : (
                                                     <img
                                                         src={img.url}
@@ -1255,39 +1271,65 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                             flexDirection: "column", 
                             alignItems: "center", 
                             justifyContent: "center", 
-                            zIndex: 10,
-                            padding: "20px",
+                            zIndex: 100,
+                            padding: "24px",
                             textAlign: "center",
-                            background: shouldBlurWhole ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0.2)",
-                            backdropFilter: shouldBlurWhole ? "blur(12px)" : "none",
-                            borderRadius: "inherit"
+                            background: "rgba(15, 23, 42, 0.85)",
+                            backdropFilter: "blur(24px)",
+                            WebkitBackdropFilter: "blur(24px)",
+                            borderRadius: "inherit",
+                            border: "1px solid rgba(255, 255, 255, 0.08)",
+                            boxShadow: "inset 0 0 40px rgba(0, 0, 0, 0.6)"
                         }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div style={{ background: "rgba(255,255,255,0.1)", padding: "12px", borderRadius: "50%", marginBottom: "12px" }}>
-                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" strokeWidth="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                <circle cx="12" cy="12" r="3" />
-                                <line x1="1" y1="1" x2="23" y2="23" />
+                        <div style={{ 
+                            background: "rgba(244, 63, 94, 0.15)", 
+                            padding: "16px", 
+                            borderRadius: "50%", 
+                            marginBottom: "16px",
+                            border: "1px solid rgba(244, 63, 94, 0.3)",
+                            boxShadow: "0 0 20px rgba(244, 63, 94, 0.1)"
+                        }}>
+                            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#f43f5e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                <line x1="12" y1="9" x2="12" y2="13" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
                             </svg>
                         </div>
-                        <p style={{ color: "white", fontWeight: 600, fontSize: "0.95rem", marginBottom: "16px", textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>
-                            Este post puede contener contenido sensible
+                        <h4 style={{ color: "white", margin: "0 0 8px 0", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "-0.01em" }}>
+                            Contenido Altamente Sensible
+                        </h4>
+                        <p style={{ color: "rgba(255, 255, 255, 0.7)", fontWeight: 400, fontSize: "0.85rem", maxWidth: "280px", margin: "0 0 20px 0", lineHeight: "1.4" }}>
+                            Esta publicación ha sido marcada debido a su contenido gráfico o sensible.
                         </p>
                         <button 
                             onClick={(e) => { e.stopPropagation(); setRevealed(true); }}
                             style={{ 
-                                background: "white", 
-                                color: "black", 
+                                background: "linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%)", 
+                                color: "#0f172a", 
                                 border: "none", 
-                                padding: "8px 20px", 
-                                borderRadius: "var(--radius-full)", 
+                                padding: "10px 24px", 
+                                borderRadius: "30px", 
                                 fontWeight: 700, 
                                 cursor: "pointer",
-                                fontSize: "0.9rem"
+                                fontSize: "0.85rem",
+                                boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+                                transition: "all 0.2s ease",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px"
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = "scale(1.05)";
+                                e.currentTarget.style.boxShadow = "0 6px 16px rgba(255, 255, 255, 0.15)";
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = "scale(1)";
+                                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.25)";
                             }}
                         >
-                            Ver de todos modos
+                            👁️ Ver de todos modos
                         </button>
                     </div>
                 )}
@@ -1296,29 +1338,47 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                     <div 
                         style={{
                             position: "absolute",
-                            bottom: "20px",
-                            left: "50%",
-                            transform: "translateX(-50%)",
+                            inset: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
                             zIndex: 11,
-                            pointerEvents: "auto"
+                            pointerEvents: "auto",
+                            background: "rgba(15, 23, 42, 0.45)",
+                            backdropFilter: "blur(20px)",
+                            WebkitBackdropFilter: "blur(20px)",
+                            borderRadius: "inherit"
                         }}
                         onClick={(e) => e.stopPropagation()}
                     >
                          <button 
                             onClick={(e) => { e.stopPropagation(); setRevealed(true); }}
                             style={{ 
-                                background: "rgba(0,0,0,0.7)", 
+                                background: "rgba(15, 23, 42, 0.9)", 
                                 color: "white", 
-                                border: "1px solid rgba(255,255,255,0.3)", 
-                                padding: "6px 16px", 
-                                borderRadius: "var(--radius-full)", 
+                                border: "1px solid rgba(255, 255, 255, 0.15)", 
+                                padding: "10px 20px", 
+                                borderRadius: "30px", 
                                 fontWeight: 700, 
                                 cursor: "pointer",
                                 fontSize: "0.85rem",
-                                backdropFilter: "blur(4px)"
+                                backdropFilter: "blur(12px)",
+                                boxShadow: "0 4px 16px rgba(0,0,0,0.35)",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                transition: "all 0.2s ease"
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = "scale(1.05)";
+                                e.currentTarget.style.background = "#1e293b";
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = "scale(1)";
+                                e.currentTarget.style.background = "rgba(15, 23, 42, 0.9)";
                             }}
                         >
-                            {t("show") || "Mostrar"}
+                            👁️ Mostrar multimedia
                         </button>
                     </div>
                 )}

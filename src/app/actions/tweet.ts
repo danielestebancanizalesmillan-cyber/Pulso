@@ -49,6 +49,7 @@ export async function createTweet(content: string, parentId?: string, images?: {
                 authorId: session.user.id,
                 parentId: parentId || null,
                 quoteOfId: quoteOfId || null,
+                communityId: communityId || null,
                 countryCode: dbUser.countryCode,
                 images: {
                     create: images?.map((img) => ({ url: img.url, type: img.type })) || [],

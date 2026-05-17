@@ -17,7 +17,8 @@ export default async function MessagesPage() {
     const conversations = await prisma.conversation.findMany({
         where: {
             participants: { some: { id: userId } },
-            deletedBy: { none: { userId } }
+            deletedBy: { none: { userId } },
+            messages: { some: {} }
         },
         include: {
             participants: true,

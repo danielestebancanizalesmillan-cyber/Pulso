@@ -76,14 +76,26 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
     const memberIds = list.members.map(m => m.userId);
 
+    const userDb = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { showSensitiveContent: true }
+    });
+    const showSensitive = userDb?.showSensitiveContent ?? false;
+
+    const where: any = {
+        authorId: { in: memberIds },
+        parentId: null
+    };
+
+    if (!showSensitive) {
+        where.classification = "SAFE";
+    }
+
     const tweets = await prisma.tweet.findMany({
         take: limit,
         skip: cursor ? 1 : 0,
         cursor: cursor ? { id: cursor } : undefined,
-        where: {
-            authorId: { in: memberIds },
-            parentId: null
-        },
+        where,
         orderBy: { createdAt: "desc" },
         include: TWEET_INCLUDE as any,
     });

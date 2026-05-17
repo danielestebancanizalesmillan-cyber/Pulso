@@ -7,6 +7,7 @@ import { InfiniteFeed } from "./InfiniteFeed";
 import Link from "next/link";
 import { Avatar } from "./Avatar";
 import { useRouter } from "next/navigation";
+import { ComposeTweet } from "./ComposeTweet";
 
 export function CommunityDetailContent({ community, membership, userId }: { community: any, membership: any, userId: string }) {
     const { t } = useTranslation();
@@ -127,6 +128,12 @@ export function CommunityDetailContent({ community, membership, userId }: { comm
                     {t("about") || "About"}
                 </div>
             </div>
+
+            {isMember && (
+                <div style={{ borderBottom: "1px solid var(--border)" }}>
+                    <ComposeTweet communityId={community.id} />
+                </div>
+            )}
 
             <InfiniteFeed 
                 endpoint={`/api/communities/${community.id}/tweets`} 

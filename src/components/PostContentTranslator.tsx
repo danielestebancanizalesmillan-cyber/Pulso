@@ -5,7 +5,7 @@ import Link from "next/link";
 import { translateText, detectLanguage } from "@/app/actions/translate";
 import { useTranslation } from "@/lib/i18n";
 
-export function PostContentTranslator({ content, className, alwaysShowButton = false }: { content: string, className?: string, alwaysShowButton?: boolean }) {
+export function PostContentTranslator({ content, className, alwaysShowButton = false, type = "post" }: { content: string, className?: string, alwaysShowButton?: boolean, type?: "post" | "bio" }) {
     const { t, locale } = useTranslation();
     const [translatedText, setTranslatedText] = useState<string | null>(null);
     const [isTranslating, setIsTranslating] = useState(false);
@@ -106,7 +106,7 @@ export function PostContentTranslator({ content, className, alwaysShowButton = f
                     className="translate-btn"
                 >
                     <img src="https://upload.wikimedia.org/wikipedia/commons/d/d7/Google_Translate_logo.svg" alt="GTranslate" style={{ width: 16, height: 16, objectFit: "contain" }} />
-                    {isTranslating ? t("translating") : (translatedText ? t("seeOriginal") : t("translatePost"))}
+                    {isTranslating ? t("translating") : (translatedText ? t("seeOriginal") : (type === "bio" ? (t("translateBio") || "Traducir descripción") : (t("translatePost") || "Traducir post")))}
                 </button>
 
             )}

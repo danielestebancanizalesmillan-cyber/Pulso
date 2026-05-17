@@ -2,6 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { USER_SELECT } from "@/lib/constants";
+import { auth } from "@/lib/auth";
 
 
 export async function GET(req: Request) {
@@ -9,8 +10,23 @@ export async function GET(req: Request) {
     const cursor = searchParams.get("cursor");
     const limit = 10;
 
+    const session = await auth();
+    let showSensitive = false;
+    if (session?.user?.id) {
+        const userDb = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { showSensitiveContent: true }
+        });
+        showSensitive = userDb?.showSensitiveContent ?? false;
+    }
+
+    const where: any = { parentId: null, retweetOfId: null };
+    if (!showSensitive) {
+        where.classification = "SAFE";
+    }
+
     const tweets = await prisma.tweet.findMany({
-        where: { parentId: null, retweetOfId: null },
+        where,
         orderBy: { createdAt: "desc" },
         take: limit * 3,
         skip: cursor ? 1 : 0,

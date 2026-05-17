@@ -24,7 +24,12 @@ export function NewMessageModal({ onClose }: { onClose: () => void }) {
 
     useEffect(() => {
         if (!query.trim()) {
-            setResults([]);
+            setLoading(true);
+            fetch("/api/users/who-to-follow?limit=10")
+                .then((res) => res.json())
+                .then((data) => setResults(data.users || []))
+                .catch((e) => console.error("Suggestions failed:", e))
+                .finally(() => setLoading(false));
             return;
         }
 
@@ -88,6 +93,12 @@ export function NewMessageModal({ onClose }: { onClose: () => void }) {
                     {loading && <div style={{ padding: 16, textAlign: "center", color: "var(--text-secondary)" }}>{t("searching")}</div>}
                     {!loading && results.length === 0 && query.trim() && (
                         <div style={{ padding: 16, textAlign: "center", color: "var(--text-secondary)" }}>{t("noPeopleFound")}</div>
+                    )}
+                    
+                    {!loading && !query.trim() && results.length > 0 && (
+                        <div style={{ padding: "12px 16px 8px", fontSize: "0.80rem", fontWeight: 800, color: "var(--text-secondary)", borderBottom: "1px solid var(--border)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                            👥 Sugeridos para ti
+                        </div>
                     )}
                     
                     {!loading && results.map((u) => (

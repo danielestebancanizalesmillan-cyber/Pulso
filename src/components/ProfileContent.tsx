@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CreateStatusModal } from "./CreateStatusModal";
 import { PostContentTranslator } from "./PostContentTranslator";
 import { MediaLightbox } from "./MediaLightbox";
+import { ManageListsModal } from "./ManageListsModal";
 
 function getYouTubeId(url?: string | null) {
     if (!url) return null;
@@ -81,6 +82,7 @@ export function ProfileContent({
     const [showAvatarMenu, setShowAvatarMenu] = useState(false);
     const [viewerOpen, setViewerOpen] = useState(false);
     const [showCreateStatus, setShowCreateStatus] = useState(false);
+    const [showListsModal, setShowListsModal] = useState(false);
     
     const audioRef = useRef<HTMLAudioElement>(null);
     const [ytPlayer, setYtPlayer] = useState<any>(null);
@@ -110,6 +112,13 @@ export function ProfileContent({
     const setupNativeAudioEffects = () => {
         if (!audioRef.current) return;
         audioRef.current.volume = 0.15;
+
+        // Skip Web Audio API node connection for cross-origin URLs if they don't support CORS
+        const isExternalAudio = user?.profileAudioUrl?.startsWith("http") && !user?.profileAudioUrl?.includes(window.location.host);
+        if (isExternalAudio) {
+            console.log("External audio source detected; bypassing Web Audio API routing to prevent CORS silent blocks.");
+            return;
+        }
 
         try {
             const ctx = audioContextRef.current || new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -143,7 +152,7 @@ export function ProfileContent({
     const toggleProfileAudio = async () => {
         const ytId = getYouTubeId(user?.profileAudioUrl);
 
-                if (ytPlayer && typeof ytPlayer.playVideo === "function") {
+        if (ytPlayer && typeof ytPlayer.playVideo === "function") {
             if (isPlayingAudio) ytPlayer.pauseVideo();
             else ytPlayer.playVideo();
             setIsPlayingAudio(!isPlayingAudio);
@@ -158,14 +167,14 @@ export function ProfileContent({
                     height: "1",
                     width: "1",
                     videoId: ytId,
-                            // Use the standard YouTube host to avoid origin/postMessage mismatches
-                            host: "https://www.youtube.com",
+                    // Use the standard YouTube host to avoid origin/postMessage mismatches
+                    host: "https://www.youtube.com",
                     playerVars: {
                         autoplay: 1,
                         controls: 0,
                         disablekb: 1,
                         enablejsapi: 1,
-                                origin: window.location.origin,
+                        origin: window.location.origin,
                         playsinline: 1,
                         start: user.profileAudioStart || 0,
                     },
@@ -200,36 +209,15 @@ export function ProfileContent({
         e.stopPropagation(); 
         setShowAvatarMenu(false);
         
-        if (ytPlayer && typeof ytPlayer.setVolume === 'function') {
-            let vol = 15;
-            const fade = setInterval(() => {
-                if (vol > 3) {
-                    vol -= 3;
-                    ytPlayer.setVolume(vol);
-                } else {
-                    ytPlayer.stopVideo();
-                    clearInterval(fade);
-                    setViewerOpen(true);
-                }
-            }, 80);
-        } else if (audioRef.current) {
-            let vol = 0.15;
-            const fade = setInterval(() => {
-                if (vol > 0.03) {
-                    vol -= 0.03;
-                    if (audioRef.current) audioRef.current.volume = vol;
-                } else {
-                    if (audioRef.current) {
-                        audioRef.current.pause();
-                        audioRef.current.volume = 0.15; 
-                    }
-                    clearInterval(fade);
-                    setViewerOpen(true);
-                }
-            }, 80);
-        } else {
-            setViewerOpen(true);
+        // Stop profile audio immediately to preserve synchronous user gesture context
+        if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
+            try { ytPlayer.pauseVideo(); } catch {}
         }
+        if (audioRef.current) {
+            try { audioRef.current.pause(); } catch {}
+        }
+        setIsPlayingAudio(false);
+        setViewerOpen(true);
     };
 
     function getEmptyTitle() {
@@ -333,7 +321,17 @@ export function ProfileContent({
                         <>
                             <div id="yt-player-ambient" style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} />
                             {!user.profileAudioUrl.includes("youtube.com") && !user.profileAudioUrl.includes("youtu.be") && (
-                                <audio ref={audioRef} src={user.profileAudioUrl} crossOrigin="anonymous" loop style={{ display: "none" }} />
+                                <audio 
+                                    ref={audioRef} 
+                                    src={user.profileAudioUrl} 
+                                    crossOrigin={
+                                        (user.profileAudioUrl.startsWith("http") && !user.profileAudioUrl.includes(window.location.host))
+                                            ? undefined 
+                                            : "anonymous"
+                                    } 
+                                    loop 
+                                    style={{ display: "none" }} 
+                                />
                             )}
                         </>
                     )}
@@ -363,6 +361,9 @@ export function ProfileContent({
                                         <button onClick={() => { toggleMute(user.id); setShowMoreMenu(false); }} className="dropdown-item">
                                             {isMuted ? (t("unmute") || "Unmute") : (t("mute") || "Mute")} @{user.username}
                                         </button>
+                                        <button onClick={() => { setShowListsModal(true); setShowMoreMenu(false); }} className="dropdown-item">
+                                            👥 Administrar en Listas
+                                        </button>
                                         <button onClick={() => { toggleBlock(user.id); setShowMoreMenu(false); }} className="dropdown-item" style={{ color: "var(--red)" }}>
                                             {isBlocked ? (t("unblock") || "Unblock") : (t("block") || "Block")} @{user.username}
                                         </button>
@@ -391,7 +392,7 @@ export function ProfileContent({
                     </div>
                 </div>
 
-                {latestStatus?.audioUrl && (
+                {user?.profileAudioUrl && (
                     <button
                         onClick={toggleProfileAudio}
                         disabled={isLoadingAudio}
@@ -422,7 +423,7 @@ export function ProfileContent({
                 <div className="profile-handle">@{user.username}</div>
                 {user.bio && (
                     <div style={{ marginTop: "12px", marginBottom: "4px" }}>
-                        <PostContentTranslator content={user.bio} className="profile-bio" alwaysShowButton />
+                        <PostContentTranslator content={user.bio} className="profile-bio" alwaysShowButton type="bio" />
                     </div>
                 )}
 
@@ -560,6 +561,14 @@ export function ProfileContent({
 
             {lightboxCoverImage && (
                 <MediaLightbox images={[{ url: lightboxCoverImage }]} initialIndex={0} onClose={() => setLightboxCoverImage(null)} />
+            )}
+
+            {showListsModal && (
+                <ManageListsModal 
+                    targetUserId={user.id} 
+                    targetUsername={user.username} 
+                    onClose={() => setShowListsModal(false)} 
+                />
             )}
         </>
     );

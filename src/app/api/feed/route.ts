@@ -74,10 +74,11 @@ export async function GET(req: Request) {
     const selectedCategories = userInterests.map(i => i.category);
 
     // Get security filters
-    const [blockedByMe, blockedMe, mutedByMe] = await Promise.all([
+    const [blockedByMe, blockedMe, mutedByMe, userDb] = await Promise.all([
         prisma.block.findMany({ where: { blockerId: userId }, select: { blockedId: true } }),
         prisma.block.findMany({ where: { blockedId: userId }, select: { blockerId: true } }),
         prisma.mute.findMany({ where: { muterId: userId }, select: { mutedId: true } }),
+        prisma.user.findUnique({ where: { id: userId }, select: { showSensitiveContent: true } }),
     ]);
 
     const excludeUserIds = [
@@ -86,10 +87,16 @@ export async function GET(req: Request) {
         ...mutedByMe.map(m => m.mutedId)
     ];
 
+    const showSensitive = userDb?.showSensitiveContent ?? false;
+
     const where: Prisma.TweetWhereInput = { 
         parentId: null,
         authorId: { notIn: excludeUserIds }
     };
+
+    if (!showSensitive) {
+        where.classification = "SAFE";
+    }
 
     // In "For You", interests are used for boosting, not for strict filtering
     // Unless we are in a specific category tab (not implemented yet)

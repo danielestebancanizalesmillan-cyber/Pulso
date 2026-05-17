@@ -185,7 +185,7 @@ export async function updateProfile(data: {
             bio: data.bio,
             location: data.location,
             website: data.website,
-            ...(data.avatar ? { avatar: data.avatar } : {}),
+            ...(data.avatar ? { avatar: data.avatar, image: data.avatar } : {}),
             ...(data.coverImage ? { coverImage: data.coverImage } : {}),
             countryCode: data.countryCode || undefined,
             profileAudioUrl: data.profileAudioUrl,

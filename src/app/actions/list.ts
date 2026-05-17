@@ -71,3 +71,26 @@ export async function toggleListMember(listId: string, userId: string) {
     revalidatePath(`/lists/${listId}`);
     return { success: true };
 }
+
+export async function getUserListsWithMembership(targetUserId: string) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+
+    const lists = await prisma.tweetList.findMany({
+        where: { creatorId: session.user.id },
+        include: {
+            members: {
+                where: { userId: targetUserId }
+            }
+        },
+        orderBy: { name: "asc" }
+    });
+
+    return lists.map(list => ({
+        id: list.id,
+        name: list.name,
+        description: list.description,
+        isPrivate: list.isPrivate,
+        isMember: list.members.length > 0
+    }));
+}
