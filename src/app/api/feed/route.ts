@@ -91,6 +91,7 @@ export async function GET(req: Request) {
 
     const where: Prisma.TweetWhereInput = { 
         parentId: null,
+        communityId: null,
         authorId: { notIn: excludeUserIds }
     };
 

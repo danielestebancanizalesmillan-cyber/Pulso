@@ -309,7 +309,8 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                     };
                 }
 
-                const res = await createTweet(content.trim(), parentId, [...uploadedMedia, ...hotlinkedMedia], quoteOfId, pollData, selectedCommunityId, isSensitive, location || undefined);
+                const finalCommunityId = initialCommunityId || selectedCommunityId;
+                const res = await createTweet(content.trim(), parentId, [...uploadedMedia, ...hotlinkedMedia], quoteOfId, pollData, finalCommunityId, isSensitive, location || undefined);
                 setContent("");
                 mediaPayloads.forEach(p => {
                     if (p.url.startsWith('blob:')) URL.revokeObjectURL(p.url);
