@@ -4,6 +4,8 @@ import { useTranslation } from "@/lib/i18n";
 import { useState, useTransition } from "react";
 import { createCommunity, joinCommunity } from "@/app/actions/community";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { BackButton } from "./BackButton";
 import { Avatar } from "./Avatar";
 
 export function CommunitiesContent({ myCommunities, discoverCommunities, userId }: { myCommunities: any[], discoverCommunities: any[], userId: string }) {
@@ -27,11 +29,7 @@ export function CommunitiesContent({ myCommunities, discoverCommunities, userId 
     return (
         <>
             <div className="column-header">
-                <Link href="/home" className="back-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="15 18 9 12 15 6" />
-                    </svg>
-                </Link>
+                <BackButton fallbackHref="/home" />
                 <h1>{t("communities") || "Communities"}</h1>
                 <button 
                     className="icon-btn" 

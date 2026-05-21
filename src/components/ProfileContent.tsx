@@ -3,6 +3,7 @@
 import { useTranslation } from "@/lib/i18n";
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
+import { BackButton } from "@/components/BackButton";
 import { FollowButton } from "@/components/FollowButton";
 import { MessageButton } from "@/components/MessageButton";
 import { TweetCard } from "@/components/TweetCard";
@@ -211,11 +212,7 @@ export function ProfileContent({
     return (
         <>
             <div className="column-header">
-                <Link href="/home" className="back-btn" aria-label={t("back")}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="15 18 9 12 15 6" />
-                    </svg>
-                </Link>
+                <BackButton fallbackHref="/home" />
                 <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <h1>{user.name}</h1>

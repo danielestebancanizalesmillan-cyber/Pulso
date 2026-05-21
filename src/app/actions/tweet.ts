@@ -229,6 +229,9 @@ export async function createTweet(content: string, parentId?: string, images?: {
 
         revalidatePath("/home");
         revalidatePath("/");
+        if (communityId) {
+            revalidatePath(`/communities/${communityId}`);
+        }
         return tweet;
     } catch (e: any) {
         console.error(">> Prisma Tweet Error:", e);

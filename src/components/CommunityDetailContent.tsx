@@ -8,12 +8,14 @@ import Link from "next/link";
 import { Avatar } from "./Avatar";
 import { useRouter } from "next/navigation";
 import { ComposeTweet } from "./ComposeTweet";
+import { BackButton } from "./BackButton";
 
 export function CommunityDetailContent({ community, membership, userId }: { community: any, membership: any, userId: string }) {
     const { t } = useTranslation();
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [showOptions, setShowOptions] = useState(false);
+    const [feedKey, setFeedKey] = useState(0);
 
     const isMember = !!membership;
     const isOwner = community.creatorId === userId;
@@ -24,6 +26,7 @@ export function CommunityDetailContent({ community, membership, userId }: { comm
                 try {
                     await deleteCommunity(community.id);
                     router.push("/communities");
+                    router.refresh();
                 } catch (error: any) {
                     alert(error.message || "Failed to delete community");
                 }
@@ -38,17 +41,14 @@ export function CommunityDetailContent({ community, membership, userId }: { comm
             } else {
                 await joinCommunity(community.id);
             }
+            router.refresh();
         });
     };
 
     return (
         <>
             <div className="column-header">
-                <Link href="/communities" className="back-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="15 18 9 12 15 6" />
-                    </svg>
-                </Link>
+                <BackButton fallbackHref="/communities" />
                 <div style={{ flex: 1 }}>
                     <h1 style={{ marginBottom: 2 }}>{community.name}</h1>
                     <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{community._count.members} {t("members") || "members"}</div>
@@ -131,11 +131,12 @@ export function CommunityDetailContent({ community, membership, userId }: { comm
 
             {isMember && (
                 <div style={{ borderBottom: "1px solid var(--border)" }}>
-                    <ComposeTweet communityId={community.id} />
+                    <ComposeTweet communityId={community.id} onSuccess={() => setFeedKey(prev => prev + 1)} />
                 </div>
             )}
 
             <InfiniteFeed 
+                key={feedKey}
                 endpoint={`/api/communities/${community.id}/tweets`} 
                 currentUserId={userId} 
             />
