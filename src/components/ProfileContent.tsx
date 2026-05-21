@@ -166,9 +166,6 @@ export function ProfileContent({
         e.stopPropagation(); 
         setShowAvatarMenu(false);
         
-        // Synchronously unlock native audio context on mobile tap
-        window.dispatchEvent(new CustomEvent("unlock-mobile-audio"));
-        
         const firstItem = statuses?.[0];
         if (firstItem && firstItem.audioUrl) {
             window.dispatchEvent(new CustomEvent("play-global-audio", {
@@ -181,6 +178,8 @@ export function ProfileContent({
                 }
             }));
         } else {
+            // Only unlock silently if the first slide does not have audio
+            window.dispatchEvent(new CustomEvent("unlock-mobile-audio"));
             window.dispatchEvent(new CustomEvent("temp-pause-global-audio"));
         }
         

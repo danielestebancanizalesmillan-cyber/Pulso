@@ -43,8 +43,6 @@ export function StatusCarousel() {
     const myStatuses = groupedStatuses.find(g => g.userId === session?.user?.id);
 
     const handleOpenGroup = (group: any) => {
-        // Synchronously unlock native audio context on mobile tap
-        window.dispatchEvent(new CustomEvent("unlock-mobile-audio"));
         const firstItem = group.items?.[0];
         if (firstItem && firstItem.audioUrl) {
             window.dispatchEvent(new CustomEvent("play-global-audio", {
@@ -57,6 +55,8 @@ export function StatusCarousel() {
                 }
             }));
         } else {
+            // Only unlock silently if the first slide does not have audio
+            window.dispatchEvent(new CustomEvent("unlock-mobile-audio"));
             window.dispatchEvent(new CustomEvent("temp-pause-global-audio"));
         }
         setActiveViewer(group);

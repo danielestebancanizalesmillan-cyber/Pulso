@@ -70,6 +70,8 @@ model User {
   settings               UserSetting[]
   verificationRequest    VerificationRequest?
   conversations          Conversation[]        @relation("ConversationParticipants")
+  hostedSpaces           VoiceSpace[]          @relation("SpaceHost")
+  spaceParticipations    VoiceSpaceParticipant[]
 }
 
 model AIChat {
@@ -499,4 +501,35 @@ model Ad {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model VoiceSpace {
+  id           String                  @id @default(cuid())
+  title        String
+  description  String?
+  hostId       String
+  status       String                  @default("LIVE")  // LIVE | ENDED
+  startedAt    DateTime                @default(now())
+  endedAt      DateTime?
+  createdAt    DateTime                @default(now())
+  host         User                    @relation("SpaceHost", fields: [hostId], references: [id], onDelete: Cascade)
+  participants VoiceSpaceParticipant[]
+
+  @@index([status])
+  @@index([hostId])
+}
+
+model VoiceSpaceParticipant {
+  id       String     @id @default(cuid())
+  spaceId  String
+  userId   String
+  role     String     @default("LISTENER")  // HOST | SPEAKER | LISTENER
+  isMuted  Boolean    @default(false)
+  joinedAt DateTime   @default(now())
+  leftAt   DateTime?
+  space    VoiceSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([spaceId, userId])
+  @@index([spaceId])
 }

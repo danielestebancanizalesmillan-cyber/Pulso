@@ -157,48 +157,59 @@ export function GlobalAmbientPlayer() {
                 setYtId(isYt);
                 updateState(true, url, userId, title, !!isStatus, previous);
 
-                try {
-                    await loadYouTubeApi();
+                const setupPlayer = () => {
                     if (ytPlayerRef.current && typeof ytPlayerRef.current.loadVideoById === "function") {
-                        ytPlayerRef.current.loadVideoById({
-                            videoId: isYt,
-                            startSeconds: start || 0,
-                        });
-                        ytPlayerRef.current.playVideo();
+                        try {
+                            ytPlayerRef.current.loadVideoById({
+                                videoId: isYt,
+                                startSeconds: start || 0,
+                            });
+                            ytPlayerRef.current.playVideo();
+                        } catch {}
                     } else {
-                        ytPlayerRef.current = new window.YT.Player(ytContainerId.current, {
-                            height: "200",
-                            width: "300",
-                            videoId: isYt,
-                            host: "https://www.youtube.com",
-                            playerVars: {
-                                autoplay: 1,
-                                controls: 0,
-                                disablekb: 1,
-                                enablejsapi: 1,
-                                origin: window.location.origin,
-                                playsinline: 1,
-                                start: start || 0,
-                            },
-                            events: {
-                                onReady: (event: any) => {
-                                    try {
-                                        event.target.setVolume(50);
-                                        event.target.unMute?.();
-                                        event.target.playVideo();
-                                    } catch {}
+                        try {
+                            ytPlayerRef.current = new window.YT.Player(ytContainerId.current, {
+                                height: "200",
+                                width: "300",
+                                videoId: isYt,
+                                host: "https://www.youtube.com",
+                                playerVars: {
+                                    autoplay: 1,
+                                    controls: 0,
+                                    disablekb: 1,
+                                    enablejsapi: 1,
+                                    origin: window.location.origin,
+                                    playsinline: 1,
+                                    start: start || 0,
                                 },
-                                onStateChange: (event: any) => {
-                                    const playing = event.data === window.YT.PlayerState.PLAYING;
-                                    const curr = window.__globalAudioState;
-                                    updateState(playing, url, userId, title, !!isStatus, curr?.previous || null);
+                                events: {
+                                    onReady: (event: any) => {
+                                        try {
+                                            event.target.setVolume(50);
+                                            event.target.unMute?.();
+                                            event.target.playVideo();
+                                        } catch {}
+                                    },
+                                    onStateChange: (event: any) => {
+                                        const playing = event.data === window.YT.PlayerState.PLAYING;
+                                        const curr = window.__globalAudioState;
+                                        updateState(playing, url, userId, title, !!isStatus, curr?.previous || null);
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        } catch (e) {
+                            console.error("YT Player init error:", e);
+                        }
                     }
-                } catch (error) {
-                    console.error("Global YouTube setup failed:", error);
-                    updateState(false, null, null, null, false, null);
+                };
+
+                if (window.YT?.Player) {
+                    setupPlayer();
+                } else {
+                    loadYouTubeApi().then(setupPlayer).catch((error) => {
+                        console.error("Global YouTube setup failed:", error);
+                        updateState(false, null, null, null, false, null);
+                    });
                 }
             } else {
                 setYtId(null);
