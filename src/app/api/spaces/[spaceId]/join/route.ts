@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { pusherServer } from "@/lib/pusher";
 import { NextResponse } from "next/server";
 
 // POST /api/spaces/[spaceId]/join
@@ -31,6 +32,16 @@ export async function POST(_req: Request, { params }: { params: Promise<{ spaceI
         leftAt: null,
         joinedAt: new Date(),
       },
+      include: {
+        user: {
+          select: { id: true, name: true, username: true, avatar: true, image: true, isVerified: true, verificationType: true },
+        },
+      },
+    });
+
+    await pusherServer.trigger(`space-${spaceId}`, "space-event", {
+      type: "USER_JOINED",
+      participant,
     });
 
     return NextResponse.json(participant);

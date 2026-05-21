@@ -152,6 +152,10 @@ export function VoiceSpaceRoom({ space: initialSpace, currentUserId }: VoiceSpac
   useEffect(() => {
     joinSpace();
 
+    if (myRole === "HOST" || myRole === "SPEAKER") {
+      startMic();
+    }
+
     const pusher = new PusherClient(process.env.NEXT_PUBLIC_PUSHER_APP_KEY!, {
       cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
     });
@@ -187,6 +191,16 @@ export function VoiceSpaceRoom({ space: initialSpace, currentUserId }: VoiceSpac
     // ── Handle space events ──
     channel.bind("space-event", async (data: any) => {
       const { type } = data;
+
+      if (type === "USER_JOINED") {
+        setParticipants(prev => {
+          if (prev.find(p => p.user.id === data.participant.user.id)) {
+            // Update role if they already exist
+            return prev.map(p => p.user.id === data.participant.user.id ? data.participant : p);
+          }
+          return [...prev, data.participant];
+        });
+      }
 
       if (type === "RAISE_HAND") {
         setRaisedHands(prev => {
@@ -385,6 +399,7 @@ export function VoiceSpaceRoom({ space: initialSpace, currentUserId }: VoiceSpac
                       ? "#7c3aed" : "rgba(255,255,255,0.15)",
                     transition: "border-color 0.3s",
                     overflow: "hidden",
+                    display: "flex", alignItems: "center", justifyContent: "center"
                   }}>
                     <Avatar user={p.user} size="lg" />
                   </div>
@@ -486,7 +501,7 @@ export function VoiceSpaceRoom({ space: initialSpace, currentUserId }: VoiceSpac
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
               {listeners.map(p => (
                 <div key={p.user.id} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.05)", borderRadius: "24px", padding: "6px 12px 6px 6px" }}>
-                  <div style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden" }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Avatar user={p.user} size="sm" />
                   </div>
                   <span style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.7)", fontWeight: 500 }}>
