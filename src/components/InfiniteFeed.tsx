@@ -18,9 +18,10 @@ interface InfiniteFeedProps {
     currentUserId?: string;
     tab?: string;
     countryCode?: string;
+    hideSocial?: boolean; // hide StatusCarousel, ads, and real-time new-tweet notifications
 }
 
-export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab = "for-you", countryCode }: InfiniteFeedProps) {
+export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab = "for-you", countryCode, hideSocial = false }: InfiniteFeedProps) {
     const { t } = useTranslation();
     const { status, data } = useSession();
     const [tweets, setTweets] = useState<any[]>(initialTweets);
@@ -281,7 +282,7 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
 
     return (
         <div className="feed" style={{ position: "relative" }}>
-            {status === "authenticated" && <StatusCarousel />}
+            {status === "authenticated" && !hideSocial && <StatusCarousel />}
             {pullDistance > 0 && (
                 <div style={{ 
                     display: "flex", justifyContent: "center", padding: "12px", 
@@ -318,11 +319,11 @@ export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab 
                 <AnimatePresence initial={false}>
                     {tweets.map((t, index) => (
                         <React.Fragment key={t.id}>
-                            {t.isAd ? (
+                            {t.isAd && !hideSocial ? (
                                 <AdPostCard ad={t} />
-                            ) : (
+                            ) : !t.isAd ? (
                                 <TweetCard tweet={t} currentUserId={currentUserId} />
-                            )}
+                            ) : null}
                         </React.Fragment>
                     ))}
                 </AnimatePresence>

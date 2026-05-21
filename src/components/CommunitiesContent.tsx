@@ -2,27 +2,35 @@
 
 import { useTranslation } from "@/lib/i18n";
 import { useState, useTransition } from "react";
-import { createCommunity, joinCommunity } from "@/app/actions/community";
+import { createCommunity } from "@/app/actions/community";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BackButton } from "./BackButton";
-import { Avatar } from "./Avatar";
 
 export function CommunitiesContent({ myCommunities, discoverCommunities, userId }: { myCommunities: any[], discoverCommunities: any[], userId: string }) {
     const { t } = useTranslation();
+    const router = useRouter();
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [isPending, startTransition] = useTransition();
+    const [error, setError] = useState("");
 
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
 
     const handleCreate = () => {
         if (!name.trim()) return;
+        setError("");
         startTransition(async () => {
-            await createCommunity({ name, description });
-            setShowCreateModal(false);
-            setName("");
-            setDescription("");
+            try {
+                const community = await createCommunity({ name, description });
+                setShowCreateModal(false);
+                setName("");
+                setDescription("");
+                router.refresh();
+                router.push(`/communities/${community.id}`);
+            } catch (e: any) {
+                setError(e.message || "Error al crear la comunidad");
+            }
         });
     };
 
@@ -105,25 +113,40 @@ export function CommunitiesContent({ myCommunities, discoverCommunities, userId 
                             </button>
                         </div>
                         <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+                            {error && (
+                                <div style={{ padding: "10px 14px", background: "rgba(244,33,46,0.1)", border: "1px solid rgba(244,33,46,0.3)", borderRadius: "8px", color: "var(--red)", fontSize: "0.9rem" }}>
+                                    {error}
+                                </div>
+                            )}
                             <div>
                                 <input 
                                     className="input-field"
                                     placeholder={t("communityName") || "Community Name"}
                                     value={name}
                                     onChange={e => setName(e.target.value)}
+                                    onKeyDown={e => e.key === "Enter" && handleCreate()}
                                     maxLength={40}
+                                    autoFocus
                                 />
                             </div>
                             <div>
                                 <textarea 
                                     className="input-field"
-                                    placeholder={t("communityDescription") || "Description"}
+                                    placeholder={t("communityDescription") || "Description (optional)"}
                                     value={description}
                                     onChange={e => setDescription(e.target.value)}
                                     rows={4}
                                     style={{ resize: "none" }}
                                 />
                             </div>
+                            <button
+                                className="btn btn-primary"
+                                disabled={!name.trim() || isPending}
+                                onClick={handleCreate}
+                                style={{ width: "100%", padding: "12px" }}
+                            >
+                                {isPending ? "Creando..." : (t("create") || "Crear Comunidad")}
+                            </button>
                         </div>
                     </div>
                 </div>

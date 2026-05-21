@@ -138,7 +138,8 @@ export function CommunityDetailContent({ community, membership, userId }: { comm
             <InfiniteFeed 
                 key={feedKey}
                 endpoint={`/api/communities/${community.id}/tweets`} 
-                currentUserId={userId} 
+                currentUserId={userId}
+                hideSocial={true}
             />
         </>
     );
