@@ -427,7 +427,6 @@ export function SettingsClient() {
                             {locale === "en" ? "English" : "Español"}
                         </div>
                     </button>
-                </div>
 
                     <div className={styles.divider} />
 
