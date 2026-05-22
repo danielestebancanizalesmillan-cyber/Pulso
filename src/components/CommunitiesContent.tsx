@@ -6,6 +6,7 @@ import { createCommunity } from "@/app/actions/community";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BackButton } from "./BackButton";
+import { upload } from "@vercel/blob/client";
 
 export function CommunitiesContent({ myCommunities, discoverCommunities, userId }: { myCommunities: any[], discoverCommunities: any[], userId: string }) {
     const { t } = useTranslation();
@@ -16,16 +17,34 @@ export function CommunitiesContent({ myCommunities, discoverCommunities, userId 
 
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [bannerFile, setBannerFile] = useState<File | null>(null);
 
     const handleCreate = () => {
         if (!name.trim()) return;
         setError("");
         startTransition(async () => {
             try {
-                const community = await createCommunity({ name, description });
+                let avatarUrl = "";
+                let bannerUrl = "";
+
+                if (avatarFile) {
+                    const sanitizedName = avatarFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                    const blob = await upload(`community_avatar_${Date.now()}_${sanitizedName}`, avatarFile, { access: 'public', handleUploadUrl: '/api/upload' });
+                    avatarUrl = blob.url;
+                }
+                if (bannerFile) {
+                    const sanitizedName = bannerFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                    const blob = await upload(`community_banner_${Date.now()}_${sanitizedName}`, bannerFile, { access: 'public', handleUploadUrl: '/api/upload' });
+                    bannerUrl = blob.url;
+                }
+
+                const community = await createCommunity({ name, description, avatar: avatarUrl || undefined, banner: bannerUrl || undefined });
                 setShowCreateModal(false);
                 setName("");
                 setDescription("");
+                setAvatarFile(null);
+                setBannerFile(null);
                 router.refresh();
                 router.push(`/communities/${community.id}`);
             } catch (e: any) {
@@ -137,6 +156,24 @@ export function CommunitiesContent({ myCommunities, discoverCommunities, userId 
                                     onChange={e => setDescription(e.target.value)}
                                     rows={4}
                                     style={{ resize: "none" }}
+                                />
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                <label style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 600 }}>Avatar (Imagen de perfil)</label>
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={(e) => setAvatarFile(e.target.files?.[0] || null)} 
+                                    style={{ color: "var(--text-primary)", fontSize: "0.9rem" }}
+                                />
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                <label style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 600 }}>Banner (Portada)</label>
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={(e) => setBannerFile(e.target.files?.[0] || null)} 
+                                    style={{ color: "var(--text-primary)", fontSize: "0.9rem" }}
                                 />
                             </div>
                             <button

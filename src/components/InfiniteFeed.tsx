@@ -21,7 +21,9 @@ interface InfiniteFeedProps {
     hideSocial?: boolean; // hide StatusCarousel, ads, and real-time new-tweet notifications
 }
 
-export function InfiniteFeed({ initialTweets = [], endpoint, currentUserId, tab = "for-you", countryCode, hideSocial = false }: InfiniteFeedProps) {
+const EMPTY_ARRAY: any[] = [];
+
+export function InfiniteFeed({ initialTweets = EMPTY_ARRAY, endpoint, currentUserId, tab = "for-you", countryCode, hideSocial = false }: InfiniteFeedProps) {
     const { t } = useTranslation();
     const { status, data } = useSession();
     const [tweets, setTweets] = useState<any[]>(initialTweets);

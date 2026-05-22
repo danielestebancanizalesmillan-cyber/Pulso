@@ -16,6 +16,7 @@ export function CommunityDetailContent({ community, membership, userId }: { comm
     const [isPending, startTransition] = useTransition();
     const [showOptions, setShowOptions] = useState(false);
     const [feedKey, setFeedKey] = useState(0);
+    const [activeTab, setActiveTab] = useState<"latest" | "about">("latest");
 
     const isMember = !!membership;
     const isOwner = community.creatorId === userId;
@@ -113,34 +114,77 @@ export function CommunityDetailContent({ community, membership, userId }: { comm
             </div>
 
             <div style={{ height: "48px", borderBottom: "1px solid var(--border)", display: "flex" }}>
-                <div style={{ 
-                    flex: 1, 
-                    display: "flex", 
-                    alignItems: "center", 
-                    justifyContent: "center", 
-                    fontWeight: 700,
-                    borderBottom: "4px solid var(--blue)",
-                    color: "var(--text-primary)"
-                }}>
+                <div 
+                    onClick={() => setActiveTab("latest")}
+                    style={{ 
+                        flex: 1, 
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "center", 
+                        fontWeight: 700,
+                        borderBottom: activeTab === "latest" ? "4px solid var(--blue)" : "none",
+                        color: activeTab === "latest" ? "var(--text-primary)" : "var(--text-secondary)",
+                        cursor: "pointer"
+                    }}>
                     {t("latest") || "Latest"}
                 </div>
-                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)" }}>
+                <div 
+                    onClick={() => setActiveTab("about")}
+                    style={{ 
+                        flex: 1, 
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "center", 
+                        fontWeight: 700,
+                        borderBottom: activeTab === "about" ? "4px solid var(--blue)" : "none",
+                        color: activeTab === "about" ? "var(--text-primary)" : "var(--text-secondary)",
+                        cursor: "pointer"
+                    }}>
                     {t("about") || "About"}
                 </div>
             </div>
 
-            {isMember && (
-                <div style={{ borderBottom: "1px solid var(--border)" }}>
-                    <ComposeTweet communityId={community.id} onSuccess={() => setFeedKey(prev => prev + 1)} />
-                </div>
+            {activeTab === "latest" && (
+                <>
+                    {isMember && (
+                        <div style={{ borderBottom: "1px solid var(--border)" }}>
+                            <ComposeTweet communityId={community.id} onSuccess={() => setFeedKey(prev => prev + 1)} />
+                        </div>
+                    )}
+
+                    <InfiniteFeed 
+                        key={feedKey}
+                        endpoint={`/api/communities/${community.id}/tweets`} 
+                        currentUserId={userId}
+                        hideSocial={true}
+                    />
+                </>
             )}
 
-            <InfiniteFeed 
-                key={feedKey}
-                endpoint={`/api/communities/${community.id}/tweets`} 
-                currentUserId={userId}
-                hideSocial={true}
-            />
+            {activeTab === "about" && (
+                <div style={{ padding: "24px" }}>
+                    <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "16px" }}>Acerca de {community.name}</h3>
+                    <p style={{ color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: "24px", whiteSpace: "pre-wrap" }}>
+                        {community.description || "Esta comunidad no tiene una descripción aún."}
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px", color: "var(--text-primary)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
+                            <span><strong>{community._count.members}</strong> miembros</span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <span>Creado el {new Date(community.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        {community.creator && (
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <span>Fundador: <strong>@{community.creator.username}</strong></span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </>
     );
 }
