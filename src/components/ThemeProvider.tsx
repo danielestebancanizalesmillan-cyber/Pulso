@@ -69,7 +69,12 @@ function applyWallpaperToDom(wp: WallpaperConfig) {
     const existing = document.getElementById("pulso-wallpaper");
     if (existing) existing.remove();
 
-    if (wp.type === "none") return;
+    if (wp.type === "none") {
+        document.documentElement.removeAttribute("data-wallpaper");
+        return;
+    }
+
+    document.documentElement.setAttribute("data-wallpaper", "true");
 
     const el = document.createElement("div");
     el.id = "pulso-wallpaper";
@@ -87,7 +92,7 @@ function applyWallpaperToDom(wp: WallpaperConfig) {
         el.style.backgroundSize = "cover";
         el.style.backgroundPosition = "center";
         el.style.backgroundRepeat = "no-repeat";
-        // Overlay
+        // Overlay for readability
         const overlay = document.createElement("div");
         overlay.style.cssText = [
             "position:absolute",

@@ -164,6 +164,35 @@ body {
   min-height: 100vh;
 }
 
+/* ====== WALLPAPER MODE ====== */
+/* When a wallpaper is active, the body background becomes transparent
+   and the main layout panels get a frosted-glass effect */
+[data-wallpaper="true"] body {
+  background-color: transparent !important;
+}
+
+[data-wallpaper="true"] .sidebar,
+[data-wallpaper="true"] .main-column,
+[data-wallpaper="true"] .right-column {
+  background-color: color-mix(in srgb, var(--bg-primary) 72%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+[data-wallpaper="true"] .column-header {
+  background: color-mix(in srgb, var(--bg-primary) 60%, transparent) !important;
+}
+
+[data-wallpaper="true"] .tweet-card:hover {
+  background: color-mix(in srgb, var(--bg-hover) 80%, transparent);
+}
+
+[data-wallpaper="true"] .dropdown {
+  background: color-mix(in srgb, var(--bg-elevated) 90%, transparent) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
 /* Premium Verified Styles */
 .gold-premium {
   position: relative;
