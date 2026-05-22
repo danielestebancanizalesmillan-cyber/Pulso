@@ -129,9 +129,15 @@ export function GlobalAmbientPlayer() {
             const customEvent = e as CustomEvent;
             const { url, title, start, duration, userId, isStatus } = customEvent.detail;
 
+            const current = window.__globalAudioState;
+            if (current?.url === url && current?.userId === userId && current?.isStatus === isStatus) {
+                // If the exact same track is already playing or buffering for this status/profile, do not restart it.
+                // This prevents `useEffect` in StatusViewerModal from breaking the user-gesture context of the initial click.
+                return;
+            }
+
             // If a profile song was playing and we trigger status music,
             // push current track to the restoration stack
-            const current = window.__globalAudioState;
             let previous = current?.previous || null;
             if (isStatus && current && !current.isStatus && current.url) {
                 previous = {

@@ -48,8 +48,9 @@ export function StatusCarousel() {
             window.dispatchEvent(new CustomEvent("play-global-audio", {
                 detail: {
                     url: firstItem.audioUrl,
-                    title: firstItem.audioTitle,
-                    start: firstItem.audioStart,
+                    title: firstItem.styleOptions ? JSON.parse(firstItem.styleOptions).audioTitle || "Música del estado" : "Música del estado",
+                    start: firstItem.audioStart || 0,
+                    duration: firstItem.audioDuration || 15,
                     userId: firstItem.id,
                     isStatus: true
                 }
