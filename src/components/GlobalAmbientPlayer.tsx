@@ -18,6 +18,7 @@ declare global {
                 title: string | null;
                 isPlaying: boolean;
             } | null;
+            hasEnded?: boolean;
         };
     }
 }
@@ -91,6 +92,7 @@ export function GlobalAmbientPlayer() {
             title: null,
             isStatus: false,
             previous: null,
+            hasEnded: false
         };
 
         const updateState = (
@@ -99,9 +101,10 @@ export function GlobalAmbientPlayer() {
             userId: string | null,
             title: string | null,
             isStatus: boolean = false,
-            previous: any = null
+            previous: any = null,
+            hasEnded: boolean = false
         ) => {
-            window.__globalAudioState = { isPlaying, url, userId, title, isStatus, previous };
+            window.__globalAudioState = { isPlaying, url, userId, title, isStatus, previous, hasEnded };
             window.dispatchEvent(new CustomEvent("global-audio-state-change"));
         };
 
@@ -203,8 +206,9 @@ export function GlobalAmbientPlayer() {
                                     },
                                     onStateChange: (event: any) => {
                                         const playing = event.data === window.YT.PlayerState.PLAYING;
+                                        const ended = event.data === window.YT.PlayerState.ENDED;
                                         const curr = window.__globalAudioState;
-                                        updateState(playing, url, userId, title, !!isStatus, curr?.previous || null);
+                                        updateState(playing, url, userId, title, !!isStatus, curr?.previous || null, ended);
                                     }
                                 }
                             });
@@ -234,6 +238,11 @@ export function GlobalAmbientPlayer() {
                         if (audioRef.current && start) {
                             audioRef.current.currentTime = start;
                         }
+                    };
+
+                    audioRef.current.onended = () => {
+                        const curr = window.__globalAudioState;
+                        updateState(false, url, userId, title, !!isStatus, curr?.previous || null, true);
                     };
 
                     // Trigger synchronous play immediately in the user gesture call stack

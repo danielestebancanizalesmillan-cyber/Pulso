@@ -59,6 +59,7 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
     const [progress, setProgress] = useState(0);
     const [audioLoading, setAudioLoading] = useState(false);
     const [audioPlaying, setAudioPlaying] = useState(false);
+    const [audioEnded, setAudioEnded] = useState(false);
     const elapsedRef = useRef(0);
 
     const items = group.items;
@@ -124,6 +125,11 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
         const syncState = () => {
             const state = window.__globalAudioState;
             setAudioPlaying(!!(state?.isPlaying && state?.userId === currentItem.id));
+            if (state?.hasEnded && state?.userId === currentItem.id) {
+                setAudioEnded(true);
+            } else {
+                setAudioEnded(false);
+            }
         };
 
         syncState();
@@ -133,6 +139,13 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
             window.removeEventListener("global-audio-state-change", syncState);
         };
     }, [currentItem.id]);
+
+    // Force next slide immediately if audio ends before timer reaches 100%
+    useEffect(() => {
+        if (audioEnded) {
+            handleNext();
+        }
+    }, [audioEnded]);
 
     // Auto-play status audio de fondo when slide changes
     useEffect(() => {
