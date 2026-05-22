@@ -9,6 +9,7 @@ import { UsernameGuard } from "@/components/UsernameGuard";
 import { GlobalAmbientPlayer } from "@/components/GlobalAmbientPlayer";
 import { BottomNav } from "@/components/BottomNav";
 import { PageTransition } from "@/components/PageTransition";
+import { MobileTopBar } from "@/components/MobileTopBar";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
     return (
         <UsernameGuard>
             {session && <VerificationBanner />}
+            <MobileTopBar />
             <div className="app-layout">
                 <Sidebar />
                 <main className="main-column">
