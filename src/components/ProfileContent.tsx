@@ -207,7 +207,7 @@ export function ProfileContent({
                 <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <h1>{user.name}</h1>
-                        <VerifiedBadge type={user.verificationType || (user.isVerified ? "BLUE" : "NONE")} size={20} className="mt-1" />
+                        <VerifiedBadge type={user.verificationType || (user.isVerified ? "BLUE" : "NONE")} size={20} className="mt-1" customBadges={user.badges} />
                     </div>
                     <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", fontWeight: 400 }}>
                         {user._count.tweets} {t("posts")}
@@ -340,7 +340,7 @@ export function ProfileContent({
 
                 <div className="profile-name" style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     {user.name}
-                    <VerifiedBadge type={user.verificationType || (user.isVerified ? "BLUE" : "NONE")} size={20} />
+                    <VerifiedBadge type={user.verificationType || (user.isVerified ? "BLUE" : "NONE")} size={20} customBadges={user.badges} />
                     {user.accountLabel && (
                         <span style={{ 
                             background: "var(--bg-secondary)", 

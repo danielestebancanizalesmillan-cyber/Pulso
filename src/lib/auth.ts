@@ -23,6 +23,7 @@ declare module "next-auth" {
             isVerified?: boolean;
             accountLabel?: string | null;
             coverImage?: string | null;
+            badges?: any[];
         } & DefaultSession["user"]
     }
 
@@ -37,6 +38,7 @@ declare module "next-auth" {
         isVerified?: boolean;
         accountLabel?: string | null;
         coverImage?: string | null;
+        badges?: any[];
     }
 }
 
@@ -52,6 +54,7 @@ declare module "next-auth/jwt" {
         isVerified?: boolean;
         accountLabel?: string | null;
         coverImage?: string | null;
+        badges?: any[];
     }
 }
 
@@ -214,6 +217,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     coverImage: user.coverImage,
                     birthDate: user.birthDate,
                     showSensitiveContent: user.showSensitiveContent,
+                    badges: (user as any).badges,
                 } as any;
             },
         }),
@@ -249,6 +253,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     coverImage: user.coverImage,
                     birthDate: user.birthDate,
                     showSensitiveContent: user.showSensitiveContent,
+                    badges: (user as any).badges,
                 } as any;
             }
         }),
@@ -269,6 +274,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 token.coverImage = user.coverImage;
                 token.birthDate = user.birthDate;
                 token.showSensitiveContent = user.showSensitiveContent;
+                token.badges = user.badges;
             }
             if (token.id) {
                 try {
@@ -285,7 +291,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                             birthDate: true, 
                             showSensitiveContent: true, 
                             countryCode: true,
-                            isVerified: true
+                            isVerified: true,
+                            badges: { include: { badge: true } }
                         }
                     });
                     if (dbUser) {
@@ -300,6 +307,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         token.showSensitiveContent = dbUser.showSensitiveContent;
                         token.countryCode = dbUser.countryCode;
                         token.isVerified = dbUser.isVerified;
+                        token.badges = dbUser.badges;
                     }
                 } catch (e) {
                     console.error("JWT sync error:", e);

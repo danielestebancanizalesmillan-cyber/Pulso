@@ -9,7 +9,7 @@ import { Avatar } from "./Avatar";
 import { useTranslation } from "@/lib/i18n";
 import { VerifiedBadge } from "./VerifiedBadge";
 
-interface UserSuggestion { id: string; name: string; username: string; isVerified?: boolean; }
+interface UserSuggestion { id: string; name: string; username: string; isVerified?: boolean; verificationType?: string; badges?: any[]; }
 
 export function RightPanel() {
     const router = useRouter();
@@ -90,7 +90,7 @@ export function RightPanel() {
                                     <div className="suggestion-info">
                                         <div className="suggestion-name">
                                             {u.name}
-                                            <VerifiedBadge isVerified={u.isVerified} size={16} />
+                                            <VerifiedBadge isVerified={u.isVerified} type={u.verificationType} size={16} customBadges={u.badges} />
                                         </div>
                                         <div className="suggestion-handle">@{u.username}</div>
                                     </div>

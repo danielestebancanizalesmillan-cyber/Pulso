@@ -8,7 +8,12 @@ export const USER_SELECT = {
     isVerified: true,
     verificationType: true,
     createdAt: true,
-    countryCode: true
+    countryCode: true,
+    badges: {
+        include: {
+            badge: true
+        }
+    }
 };
 
 export const REGIONS = [

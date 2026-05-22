@@ -48,6 +48,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                     <AdminNavLink href="/admin-dashboard/users" icon={<Users size={20} />} label="Usuarios" />
                     <AdminNavLink href="/admin-dashboard/ads" icon={<Megaphone size={20} />} label="Anuncios" />
                     <AdminNavLink href="/admin-dashboard/verifications" icon={<Award size={20} />} label="Verificaciones" />
+                    <AdminNavLink href="/admin-dashboard/badges" icon={<Shield size={20} />} label="Insignias" />
                     <AdminNavLink href="/admin-dashboard/reports" icon={<AlertTriangle size={20} />} label="Reportes" />
                 </nav>
 

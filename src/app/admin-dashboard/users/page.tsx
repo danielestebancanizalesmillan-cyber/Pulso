@@ -11,9 +11,14 @@ export default async function AdminUsersPage() {
             role: true,
             isVerified: true,
             verificationType: true,
-            createdAt: true
+            createdAt: true,
+            badges: { include: { badge: true } }
         },
         orderBy: { createdAt: "desc" }
+    });
+
+    const availableBadges = await prisma.badge.findMany({
+        orderBy: { name: "asc" }
     });
 
     return (
@@ -24,7 +29,7 @@ export default async function AdminUsersPage() {
             </div>
 
             <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
-                <UsersList initialUsers={users} />
+                <UsersList initialUsers={users} availableBadges={availableBadges} />
             </div>
         </div>
     );

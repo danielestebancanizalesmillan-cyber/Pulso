@@ -72,6 +72,7 @@ model User {
   conversations          Conversation[]        @relation("ConversationParticipants")
   hostedSpaces           VoiceSpace[]          @relation("SpaceHost")
   spaceParticipations    VoiceSpaceParticipant[]
+  badges                 UserBadge[]
 }
 
 model AIChat {
@@ -532,4 +533,24 @@ model VoiceSpaceParticipant {
 
   @@unique([spaceId, userId])
   @@index([spaceId])
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  imageUrl    String
+  createdAt   DateTime    @default(now())
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
 }

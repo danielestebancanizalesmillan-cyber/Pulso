@@ -513,7 +513,7 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                                 style={{ display: "flex", alignItems: "center", gap: 2 }}
                             >
                                 {tweet.author?.name}
-                                <VerifiedBadge type={tweet.author?.verificationType || (tweet.author?.isVerified ? "BLUE" : "NONE")} size={16} />
+                                <VerifiedBadge type={tweet.author?.verificationType || (tweet.author?.isVerified ? "BLUE" : "NONE")} size={16} customBadges={tweet.author?.badges} />
                                 {tweet.author?.accountLabel && (
                                     <span style={{ 
                                         background: "var(--bg-secondary)", 
@@ -939,7 +939,7 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                                         <Avatar user={tweet.quoteOf.author} size="sm" />
                                         <span style={{ fontWeight: 700, display: "flex", alignItems: "center", gap: 2 }}>
                                             {tweet.quoteOf.author.name}
-                                            <VerifiedBadge type={tweet.quoteOf.author.verificationType || (tweet.quoteOf.author.isVerified ? "BLUE" : "NONE")} size={14} />
+                                            <VerifiedBadge type={tweet.quoteOf.author.verificationType || (tweet.quoteOf.author.isVerified ? "BLUE" : "NONE")} size={14} customBadges={tweet.quoteOf.author.badges} />
                                         </span>
                                         <span style={{ color: "var(--text-secondary)" }}>@{tweet.quoteOf.author.username}</span>
                                     </Link>

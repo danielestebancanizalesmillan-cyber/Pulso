@@ -323,7 +323,7 @@ export function Sidebar() {
                 <div className="sidebar-user-info nav-label">
                     <span className="sidebar-user-name" style={{ display: "flex", alignItems: "center", gap: 2 }}>
                         {user?.name || t("login")}
-                        {user?.id && <VerifiedBadge type={user?.verificationType || (user?.isVerified ? "BLUE" : "NONE")} size={16} />}
+                        {user?.id && <VerifiedBadge type={user?.verificationType || (user?.isVerified ? "BLUE" : "NONE")} size={16} customBadges={user?.badges} />}
                     </span>
                     <span className="sidebar-user-handle">{user?.id ? `@${username}` : t("signInToAccount")}</span>
                 </div>
