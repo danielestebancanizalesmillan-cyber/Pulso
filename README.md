@@ -12,10 +12,10 @@ Puedes entrar a la plataforma directamente desde tu navegador en el siguiente en
 ## ¿Por qué elegir Pulso?
 
 ### Características Premium
-- **Diseño Ultra-Moderno**: Una interfaz fluida, rápida y con modo oscuro premium.
+- **Diseño Ultra-Moderno**: Una interfaz fluida, rápida y con modo oscuro.
 - **Seguridad Avanzada**: Autenticación de dos factores (2FA) y protección de datos de grado industrial.
 - **Personalización Total**: Define tu identidad con perfiles verificados y etiquetas personalizadas.
-- **Experiencia Multimedia**: Comparte tus mejores momentos con carga optimizada de fotos y videos.
+- **Experiencia Multimedia**: Comparte tus mejores momentos con fotos y videos.
 
 ---
 
