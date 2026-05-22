@@ -14,6 +14,18 @@ const nextConfig: NextConfig = {
   reactCompiler: false,
   crossOrigin: "anonymous",
   serverExternalPackages: ["@prisma/client", "bcryptjs"],
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.googleusercontent.com",
+      },
+    ],
+  },
   async headers() {
     return [
       {
