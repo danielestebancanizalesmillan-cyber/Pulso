@@ -12,6 +12,7 @@ import { getUserSettings, updateUserSetting } from "@/app/actions/settings";
 import { generate2FASecret, enable2FA, disable2FA, get2FAStatus } from "@/app/actions/two-factor";
 import { submitVerificationRequest, getVerificationStatus } from "@/app/actions/verification";
 import { FollowRequestsModal } from "./FollowRequestsModal";
+import { WallpaperPickerModal } from "./WallpaperPickerModal";
 import { updateUserLabel, updateBirthDate, updateSensitiveToggle, deleteAccount } from "@/app/actions/user";
 
 const THEMES = [
@@ -66,6 +67,7 @@ export function SettingsClient() {
     const [accountLabel, setAccountLabel] = useState<string | null>(null);
     const [birthDate, setBirthDate] = useState<string>("");
     const [showSensitiveContent, setShowSensitiveContent] = useState(false);
+    const [showWallpaperModal, setShowWallpaperModal] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -426,6 +428,19 @@ export function SettingsClient() {
                         </div>
                     </button>
                 </div>
+
+                    <div className={styles.divider} />
+
+                    <button className={styles.settingsRow} onClick={() => setShowWallpaperModal(true)} style={{ cursor: "pointer" }}>
+                        <div className={styles.rowContent}>
+                            <span className={styles.rowLabel}>🎨 Fondo de pantalla</span>
+                            <span className={styles.rowDesc}>Personaliza el fondo de Pulso con gradientes o imágenes.</span>
+                        </div>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ width: 16, height: 16, color: "var(--text-secondary)" }}>
+                            <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                    </button>
+                </div>
             </section>
 
             {/* Privacy & Safety */}
@@ -686,6 +701,7 @@ export function SettingsClient() {
                 </div>
             )}
             {showFollowRequests && <FollowRequestsModal onClose={() => setShowFollowRequests(false)} />}
+            {showWallpaperModal && <WallpaperPickerModal onClose={() => setShowWallpaperModal(false)} />}
         </div>
     );
 }

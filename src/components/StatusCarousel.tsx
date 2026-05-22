@@ -64,7 +64,7 @@ export function StatusCarousel() {
     };
 
     return (
-        <div style={{ display: "flex", gap: "12px", padding: "12px", borderBottom: "1px solid var(--border)", overflowX: "auto", whiteSpace: "nowrap", background: "var(--bg-primary)" }} className="no-scrollbar">
+        <div className="status-carousel-bar no-scrollbar">
             {/* My Status Trigger */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", flexShrink: 0 }}>
                 <div style={{ position: "relative", width: "56px", height: "56px", borderRadius: "50%", padding: "2px", border: myStatuses ? "2px solid var(--blue)" : "2px dashed var(--text-secondary)", cursor: "pointer" }} onClick={() => myStatuses ? handleOpenGroup(myStatuses) : setShowCreate(true)}>
