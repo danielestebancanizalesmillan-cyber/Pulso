@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { upload } from "@vercel/blob/client";
+// import { upload } from "@vercel/blob/client";
 
 export default function AdminAdsPage() {
     const { data: session, status } = useSession();
@@ -57,10 +57,14 @@ export default function AdminAdsPage() {
     };
 
     const handleFileUpload = async (file: File) => {
-        const newBlob = await upload(file.name, file, {
-            access: 'public',
-            handleUploadUrl: '/api/upload',
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploadRes = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
         });
+        if (!uploadRes.ok) throw new Error("Upload failed");
+        const newBlob = await uploadRes.json();
         return newBlob.url;
     };
 

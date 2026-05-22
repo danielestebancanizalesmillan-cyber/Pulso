@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { createStatus, searchYouTube } from "@/app/actions/status";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
-import { upload } from "@vercel/blob/client";
+// import { upload } from "@vercel/blob/client";
 
 const PRESET_SONGS = [
     { name: "Lo-Fi Chill 🎧", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
@@ -96,10 +96,19 @@ export function CreateStatusModal({ onClose }: { onClose: () => void }) {
             let uploadedUrl = null;
             if (type === "IMAGE" && file) {
                 const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-                const newBlob = await upload(sanitizedName, file, {
-                    access: 'public',
-                    handleUploadUrl: '/api/upload',
+                const formData = new FormData();
+                formData.append("file", file);
+                
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
                 });
+                
+                if (!uploadRes.ok) {
+                    throw new Error("Upload failed");
+                }
+                
+                const newBlob = await uploadRes.json();
                 uploadedUrl = newBlob.url;
             }
 

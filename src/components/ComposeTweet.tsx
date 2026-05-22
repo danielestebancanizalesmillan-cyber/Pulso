@@ -11,7 +11,7 @@ import { improveTweetWithAI } from "@/app/actions/ai";
 import { GifPicker } from "./GifPicker";
 import { MapPin, X } from "lucide-react";
 
-import { upload } from "@vercel/blob/client";
+// import { upload } from "@vercel/blob/client";
 
 // Character limit moved inside component for dynamic calculation based on verification status
 
@@ -281,10 +281,19 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                             // Sanitize filename: remove special characters and spaces
                             const sanitizedName = item.file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
                             console.log(`>> ComposeTweet: Uploading file ${i+1}/${filesToUpload.length}: ${sanitizedName} (original: ${item.file.name})`);
-                            const newBlob = await upload(sanitizedName, item.file, {
-                                access: 'public',
-                                handleUploadUrl: '/api/upload',
+                            const formData = new FormData();
+                            formData.append("file", item.file);
+                            
+                            const uploadRes = await fetch('/api/upload', {
+                                method: 'POST',
+                                body: formData
                             });
+                            
+                            if (!uploadRes.ok) {
+                                throw new Error("Upload failed");
+                            }
+                            
+                            const newBlob = await uploadRes.json();
                             console.log(`>> ComposeTweet: File ${i+1} uploaded successfully:`, newBlob.url);
                             return { url: newBlob.url, type: item.type };
                         });

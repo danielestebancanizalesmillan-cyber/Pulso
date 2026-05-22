@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTheme, WallpaperConfig } from "./ThemeProvider";
-import { upload } from "@vercel/blob/client";
+// import { upload } from "@vercel/blob/client";
 
 interface WallpaperPickerModalProps {
     onClose: () => void;
@@ -48,10 +48,14 @@ export function WallpaperPickerModal({ onClose }: WallpaperPickerModalProps) {
         setUploading(true);
         try {
             const sanitized = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-            const blob = await upload(`wallpaper_${Date.now()}_${sanitized}`, file, {
-                access: "public",
-                handleUploadUrl: "/api/upload",
+            const formData = new FormData();
+            formData.append("file", file);
+            const uploadRes = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
             });
+            if (!uploadRes.ok) throw new Error("Upload failed");
+            const blob = await uploadRes.json();
             const wp: WallpaperConfig = {
                 type: "image",
                 value: blob.url,

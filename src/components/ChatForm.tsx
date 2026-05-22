@@ -4,7 +4,7 @@ import { useState, useTransition, useRef, useEffect } from "react";
 import { sendMessage } from "@/app/actions/message";
 import { sendTypingStatus } from "@/app/actions/typing";
 import { useTranslation } from "@/lib/i18n";
-import { upload } from "@vercel/blob/client";
+// import { upload } from "@vercel/blob/client";
 
 import { encryptContent } from "@/lib/e2ee";
 
@@ -55,10 +55,14 @@ export function ChatForm({ conversationId, userId, recipientPublicKey }: { conve
         startTransition(async () => {
             try {
                 const fileName = `${fileType}-${Date.now()}-${file.name}`;
-                const newBlob = await upload(fileName, file, {
-                    access: 'public',
-                    handleUploadUrl: '/api/upload',
+                const formData = new FormData();
+                formData.append("file", file);
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
                 });
+                if (!uploadRes.ok) throw new Error("Upload failed");
+                const newBlob = await uploadRes.json();
                 await sendMessage(conversationId, "", fileType, newBlob.url);
             } catch (error) {
                 console.error("Error uploading file:", error);
@@ -118,10 +122,14 @@ export function ChatForm({ conversationId, userId, recipientPublicKey }: { conve
         startTransition(async () => {
             try {
                 const fileName = `audio-${Date.now()}.webm`;
-                const newBlob = await upload(fileName, blob, {
-                    access: 'public',
-                    handleUploadUrl: '/api/upload',
+                const formData = new FormData();
+                formData.append("file", new File([blob], fileName, { type: blob.type }));
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
                 });
+                if (!uploadRes.ok) throw new Error("Upload failed");
+                const newBlob = await uploadRes.json();
                 await sendMessage(conversationId, "", "audio", newBlob.url);
             } catch (error) {
                 console.error("Error uploading audio:", error);

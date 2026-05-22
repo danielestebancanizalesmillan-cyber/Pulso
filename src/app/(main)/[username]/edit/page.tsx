@@ -158,14 +158,20 @@ export default function EditProfilePage() {
             try {
                 let avatarUrl: string | undefined;
                 let coverUrl: string | undefined;
-                const { upload } = await import("@vercel/blob/client");
-
                 if (avatarFile) {
-                    const blob = await upload(avatarFile.name, avatarFile, { access: "public", handleUploadUrl: "/api/upload" });
+                    const formData = new FormData();
+                    formData.append("file", avatarFile);
+                    const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+                    if (!uploadRes.ok) throw new Error("Upload failed");
+                    const blob = await uploadRes.json();
                     avatarUrl = blob.url;
                 }
                 if (coverFile) {
-                    const blob = await upload(coverFile.name, coverFile, { access: "public", handleUploadUrl: "/api/upload" });
+                    const formData = new FormData();
+                    formData.append("file", coverFile);
+                    const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+                    if (!uploadRes.ok) throw new Error("Upload failed");
+                    const blob = await uploadRes.json();
                     coverUrl = blob.url;
                 }
 

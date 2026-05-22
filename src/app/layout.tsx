@@ -1,7 +1,15 @@
 export const dynamic = "force-dynamic";
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  themeColor: "#1d9bf0",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 import { Providers } from "./providers";
 import { RealtimeProvider } from "@/components/RealtimeProvider";
 import Script from "next/script";
@@ -15,6 +23,14 @@ export async function generateMetadata() {
       title: "Pulso",
       description: "Una red social completa construida con Next.js",
       manifest: "/manifest.json",
+      appleWebApp: {
+        capable: true,
+        statusBarStyle: "default",
+        title: "Pulso",
+      },
+      formatDetection: {
+        telephone: false,
+      },
     };
   }
 
@@ -22,6 +38,14 @@ export async function generateMetadata() {
     title: "Pulso",
     description: "A fully-featured social network built with Next.js",
     manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: "Pulso",
+    },
+    formatDetection: {
+      telephone: false,
+    },
   };
 }
 

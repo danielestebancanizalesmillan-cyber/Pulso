@@ -6,7 +6,7 @@ import { createCommunity } from "@/app/actions/community";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BackButton } from "./BackButton";
-import { upload } from "@vercel/blob/client";
+// import { upload } from "@vercel/blob/client";
 
 export function CommunitiesContent({ myCommunities, discoverCommunities, userId }: { myCommunities: any[], discoverCommunities: any[], userId: string }) {
     const { t } = useTranslation();
@@ -29,13 +29,19 @@ export function CommunitiesContent({ myCommunities, discoverCommunities, userId 
                 let bannerUrl = "";
 
                 if (avatarFile) {
-                    const sanitizedName = avatarFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-                    const blob = await upload(`community_avatar_${Date.now()}_${sanitizedName}`, avatarFile, { access: 'public', handleUploadUrl: '/api/upload' });
+                    const formData = new FormData();
+                    formData.append("file", avatarFile);
+                    const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+                    if (!uploadRes.ok) throw new Error("Upload failed");
+                    const blob = await uploadRes.json();
                     avatarUrl = blob.url;
                 }
                 if (bannerFile) {
-                    const sanitizedName = bannerFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-                    const blob = await upload(`community_banner_${Date.now()}_${sanitizedName}`, bannerFile, { access: 'public', handleUploadUrl: '/api/upload' });
+                    const formData = new FormData();
+                    formData.append("file", bannerFile);
+                    const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+                    if (!uploadRes.ok) throw new Error("Upload failed");
+                    const blob = await uploadRes.json();
                     bannerUrl = blob.url;
                 }
 
