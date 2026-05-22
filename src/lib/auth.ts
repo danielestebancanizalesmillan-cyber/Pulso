@@ -8,6 +8,7 @@ import { verify } from "otplib";
 import { decrypt } from "@/lib/crypto";
 import { DefaultSession } from "next-auth";
 import { JWT } from "next-auth/jwt";
+import crypto from "crypto";
 
 declare module "next-auth" {
     interface Session {
@@ -215,6 +216,41 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     showSensitiveContent: user.showSensitiveContent,
                 } as any;
             },
+        }),
+        CredentialsProvider({
+            id: "switch",
+            name: "switch",
+            credentials: {
+                id: { type: "text" },
+                token: { type: "text" },
+            },
+            async authorize(credentials) {
+                if (!credentials?.id || !credentials?.token) return null;
+                const user = await prisma.user.findUnique({ where: { id: credentials.id as string } });
+                if (!user || !user.password) return null;
+                
+                const secret = process.env.AUTH_SECRET || "default_secret";
+                const expectedToken = crypto.createHmac("sha256", secret).update(user.id + user.password).digest("hex");
+                
+                if (credentials.token !== expectedToken) return null;
+
+                return {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    username: user.username,
+                    image: user.avatar || user.image,
+                    avatar: user.avatar,
+                    emailVerified: user.emailVerified,
+                    countryCode: user.countryCode,
+                    role: user.role,
+                    isVerified: user.isVerified,
+                    accountLabel: user.accountLabel,
+                    coverImage: user.coverImage,
+                    birthDate: user.birthDate,
+                    showSensitiveContent: user.showSensitiveContent,
+                } as any;
+            }
         }),
     ],
     callbacks: {

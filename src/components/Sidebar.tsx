@@ -34,18 +34,62 @@ export function Sidebar() {
         setSavedAccounts(accounts);
 
         if (user?.id) {
-            const exists = accounts.find((a: any) => a.id === user.id);
-            if (!exists) {
-                const newAccs = [...accounts, { id: user.id, name: user.name, username: user.username, image: user.image, email: user.email }];
+            // First deduplicate and update existing
+            let newAccs = accounts.filter((a: any) => a.email !== user.email && a.username !== user.username);
+            const currentUserAcc = accounts.find((a: any) => a.email === user.email || a.username === user.username);
+            
+            const updatedCurrentAcc = { 
+                id: user.id, 
+                name: user.name, 
+                username: user.username, 
+                image: user.image, 
+                email: user.email,
+                switchToken: currentUserAcc?.switchToken 
+            };
+            
+            newAccs.push(updatedCurrentAcc);
+
+            // Async fetch token if not present
+            if (!updatedCurrentAcc.switchToken) {
+                fetch("/api/me/switch-token")
+                    .then(res => res.ok ? res.json() : null)
+                    .then(data => {
+                        if (data?.token) {
+                            updatedCurrentAcc.switchToken = data.token;
+                            localStorage.setItem("twtr_accounts", JSON.stringify(newAccs));
+                            setSavedAccounts(newAccs);
+                        }
+                    })
+                    .catch(console.error);
+            } else {
                 localStorage.setItem("twtr_accounts", JSON.stringify(newAccs));
                 setSavedAccounts(newAccs);
             }
         }
-    }, [user?.id]);
+    }, [user?.id, user?.username, user?.email, user?.name, user?.image]);
+    
+    const removeAccount = (e: React.MouseEvent, accId: string) => {
+        e.stopPropagation();
+        const accounts = JSON.parse(localStorage.getItem("twtr_accounts") || "[]");
+        const newAccs = accounts.filter((a: any) => a.id !== accId);
+        localStorage.setItem("twtr_accounts", JSON.stringify(newAccs));
+        setSavedAccounts(newAccs);
+    };
     
     const switchAccount = async (acc: any) => {
-
-
+        if (acc.switchToken) {
+            // Attempt seamless switch
+            const result = await import("next-auth/react").then(m => m.signIn("switch", {
+                id: acc.id,
+                token: acc.switchToken,
+                redirect: false
+            }));
+            if (result?.ok && !result.error) {
+                window.location.reload();
+                return;
+            }
+        }
+        // Fallback to manual login if token is missing or invalid
         const loginHint = acc.username || acc.email || "";
         signOut({ callbackUrl: `/login?login=${encodeURIComponent(loginHint)}` });
     };
@@ -288,13 +332,24 @@ export function Sidebar() {
                         style={{ bottom: "60px", left: 0, right: 0, padding: "8px 0", minWidth: 260 }}
                     >
                         {savedAccounts.filter(a => a.id !== user?.id).map(acc => (
-                            <button key={acc.id} className="dropdown-item" onClick={() => switchAccount(acc)}>
-                                <Avatar user={acc} size="sm" />
-                                <div style={{ marginLeft: 12, textAlign: "left" }}>
-                                    <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{acc.name}</div>
-                                    <div style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}>@{acc.username}</div>
-                                </div>
-                            </button>
+                            <div key={acc.id} className="dropdown-item" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingRight: "12px" }}>
+                                <button style={{ background: "none", border: "none", display: "flex", alignItems: "center", flex: 1, cursor: "pointer", textAlign: "left", padding: 0 }} onClick={() => switchAccount(acc)}>
+                                    <Avatar user={acc} size="sm" />
+                                    <div style={{ marginLeft: 12, flex: 1 }}>
+                                        <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{acc.name}</div>
+                                        <div style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}>@{acc.username}</div>
+                                    </div>
+                                </button>
+                                <button 
+                                    onClick={(e) => removeAccount(e, acc.id)}
+                                    title="Remover cuenta"
+                                    style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%" }}
+                                    onMouseEnter={e => e.currentTarget.style.background = "var(--bg-hover)"}
+                                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                >
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                            </div>
                         ))}
 
                         <Link href="/login" className="dropdown-item">
