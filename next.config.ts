@@ -10,6 +10,7 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   /* config options here */
+  turbopack: {},
   reactCompiler: false,
   crossOrigin: "anonymous",
   serverExternalPackages: ["@prisma/client", "bcryptjs"],
