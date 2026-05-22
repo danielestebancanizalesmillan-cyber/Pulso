@@ -11,6 +11,7 @@ import { NotificationBadge } from "./NotificationBadge";
 import { MessageBadge } from "./MessageBadge";
 import { useTranslation } from "@/lib/i18n";
 import { ThemeSelectorModal } from "./ThemeSelectorModal";
+import { WallpaperPickerModal } from "./WallpaperPickerModal";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function Sidebar() {
@@ -21,6 +22,7 @@ export function Sidebar() {
     const { t, locale, toggleLocale } = useTranslation();
     const [showDropdown, setShowDropdown] = useState(false);
     const [showThemeModal, setShowThemeModal] = useState(false);
+    const [showWallpaperModal, setShowWallpaperModal] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const user = session?.user as any;
@@ -371,6 +373,15 @@ export function Sidebar() {
                             {t("changeTheme")}
                         </button>
 
+                        <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setShowWallpaperModal(true); setShowDropdown(false); }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            Fondo de pantalla
+                        </button>
+
                         <div id="google_translate_element" style={{ padding: "8px 16px" }} onClick={(e) => e.stopPropagation()}></div>
 
 
@@ -400,7 +411,7 @@ export function Sidebar() {
             </div>
 
             {showThemeModal && <ThemeSelectorModal onClose={() => setShowThemeModal(false)} />}
-
+            {showWallpaperModal && <WallpaperPickerModal onClose={() => setShowWallpaperModal(false)} />}
 
             {/* Mobile Sheet Drawer Overlay */}
 
