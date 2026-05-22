@@ -140,8 +140,9 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
             window.dispatchEvent(new CustomEvent("play-global-audio", {
                 detail: {
                     url: currentItem.audioUrl,
-                    title: currentItem.audioTitle,
-                    start: currentItem.audioStart,
+                    title: styleOpts?.audioTitle || "Música del estado",
+                    start: currentItem.audioStart || 0,
+                    duration: currentItem.audioDuration || 15,
                     userId: currentItem.id,
                     isStatus: true
                 }
@@ -165,8 +166,9 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                 window.dispatchEvent(new CustomEvent("play-global-audio", {
                     detail: {
                         url: nextItem.audioUrl,
-                        title: nextItem.audioTitle,
-                        start: nextItem.audioStart,
+                        title: nextItem.styleOptions ? JSON.parse(nextItem.styleOptions).audioTitle || "Música del estado" : "Música del estado",
+                        start: nextItem.audioStart || 0,
+                        duration: nextItem.audioDuration || 15,
                         userId: nextItem.id,
                         isStatus: true
                     }
@@ -188,8 +190,9 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
                 window.dispatchEvent(new CustomEvent("play-global-audio", {
                     detail: {
                         url: prevItem.audioUrl,
-                        title: prevItem.audioTitle,
-                        start: prevItem.audioStart,
+                        title: prevItem.styleOptions ? JSON.parse(prevItem.styleOptions).audioTitle || "Música del estado" : "Música del estado",
+                        start: prevItem.audioStart || 0,
+                        duration: prevItem.audioDuration || 15,
                         userId: prevItem.id,
                         isStatus: true
                     }
@@ -229,8 +232,9 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
             window.dispatchEvent(new CustomEvent("play-global-audio", {
                 detail: {
                     url: currentItem.audioUrl,
-                    title: currentItem.audioTitle,
-                    start: currentItem.audioStart,
+                    title: styleOpts?.audioTitle || "Música del estado",
+                    start: currentItem.audioStart || 0,
+                    duration: currentItem.audioDuration || 15,
                     userId: currentItem.id,
                     isStatus: true
                 }
@@ -301,40 +305,42 @@ export function StatusViewerModal({ group, onClose }: { group: any, onClose: () 
 
                 {/* Main Content Viewer inside slider sheet wrapper motion container */}
                 <div style={{ position: "relative", zIndex: 2, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", width: "100%" }}>
-                    <motion.div 
-                        initial={{ scale: 0.95, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                        style={{ 
-                            position: hasTextStyle ? "absolute" : "relative",
-                            left: hasTextStyle ? `${textPos.x}%` : "auto",
-                            top: hasTextStyle ? `${textPos.y}%` : "auto",
-                            transform: hasTextStyle ? "translate(-50%, -50%)" : "none",
-                            background: styleOpts ? (styleOpts.useTextBg ? "rgba(0,0,0,0.45)" : "transparent") : "rgba(0,0,0,0.45)", 
-                            backdropFilter: styleOpts ? (styleOpts.useTextBg ? "blur(12px)" : "none") : "blur(12px)", 
-                            padding: "16px 24px", 
-                            borderRadius: "20px", 
-                            maxWidth: "90%", 
-                            border: styleOpts ? (styleOpts.useTextBg ? "1px solid rgba(255,255,255,0.18)" : "none") : "1px solid rgba(255,255,255,0.18)",
-                            boxShadow: styleOpts ? (styleOpts.useTextBg ? "0 12px 40px rgba(0,0,0,0.3)" : "none") : "0 12px 40px rgba(0,0,0,0.3)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                        }}
-                    >
-                        <p style={{ 
-                            color: styleOpts ? (styleOpts.textColor || "white") : "white", 
-                            fontSize: styleOpts?.fontSize ? `${styleOpts.fontSize}rem` : "1.75rem", 
-                            fontWeight: "800", 
-                            textAlign: "center", 
-                            textShadow: "0 2px 4px rgba(0,0,0,0.2)", 
-                            wordBreak: "break-word", 
-                            lineHeight: 1.35, 
-                            margin: 0 
-                        }}>
-                            {currentItem.content}
-                        </p>
-                    </motion.div>
+                    {currentItem.content && currentItem.content.trim() ? (
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                            style={{ 
+                                position: hasTextStyle ? "absolute" : "relative",
+                                left: hasTextStyle ? `${textPos.x}%` : "auto",
+                                top: hasTextStyle ? `${textPos.y}%` : "auto",
+                                transform: hasTextStyle ? "translate(-50%, -50%)" : "none",
+                                background: styleOpts ? (styleOpts.useTextBg ? "rgba(0,0,0,0.45)" : "transparent") : "rgba(0,0,0,0.45)", 
+                                backdropFilter: styleOpts ? (styleOpts.useTextBg ? "blur(12px)" : "none") : "blur(12px)", 
+                                padding: "16px 24px", 
+                                borderRadius: "20px", 
+                                maxWidth: "90%", 
+                                border: styleOpts ? (styleOpts.useTextBg ? "1px solid rgba(255,255,255,0.18)" : "none") : "1px solid rgba(255,255,255,0.18)",
+                                boxShadow: styleOpts ? (styleOpts.useTextBg ? "0 12px 40px rgba(0,0,0,0.3)" : "none") : "0 12px 40px rgba(0,0,0,0.3)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center"
+                            }}
+                        >
+                            <p style={{ 
+                                color: styleOpts ? (styleOpts.textColor || "white") : "white", 
+                                fontSize: styleOpts?.fontSize ? `${styleOpts.fontSize}rem` : "1.75rem", 
+                                fontWeight: "800", 
+                                textAlign: "center", 
+                                textShadow: "0 2px 4px rgba(0,0,0,0.2)", 
+                                wordBreak: "break-word", 
+                                lineHeight: 1.35, 
+                                margin: 0 
+                            }}>
+                                {currentItem.content}
+                            </p>
+                        </motion.div>
+                    ) : null}
                 </div>
 
                 {/* Bottom audio controller slider toolbar track action view */}

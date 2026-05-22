@@ -121,25 +121,15 @@ export function ProfileContent({
         };
     }, [user.id]);
 
-    // Handle autoplay on mount (runs separately to avoid early return breaking the event listener)
+    // Stop audio on unmount if it was playing for this profile
     useEffect(() => {
-        if (user?.profileAudioUrl) {
+        return () => {
             const state = window.__globalAudioState;
-            if (state?.userId !== user.id || !state?.isPlaying) {
-                const t = setTimeout(() => {
-                    window.dispatchEvent(new CustomEvent("play-global-audio", {
-                        detail: {
-                            url: user.profileAudioUrl,
-                            title: user.profileAudioTitle,
-                            start: user.profileAudioStart,
-                            userId: user.id
-                        }
-                    }));
-                }, 800);
-                return () => clearTimeout(t);
+            if (state?.isPlaying && state?.userId === user.id && !state?.isStatus) {
+                window.dispatchEvent(new CustomEvent("pause-global-audio"));
             }
-        }
-    }, [user.id, user?.profileAudioUrl]);
+        };
+    }, [user.id]);
 
     const toggleProfileAudio = () => {
         if (!user?.profileAudioUrl) return;

@@ -27,8 +27,8 @@ export async function createStatus(
             mediaUrl: mediaUrl || null,
             audioUrl: audioUrl || null,
             background: background || null,
-            audioStart: audioStart ? Math.floor(audioStart) : null,
-            audioDuration: audioDuration ? Math.floor(audioDuration) : 15,
+            audioStart: audioStart !== null && audioStart !== undefined ? Math.floor(audioStart) : null,
+            audioDuration: audioDuration !== null && audioDuration !== undefined ? Math.floor(audioDuration) : 15,
             styleOptions: styleOptions || null,
             expiresAt
         }

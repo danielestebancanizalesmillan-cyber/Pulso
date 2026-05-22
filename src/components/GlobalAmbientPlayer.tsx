@@ -127,7 +127,7 @@ export function GlobalAmbientPlayer() {
 
         const handlePlay = async (e: Event) => {
             const customEvent = e as CustomEvent;
-            const { url, title, start, userId, isStatus } = customEvent.detail;
+            const { url, title, start, duration, userId, isStatus } = customEvent.detail;
 
             // If a profile song was playing and we trigger status music,
             // push current track to the restoration stack
@@ -160,10 +160,14 @@ export function GlobalAmbientPlayer() {
                 const setupPlayer = () => {
                     if (ytPlayerRef.current && typeof ytPlayerRef.current.loadVideoById === "function") {
                         try {
-                            ytPlayerRef.current.loadVideoById({
+                            const loadOptions: any = {
                                 videoId: isYt,
                                 startSeconds: start || 0,
-                            });
+                            };
+                            if (duration) {
+                                loadOptions.endSeconds = (start || 0) + duration;
+                            }
+                            ytPlayerRef.current.loadVideoById(loadOptions);
                             ytPlayerRef.current.playVideo();
                         } catch {}
                     } else {
@@ -181,6 +185,7 @@ export function GlobalAmbientPlayer() {
                                     origin: window.location.origin,
                                     playsinline: 1,
                                     start: start || 0,
+                                    ...(duration ? { end: (start || 0) + duration } : {})
                                 },
                                 events: {
                                     onReady: (event: any) => {
@@ -286,22 +291,32 @@ export function GlobalAmbientPlayer() {
 
         const handleTempPause = () => {
             const current = window.__globalAudioState;
-            if (current && !current.isStatus && current.url) {
-                const previous = {
-                    url: current.url,
-                    userId: current.userId,
-                    title: current.title,
-                    isPlaying: current.isPlaying
-                };
+            if (current) {
+                if (!current.isStatus && current.url) {
+                    const previous = {
+                        url: current.url,
+                        userId: current.userId,
+                        title: current.title,
+                        isPlaying: current.isPlaying
+                    };
 
-                if (audioRef.current) {
-                    audioRef.current.pause();
-                }
-                if (ytPlayerRef.current && typeof ytPlayerRef.current.pauseVideo === "function") {
-                    try { ytPlayerRef.current.pauseVideo(); } catch {}
-                }
+                    if (audioRef.current) {
+                        audioRef.current.pause();
+                    }
+                    if (ytPlayerRef.current && typeof ytPlayerRef.current.pauseVideo === "function") {
+                        try { ytPlayerRef.current.pauseVideo(); } catch {}
+                    }
 
-                updateState(false, null, null, null, true, previous);
+                    updateState(false, null, null, null, true, previous);
+                } else if (current.isStatus) {
+                    if (audioRef.current) {
+                        audioRef.current.pause();
+                    }
+                    if (ytPlayerRef.current && typeof ytPlayerRef.current.pauseVideo === "function") {
+                        try { ytPlayerRef.current.pauseVideo(); } catch {}
+                    }
+                    updateState(false, null, null, null, true, current.previous);
+                }
             }
         };
 
