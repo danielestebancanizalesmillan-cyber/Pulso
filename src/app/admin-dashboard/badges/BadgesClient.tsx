@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Trash2, Image as ImageIcon } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { useToast } from "@/components/ToastProvider";
 import { useRouter } from "next/navigation";
 
 export default function BadgesClient({ initialBadges }: { initialBadges: any[] }) {
@@ -13,6 +13,7 @@ export default function BadgesClient({ initialBadges }: { initialBadges: any[] }
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { addToast } = useToast();
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -24,7 +25,7 @@ export default function BadgesClient({ initialBadges }: { initialBadges: any[] }
 
     const handleCreate = async () => {
         if (!name || !imageFile) {
-            toast.error("El nombre y la imagen son obligatorios");
+            addToast("El nombre y la imagen son obligatorios", "error");
             return;
         }
 
@@ -58,10 +59,11 @@ export default function BadgesClient({ initialBadges }: { initialBadges: any[] }
             setDescription("");
             setImageFile(null);
             setImagePreview(null);
-            toast.success("Insignia creada exitosamente");
+            addToast("Insignia creada exitosamente", "success");
             router.refresh();
         } catch (e: any) {
-            toast.error(e.message);
+            addToast(e.message, "error");
+            alert("Error al subir insignia: " + e.message + ". Verifica que las variables de Cloudinary estén configuradas en Vercel.");
         } finally {
             setLoading(false);
         }
@@ -75,10 +77,10 @@ export default function BadgesClient({ initialBadges }: { initialBadges: any[] }
             });
             if (!res.ok) throw new Error("Fallo al eliminar");
             setBadges(badges.filter(b => b.id !== id));
-            toast.success("Insignia eliminada");
+            addToast("Insignia eliminada", "success");
             router.refresh();
         } catch (e: any) {
-            toast.error(e.message);
+            addToast(e.message, "error");
         }
     };
 

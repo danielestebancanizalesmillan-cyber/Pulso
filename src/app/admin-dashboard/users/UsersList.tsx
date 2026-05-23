@@ -5,13 +5,14 @@ import { Avatar } from "@/components/Avatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { updateUserRole, updateUserVerification } from "@/app/actions/admin";
 import { Search, MoreVertical, Plus, X, Trash2 } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { useToast } from "@/components/ToastProvider";
 
 export function UsersList({ initialUsers, availableBadges }: { initialUsers: any[], availableBadges: any[] }) {
     const [users, setUsers] = useState(initialUsers);
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState<string | null>(null);
     const [managingBadgesFor, setManagingBadgesFor] = useState<any | null>(null);
+    const { addToast } = useToast();
 
     const filteredUsers = users.filter(u => 
         u.name?.toLowerCase().includes(search.toLowerCase()) || 
@@ -62,9 +63,9 @@ export function UsersList({ initialUsers, availableBadges }: { initialUsers: any
                 ...prev,
                 badges: [...(prev.badges || []), { badgeId, badge: badgeObj, ...newAssignment }]
             }));
-            toast.success("Insignia asignada");
+            addToast("Insignia asignada", "success");
         } catch (e: any) {
-            toast.error("Error: el usuario podría ya tener esta insignia");
+            addToast("Error: el usuario podría ya tener esta insignia", "error");
         } finally {
             setLoading(null);
         }
@@ -90,9 +91,9 @@ export function UsersList({ initialUsers, availableBadges }: { initialUsers: any
                 ...prev,
                 badges: prev.badges.filter((b: any) => b.badgeId !== badgeId)
             }));
-            toast.success("Insignia removida");
+            addToast("Insignia removida", "success");
         } catch (e: any) {
-            toast.error(e.message);
+            addToast(e.message, "error");
         } finally {
             setLoading(null);
         }

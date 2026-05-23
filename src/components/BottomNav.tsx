@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Home, Search, Bell, Mail, Settings } from "lucide-react";
+import { Home, Search, Bell, Mail, Settings, Users, Mic } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 export function BottomNav() {
@@ -15,8 +15,10 @@ export function BottomNav() {
 
   const links = [
     { href: "/home", icon: Home, label: "Inicio" },
-    { href: "/explore", icon: Search, label: "Búsqueda" },
-    { href: "/notifications", icon: Bell, label: "Notificaciones" },
+    { href: "/explore", icon: Search, label: "Buscar" },
+    { href: "/spaces", icon: Mic, label: "Espacios" },
+    { href: "/communities", icon: Users, label: "Comunidad" },
+    { href: "/notifications", icon: Bell, label: "Avisos" },
     { href: "/messages", icon: Mail, label: "Mensajes" },
     { href: "/settings", icon: Settings, label: "Ajustes" },
   ];
