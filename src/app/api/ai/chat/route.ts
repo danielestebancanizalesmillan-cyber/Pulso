@@ -43,8 +43,8 @@ export async function POST(req: NextRequest) {
         let messages = [
             { role: "system", content: creatorRule + "\nContexto Diario:\n" + dailyContext },
             ...history.map((m: any) => ({
-                role: m.sender === "user" ? "user" : "assistant",
-                content: m.text
+                role: m.role || (m.sender === "user" ? "user" : "assistant"),
+                content: m.content || m.text
             })),
             { role: "user", content: message }
         ];

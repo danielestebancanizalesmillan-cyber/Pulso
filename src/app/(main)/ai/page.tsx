@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -77,10 +77,38 @@ export default function PulsAIPage() {
     };
 
     // Seleccionar chat
-    const selectChat = (chatId: string) => {
+    const selectChat = async (chatId: string) => {
         setCurrentChatId(chatId);
         setMessages([]);
         setSidebarOpen(false);
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/ai/chats/${chatId}`);
+            if (res.ok) {
+                const data = await res.json();
+                const formattedMessages = data.messages.map((m: any) => {
+                    let content = m.content;
+                    try {
+                        const parsed = JSON.parse(m.content);
+                        if (parsed.type === "rich_message") {
+                            content = parsed.text;
+                        }
+                    } catch (e) {
+                        // No es JSON
+                    }
+                    return {
+                        id: m.id,
+                        role: m.role,
+                        content: content
+                    };
+                });
+                setMessages(formattedMessages);
+            }
+        } catch (error) {
+            console.error("Error al cargar mensajes:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Enviar mensaje
@@ -131,6 +159,13 @@ export default function PulsAIPage() {
                     content: data.response || "Lo siento, no pude procesar tu solicitud."
                 };
                 setMessages(prev => [...prev, assistantMessage]);
+            } else {
+                const errorData = await res.json().catch(() => ({}));
+                const errorMessage: Message = {
+                    role: "assistant",
+                    content: "Hubo un error al procesar tu solicitud: " + (errorData.error || res.statusText || "Error desconocido.")
+                };
+                setMessages(prev => [...prev, errorMessage]);
             }
         } catch (error) {
             console.error("Error enviando mensaje:", error);
