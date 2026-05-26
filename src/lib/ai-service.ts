@@ -1,7 +1,7 @@
 import { prisma } from "./prisma";
 
-const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://localhost:11434";
-const MODEL_NAME = process.env.OLLAMA_MODEL || "llama3.2:3b";
+const OLLAMA_HOST = process.env.OLLAMA_HOST || "https://jeopardous-phuong-temptedly.ngrok-free.dev";
+const MODEL_NAME = process.env.OLLAMA_MODEL || "gemma2:2b";
 
 /**
  * REGLAS CORE DE PulsAI
