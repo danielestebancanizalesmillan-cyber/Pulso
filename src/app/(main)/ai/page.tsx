@@ -28,7 +28,20 @@ export default function PulsAIPage() {
     const [inputValue, setInputValue] = useState("");
     const [loading, setLoading] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [isMobile, setIsMobile] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Detectar tamaño de pantalla
+    useEffect(() => {
+        const handleResize = () => {
+            const mobile = window.innerWidth <= 768;
+            setIsMobile(mobile);
+            if (mobile) setSidebarOpen(false);
+        };
+        handleResize(); // Configuración inicial
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     // Cargar chats
     useEffect(() => {
@@ -80,7 +93,7 @@ export default function PulsAIPage() {
     const selectChat = async (chatId: string) => {
         setCurrentChatId(chatId);
         setMessages([]);
-        setSidebarOpen(false);
+        if (isMobile) setSidebarOpen(false);
         setLoading(true);
         try {
             const res = await fetch(`/api/ai/chats/${chatId}`);
@@ -237,9 +250,12 @@ export default function PulsAIPage() {
                             borderRight: "1px solid var(--border-color)",
                             display: "flex",
                             flexDirection: "column",
-                            backgroundColor: "rgba(var(--bg-secondary-rgb), 0.5)",
-                            backdropFilter: "blur(12px)",
-                            zIndex: 10
+                            backgroundColor: "var(--bg-main)",
+                            zIndex: 20,
+                            position: isMobile ? "absolute" : "relative",
+                            height: "100%",
+                            left: 0,
+                            top: 0
                         }}
                     >
                         {/* Header Sidebar */}
@@ -392,7 +408,10 @@ export default function PulsAIPage() {
                     alignItems: "center",
                     gap: "16px",
                     background: "rgba(var(--bg-main-rgb), 0.8)",
-                    backdropFilter: "blur(12px)"
+                    backdropFilter: "blur(12px)",
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 10
                 }}>
                     <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -471,7 +490,7 @@ export default function PulsAIPage() {
                                 </svg>
                             </div>
                             <h1 style={{ 
-                                fontSize: "2.5rem", 
+                                fontSize: isMobile ? "2rem" : "2.5rem", 
                                 fontWeight: 900, 
                                 marginBottom: "12px", 
                                 background: "linear-gradient(to bottom, var(--text-primary), var(--text-secondary))", 
@@ -480,7 +499,7 @@ export default function PulsAIPage() {
                             }}>
                                 PulsAI
                             </h1>
-                            <p style={{ color: "var(--text-secondary)", maxWidth: "400px", fontSize: "1.1rem", lineHeight: "1.6" }}>
+                            <p style={{ color: "var(--text-secondary)", maxWidth: "400px", fontSize: isMobile ? "1rem" : "1.1rem", lineHeight: "1.6", padding: "0 20px" }}>
                                 Tu asistente de investigación avanzado. Pregúntame cualquier cosa y te ayudaré a analizar, investigar y crear.
                             </p>
                         </motion.div>
@@ -620,7 +639,7 @@ export default function PulsAIPage() {
                                 border: "none",
                                 background: "transparent",
                                 color: "var(--text-primary)",
-                                fontSize: "1rem",
+                                fontSize: isMobile ? "0.95rem" : "1rem",
                                 outline: "none"
                             }}
                             disabled={loading}
