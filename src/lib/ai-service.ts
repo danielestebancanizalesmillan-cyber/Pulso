@@ -71,7 +71,8 @@ export async function getOllamaResponse(messages: any[], formatJson: boolean = t
                     method: "POST",
                     headers: { 
                         "Content-Type": "application/json",
-                        "Connection": "close"
+                        "Connection": "close",
+                        "ngrok-skip-browser-warning": "true"
                     },
                     body: JSON.stringify({
                         model: targetModel,
