@@ -405,6 +405,7 @@ export default function PulsAIPage() {
                             )}
                         </div>
                     </motion.div>
+                    </>
                 )}
             </AnimatePresence>
 
