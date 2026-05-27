@@ -9,10 +9,11 @@ export async function GET() {
         if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         
         const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-        if (!user || !user.password) return NextResponse.json({ error: "No password available for switch token" }, { status: 400 });
+        if (!user) return NextResponse.json({ error: "User not found" }, { status: 400 });
 
         const secret = process.env.AUTH_SECRET || "default_secret";
-        const token = crypto.createHmac("sha256", secret).update(user.id + user.password).digest("hex");
+        const hashBase = user.id + (user.password || user.createdAt?.toISOString() || user.email || "no_pass");
+        const token = crypto.createHmac("sha256", secret).update(hashBase).digest("hex");
 
         return NextResponse.json({ token, id: user.id });
     } catch (e: any) {

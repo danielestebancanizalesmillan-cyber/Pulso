@@ -231,10 +231,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             async authorize(credentials) {
                 if (!credentials?.id || !credentials?.token) return null;
                 const user = await prisma.user.findUnique({ where: { id: credentials.id as string } });
-                if (!user || !user.password) return null;
+                if (!user) return null;
                 
                 const secret = process.env.AUTH_SECRET || "default_secret";
-                const expectedToken = crypto.createHmac("sha256", secret).update(user.id + user.password).digest("hex");
+                const hashBase = user.id + (user.password || user.createdAt?.toISOString() || user.email || "no_pass");
+                const expectedToken = crypto.createHmac("sha256", secret).update(hashBase).digest("hex");
                 
                 if (credentials.token !== expectedToken) return null;
 

@@ -105,12 +105,12 @@ export function RightPanel() {
             {!isExplore && <TrendingSidebar />}
 
             <div style={{ padding: '0 1rem', marginTop: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-                <a href="/terms" target="_blank" style={{ color: 'inherit', textDecoration: 'none' }}>
+                <Link href="/terms" style={{ color: 'inherit', textDecoration: 'none' }}>
                     Terms of Service
-                </a>
-                <a href="/privacy" target="_blank" style={{ color: 'inherit', textDecoration: 'none' }}>
+                </Link>
+                <Link href="/privacy" style={{ color: 'inherit', textDecoration: 'none' }}>
                     Privacy Policy
-                </a>
+                </Link>
                 <span>© 2026 Pulso</span>
             </div>
         </div>
