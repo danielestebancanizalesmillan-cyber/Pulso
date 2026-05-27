@@ -31,12 +31,11 @@ export default function PulsAIPage() {
     const [isMobile, setIsMobile] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Detectar tamaño de pantalla
+    // Detectar tamaño de pantalla (opcional para ajustes menores)
     useEffect(() => {
         const handleResize = () => {
             const mobile = window.innerWidth <= 768;
             setIsMobile(mobile);
-            if (mobile) setSidebarOpen(false);
         };
         handleResize(); // Configuración inicial
         window.addEventListener("resize", handleResize);
@@ -93,7 +92,7 @@ export default function PulsAIPage() {
     const selectChat = async (chatId: string) => {
         setCurrentChatId(chatId);
         setMessages([]);
-        if (isMobile) setSidebarOpen(false);
+        setSidebarOpen(false); // Siempre cerramos el drawer al seleccionar un chat
         setLoading(true);
         try {
             const res = await fetch(`/api/ai/chats/${chatId}`);
@@ -237,27 +236,44 @@ export default function PulsAIPage() {
                 zIndex: 0
             }} />
 
-            {/* Sidebar */}
+            {/* Sidebar Overlay */}
             <AnimatePresence>
                 {sidebarOpen && (
-                    <motion.div
-                        initial={{ x: -300, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: -300, opacity: 0 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        style={{
-                            width: "280px",
-                            borderRight: "1px solid var(--border-color)",
-                            display: "flex",
-                            flexDirection: "column",
-                            backgroundColor: "var(--bg-main)",
-                            zIndex: 20,
-                            position: isMobile ? "absolute" : "relative",
-                            height: "100%",
-                            left: 0,
-                            top: 0
-                        }}
-                    >
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSidebarOpen(false)}
+                            style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: "rgba(0, 0, 0, 0.4)",
+                                zIndex: 15
+                            }}
+                        />
+                        <motion.div
+                            initial={{ x: -300, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -300, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            style={{
+                                width: "280px",
+                                borderRight: "1px solid var(--border-color)",
+                                display: "flex",
+                                flexDirection: "column",
+                                backgroundColor: "var(--bg-main)",
+                                zIndex: 20,
+                                position: "absolute",
+                                height: "100%",
+                                left: 0,
+                                top: 0,
+                                boxShadow: "4px 0 24px rgba(0, 0, 0, 0.2)"
+                            }}
+                        >
                         {/* Header Sidebar */}
                         <div style={{ padding: "20px", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "10px" }}>
                             <div style={{
