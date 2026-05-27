@@ -354,7 +354,11 @@ export function Sidebar() {
                             </div>
                         ))}
 
-                        <Link href="/login" className="dropdown-item">
+                        <button 
+                            className="dropdown-item"
+                            onClick={() => signOut({ callbackUrl: "/login" })}
+                            style={{ background: "none", border: "none", width: "100%", textAlign: "left" }}
+                        >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
                                 <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
                                 <circle cx="8.5" cy="7" r="4" />
@@ -362,7 +366,7 @@ export function Sidebar() {
                                 <line x1="23" y1="11" x2="17" y2="11" />
                             </svg>
                             {t("addExistingAccount")}
-                        </Link>
+                        </button>
 
                         <div style={{ height: 1, background: "var(--border)", margin: "8px 0" }} />
 
