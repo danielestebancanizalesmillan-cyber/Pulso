@@ -10,7 +10,7 @@ export default {
             checks: ['none'],
             authorization: {
                 params: {
-                    prompt: "consent select_account",
+                    prompt: "select_account",
                 },
             },
         }),
