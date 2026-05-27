@@ -10,6 +10,7 @@ import { GlobalAmbientPlayer } from "@/components/GlobalAmbientPlayer";
 import { BottomNav } from "@/components/BottomNav";
 import { PageTransition } from "@/components/PageTransition";
 import { MobileTopBar } from "@/components/MobileTopBar";
+import { OnboardingTutorial } from "@/components/OnboardingTutorial";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
             {session && <MobileTweetFAB />}
             {session && <KeyboardShortcuts />}
             <GlobalAmbientPlayer />
+            <OnboardingTutorial />
             <BottomNav />
         </UsernameGuard>
     );

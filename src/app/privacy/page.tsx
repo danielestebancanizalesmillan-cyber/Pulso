@@ -1,135 +1,89 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { ArrowLeft, Shield, Fingerprint, Lock, EyeOff, Trash2 } from "lucide-react";
-import { useTranslation } from "@/lib/i18n";
-import styles from "../terms/Legal.module.css"; // Reuse shared module
+import { ArrowLeft } from "lucide-react";
+
+export const metadata = {
+    title: "Política de Privacidad - Pulso",
+};
 
 export default function PrivacyPage() {
-    const { t } = useTranslation();
-
-    const containerVariants = {
-        hidden: { opacity: 0, y: 30 },
-        visible: { 
-            opacity: 1, 
-            y: 0, 
-            transition: { staggerChildren: 0.15, delayChildren: 0.2, type: "spring" as const, stiffness: 100 } 
-        }
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0 }
-    };
-
     return (
-        <div className={styles.container}>
-            {/* Soft background glow */}
-            <div className={styles.glow} style={{ background: "radial-gradient(circle, rgba(6, 182, 212, 0.08) 0%, transparent 70%)" }} />
-
-            {/* Sticky Back Header */}
-            <div className={styles.header}>
-                <Link href="/home" className={styles.backBtn}>
-                    <ArrowLeft size={24} />
+        <div className="min-h-screen bg-bg-primary text-text-primary p-6 md:p-12">
+            <div className="max-w-3xl mx-auto">
+                <Link href="/" className="inline-flex items-center gap-2 text-blue hover:underline mb-8">
+                    <ArrowLeft size={20} />
+                    Volver al inicio
                 </Link>
-                <div className={styles.headerTitle}>
-                    <Shield size={16} /> {t("privacyTitle")}
+                
+                <h1 className="text-4xl font-bold mb-8">Política de Privacidad</h1>
+                
+                <div className="prose prose-invert max-w-none text-text-secondary space-y-6">
+                    <p className="text-sm">Última actualización: 26 de Mayo de 2026</p>
+
+                    <p>
+                        En Pulso, valoramos y respetamos su privacidad. Esta Política de Privacidad describe cómo 
+                        recopilamos, usamos, protegemos y compartimos su información personal cuando utiliza 
+                        nuestra plataforma y servicios.
+                    </p>
+
+                    <h2 className="text-2xl font-bold text-text-primary mt-8">1. Información que Recopilamos</h2>
+                    <p>
+                        Podemos recopilar los siguientes tipos de información:
+                    </p>
+                    <ul className="list-disc pl-6 mt-2 space-y-2">
+                        <li><strong>Información de la Cuenta:</strong> Nombre de usuario, dirección de correo electrónico, contraseña, foto de perfil y otra información proporcionada al registrarse.</li>
+                        <li><strong>Contenido:</strong> Tweets, comentarios, me gusta, mensajes y cualquier otro contenido que publique o comparta en la plataforma.</li>
+                        <li><strong>Datos de Uso:</strong> Información sobre cómo interactúa con nuestra plataforma, como enlaces en los que hace clic, tiempo de uso y páginas visitadas.</li>
+                        <li><strong>Información del Dispositivo:</strong> Dirección IP, tipo de navegador, sistema operativo y otra información técnica de su dispositivo.</li>
+                    </ul>
+
+                    <h2 className="text-2xl font-bold text-text-primary mt-8">2. Cómo Usamos Su Información</h2>
+                    <p>
+                        Utilizamos la información recopilada para:
+                    </p>
+                    <ul className="list-disc pl-6 mt-2 space-y-2">
+                        <li>Proporcionar, mantener y mejorar nuestros servicios.</li>
+                        <li>Personalizar su experiencia y ofrecerle contenido y anuncios relevantes.</li>
+                        <li>Analizar tendencias y comportamientos de los usuarios para mejorar la plataforma.</li>
+                        <li>Comunicarnos con usted respecto a actualizaciones, soporte y ofertas promocionales.</li>
+                        <li>Proteger la seguridad y la integridad de nuestra plataforma y prevenir fraudes.</li>
+                    </ul>
+
+                    <h2 className="text-2xl font-bold text-text-primary mt-8">3. Compartir Información</h2>
+                    <p>
+                        No vendemos su información personal a terceros. Podemos compartir su información en las siguientes circunstancias:
+                    </p>
+                    <ul className="list-disc pl-6 mt-2 space-y-2">
+                        <li>Con proveedores de servicios que nos ayudan a operar la plataforma (bajo acuerdos de confidencialidad).</li>
+                        <li>Si es requerido por la ley o para responder a un proceso legal válido.</li>
+                        <li>Para proteger los derechos, la propiedad y la seguridad de Pulso, nuestros usuarios u otras personas.</li>
+                    </ul>
+
+                    <h2 className="text-2xl font-bold text-text-primary mt-8">4. Cookies y Tecnologías Similares</h2>
+                    <p>
+                        Utilizamos cookies para personalizar el contenido, proporcionar funciones de redes sociales 
+                        y analizar nuestro tráfico. Puede configurar su navegador para rechazar las cookies, pero esto 
+                        puede afectar el funcionamiento de algunas partes de la plataforma.
+                    </p>
+
+                    <h2 className="text-2xl font-bold text-text-primary mt-8">5. Sus Derechos</h2>
+                    <p>
+                        Dependiendo de su ubicación, puede tener derecho a acceder, corregir, actualizar o eliminar 
+                        su información personal. Si desea ejercer alguno de estos derechos, póngase en contacto con 
+                        nosotros a través de las herramientas de configuración de su cuenta o por correo electrónico.
+                    </p>
+
+                    <h2 className="text-2xl font-bold text-text-primary mt-8">6. Cambios en esta Política</h2>
+                    <p>
+                        Podemos actualizar esta Política de Privacidad de vez en cuando. Le notificaremos cualquier 
+                        cambio importante publicando la nueva Política en esta página y actualizando la fecha de 
+                        "Última actualización".
+                    </p>
                 </div>
+                
+                <footer className="mt-16 pt-8 border-t border-border text-center text-text-secondary text-sm">
+                    &copy; {new Date().getFullYear()} Pulso. Todos los derechos reservados.
+                </footer>
             </div>
-
-            <motion.div 
-                className={styles.contentBox}
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-            >
-                {/* Header Title */}
-                <motion.div variants={itemVariants} className={styles.titleArea}>
-                    <h1 className={styles.title} style={{ background: "linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                        {t("privacyTitle")}
-                    </h1>
-                    <p className={styles.subtitle}>{t("privacySubtitle")}</p>
-                </motion.div>
-
-                {/* Main Card */}
-                <div className={styles.card}>
-                    
-                    <motion.section variants={itemVariants} className={styles.section}>
-                        <div className={`${styles.iconWrapper} bg-cyan-500/10 text-cyan-400`} style={{ borderColor: 'rgba(6, 182, 212, 0.2)' }}>
-                            <Fingerprint size={24} />
-                        </div>
-                        <div className={styles.sectionContent}>
-                            <h2 className={styles.sectionTitle}>{t("privacySec1Title")}</h2>
-                            <p className={styles.sectionText}>
-                                De acuerdo con el <span className={styles.sectionTextStrong}>Artículo 15 de la Constitución Política de Colombia</span>, {t("privacySec1Text").split("De acuerdo con el Artículo 15 de la Constitución Política de Colombia, ")[1]}
-                            </p>
-                        </div>
-                    </motion.section>
-
-                    <hr className={styles.divider} />
-
-                    <motion.section variants={itemVariants} className={styles.section}>
-                        <div className={`${styles.iconWrapper} bg-indigo-500/10 text-indigo-400`} style={{ borderColor: 'rgba(99, 102, 241, 0.2)' }}>
-                            <EyeOff size={24} />
-                        </div>
-                        <div className={styles.sectionContent}>
-                            <h2 className={styles.sectionTitle}>{t("privacySec2Title")}</h2>
-                            <p className={styles.sectionText}>
-                                {t("privacySec2Text")}
-                            </p>
-                        </div>
-                    </motion.section>
-
-                    <hr className={styles.divider} />
-
-                    <motion.section variants={itemVariants} className={styles.section}>
-                        <div className={styles.iconWrapper}>
-                            <Lock size={24} />
-                        </div>
-                        <div className={styles.sectionContent}>
-                            <h2 className={styles.sectionTitle}>{t("privacySec3Title")}</h2>
-                            <p className={styles.sectionText}>
-                                {t("privacySec3Text")}
-                            </p>
-                        </div>
-                    </motion.section>
-
-                    <hr className={styles.divider} />
-
-                    <motion.section variants={itemVariants} className={styles.section}>
-                        <div className={`${styles.iconWrapper} bg-red-500/10 text-red-400`} style={{ borderColor: 'rgba(239, 68, 68, 0.2)' }}>
-                            <Trash2 size={24} />
-                        </div>
-                        <div className={styles.sectionContent}>
-                            <h2 className={styles.sectionTitle}>{t("privacySec4Title")}</h2>
-                            <p className={styles.sectionText}>
-                                {t("privacySec4Text")}
-                            </p>
-                        </div>
-                    </motion.section>
-
-                </div>
-
-                {/* Footer back button */}
-                <motion.div variants={itemVariants} className={styles.footerBtnArea}>
-                    <button 
-                        onClick={() => {
-                            if (typeof window !== "undefined") {
-                                if (window.opener || window.history.length === 1) {
-                                    window.close();
-                                } else {
-                                    window.location.href = "/home";
-                                }
-                            }
-                        }} 
-                        className={styles.homeBtn}
-                        style={{ border: "none", cursor: "pointer", width: "100%", textAlign: "center", display: "inline-block" }}
-                    >
-                        {t("backToHome")}
-                    </button>
-                </motion.div>
-            </motion.div>
         </div>
     );
 }

@@ -8,6 +8,11 @@ export default {
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
             allowDangerousEmailAccountLinking: true,
             checks: ['none'],
+            authorization: {
+                params: {
+                    prompt: "consent select_account",
+                },
+            },
         }),
     ],
     callbacks: {

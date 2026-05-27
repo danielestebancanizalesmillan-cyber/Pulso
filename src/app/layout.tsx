@@ -51,6 +51,8 @@ export async function generateMetadata() {
 
 import { cookies } from "next/headers";
 
+import { CookieBanner } from "@/components/CookieBanner";
+
 export default async function RootLayout({
   children,
 }: {
@@ -64,6 +66,7 @@ export default async function RootLayout({
       <body className={locale === 'es' ? 'lang-es' : 'lang-en'} suppressHydrationWarning>
         <Providers>
           {children}
+          <CookieBanner />
           <RealtimeProvider />
         </Providers>
         <Script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" strategy="lazyOnload" />
