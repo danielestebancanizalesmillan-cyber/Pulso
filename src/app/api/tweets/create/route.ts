@@ -20,7 +20,7 @@ export async function POST(req: Request) {
             data: {
                 content: content.trim(),
                 authorId: session.user.id,
-                inReplyToId: inReplyToId || null,
+                parentId: inReplyToId || null,
             },
             include: {
                 author: {
