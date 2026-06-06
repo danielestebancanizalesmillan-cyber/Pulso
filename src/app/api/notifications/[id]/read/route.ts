@@ -7,14 +7,16 @@ export async function PATCH(req: Request, context: any) {
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     try {
-        const id = context.params.id;
-        await prisma.notification.update({
+        const params = await context.params;
+        const id = params.id;
+        
+        await prisma.notification.updateMany({
             where: { id: id, userId: session.user.id },
             data: { read: true }
         });
 
         return NextResponse.json({ success: true });
-    } catch (e) {
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    } catch (e: any) {
+        return NextResponse.json({ error: "Internal Server Error", details: e?.message || String(e) }, { status: 500 });
     }
 }
