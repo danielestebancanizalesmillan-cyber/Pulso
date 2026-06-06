@@ -14,9 +14,9 @@ export async function POST(req: Request, context: any) {
         const conversationId = params.id;
         
         const body = await req.json();
-        const { content, type = "text" } = body;
+        const { content, type = "text", isEncrypted = false } = body;
 
-        if (!content || content.length > 1000) {
+        if (!content || content.length > 2000) {
             return NextResponse.json({ error: "Invalid content length" }, { status: 400 });
         }
 
@@ -35,6 +35,7 @@ export async function POST(req: Request, context: any) {
                 conversationId,
                 senderId: userId,
                 type,
+                isEncrypted,
             },
             include: { sender: { select: { id: true, name: true, avatar: true } } }
         });
