@@ -91,7 +91,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const resolvedParams = await params;
     const tweet = await prisma.tweet.findUnique({
         where: { id: resolvedParams.id },
-        include: { author: { select: { name: true, username: true } } }
+        include: { 
+            author: { select: { name: true, username: true } },
+            images: { select: { url: true } }
+        }
     });
 
     if (!tweet) return { title: "Tweet no encontrado" };
@@ -99,15 +102,28 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const ogImageUrl = `${baseUrl}/api/og?id=${resolvedParams.id}`;
 
+    const ogImages: any[] = [{ url: ogImageUrl, width: 1200, height: 600 }];
+    if (tweet.images && tweet.images.length > 0) {
+        ogImages.unshift({
+            url: tweet.images[0].url,
+            alt: tweet.content ? tweet.content.substring(0, 100) : "Pulso Media"
+        });
+    }
+
     return {
         title: `${tweet.author.name} (@${tweet.author.username}) en Pulso`,
         description: tweet.content ? (tweet.content.substring(0, 160) + (tweet.content.length > 160 ? "..." : "")) : "Ver tweet en Pulso",
         openGraph: {
-            images: [ogImageUrl],
+            title: `${tweet.author.name} (@${tweet.author.username}) en Pulso`,
+            description: tweet.content ? (tweet.content.substring(0, 160) + (tweet.content.length > 160 ? "..." : "")) : "Ver tweet en Pulso",
+            images: ogImages,
+            type: "article"
         },
         twitter: {
             card: "summary_large_image",
-            images: [ogImageUrl],
+            title: `${tweet.author.name} (@${tweet.author.username}) en Pulso`,
+            description: tweet.content ? (tweet.content.substring(0, 160) + (tweet.content.length > 160 ? "..." : "")) : "Ver tweet en Pulso",
+            images: ogImages.map(img => img.url),
         }
     };
 }

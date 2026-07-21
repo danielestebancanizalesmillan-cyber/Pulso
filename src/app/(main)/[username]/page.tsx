@@ -60,9 +60,45 @@ const TWEET_INCLUDE = {
     _count: { select: { likes: true, replies: true, retweets: true, bookmarks: true } },
 };
 
-export const dynamic = 'force-dynamic';
-
 import { ProfileContent } from "@/components/ProfileContent";
+
+export async function generateMetadata({ params }: { params: Promise<{ username: string }> }) {
+    const resolvedParams = await params;
+    const user = await prisma.user.findUnique({
+        where: { username: resolvedParams.username },
+        select: { name: true, username: true, bio: true, avatar: true, image: true }
+    });
+
+    if (!user) return { title: "Usuario no encontrado" };
+
+    const avatarUrl = user.avatar || user.image || "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png";
+
+    return {
+        title: `${user.name} (@${user.username}) en Pulso`,
+        description: user.bio || `Mira el perfil de ${user.name} en Pulso, la red social del momento.`,
+        openGraph: {
+            title: `${user.name} (@${user.username}) en Pulso`,
+            description: user.bio || `Mira el perfil de ${user.name} en Pulso, la red social del momento.`,
+            images: [
+                {
+                    url: avatarUrl,
+                    width: 400,
+                    height: 400,
+                    alt: user.name,
+                }
+            ],
+            type: "profile",
+        },
+        twitter: {
+            card: "summary",
+            title: `${user.name} (@${user.username}) en Pulso`,
+            description: user.bio || `Mira el perfil de ${user.name} en Pulso.`,
+            images: [avatarUrl],
+        }
+    };
+}
+
+export const dynamic = 'force-dynamic';
 
 export default async function ProfilePage({ params, searchParams }: { params: Promise<{ username: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const resolvedParams = await params;

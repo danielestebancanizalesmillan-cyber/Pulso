@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/lib/i18n";
 
 interface CreateSpaceModalProps {
   onClose: () => void;
@@ -9,13 +10,14 @@ interface CreateSpaceModalProps {
 
 export function CreateSpaceModal({ onClose }: CreateSpaceModalProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleCreate = async () => {
-    if (!title.trim()) { setError("El título es requerido"); return; }
+    if (!title.trim()) { setError(t("titleRequired")); return; }
     setLoading(true);
     setError("");
     try {
@@ -25,11 +27,11 @@ export function CreateSpaceModal({ onClose }: CreateSpaceModalProps) {
         body: JSON.stringify({ title, description }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || "Error al crear"); setLoading(false); return; }
+      if (!res.ok) { setError(data.error || t("failedToCreate")); setLoading(false); return; }
       onClose();
       router.push(`/spaces/${data.id}`);
     } catch {
-      setError("Error de red");
+      setError(t("networkError"));
       setLoading(false);
     }
   };
@@ -69,10 +71,10 @@ export function CreateSpaceModal({ onClose }: CreateSpaceModalProps) {
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--text-main, #fff)" }}>
-                Crear un Space
+                {t("createSpace")}
               </div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary, #888)" }}>
-                Sala de audio en vivo
+                {t("liveAudioRoom")}
               </div>
             </div>
           </div>
@@ -86,14 +88,14 @@ export function CreateSpaceModal({ onClose }: CreateSpaceModalProps) {
         {/* Title input */}
         <div>
           <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-secondary, #888)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            Título del Space *
+            {t("spaceTitle")}
           </label>
           <input
             id="space-title"
             type="text"
             value={title}
             onChange={e => setTitle(e.target.value)}
-            placeholder="¿De qué quieres hablar?"
+            placeholder={t("whatTalkAbout")}
             maxLength={120}
             style={{
               width: "100%", marginTop: 8,
@@ -116,13 +118,13 @@ export function CreateSpaceModal({ onClose }: CreateSpaceModalProps) {
         {/* Description input */}
         <div>
           <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-secondary, #888)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            Descripción (opcional)
+            {t("descriptionOptional")}
           </label>
           <textarea
             id="space-description"
             value={description}
             onChange={e => setDescription(e.target.value)}
-            placeholder="Describe de qué se trata este Space..."
+            placeholder={t("describeSpace")}
             maxLength={280}
             rows={3}
             style={{
@@ -149,13 +151,13 @@ export function CreateSpaceModal({ onClose }: CreateSpaceModalProps) {
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <span style={{ fontSize: "0.82rem", color: "var(--text-secondary, #888)", lineHeight: 1.5 }}>
-            El Space es <strong style={{ color: "var(--text-main, #fff)" }}>público</strong>. Cualquier persona puede unirse a escuchar. Solo tú podrás hablar al inicio.
+            {t("spacePublicNotice")}
           </span>
         </div>
 
         {/* Error */}
         {error && (
-          <div style={{ color: "#ef4444", fontSize: "0.85rem", background: "rgba(239,68,68,0.1)", padding: "10px 14px", borderRadius: "10px" }}>
+          <div style={{ color: "#ef4444", fontSize: "0.85rem", background: "rgba(239,68,68,0.15)", padding: "10px 14px", borderRadius: "10px" }}>
             {error}
           </div>
         )}
@@ -172,7 +174,7 @@ export function CreateSpaceModal({ onClose }: CreateSpaceModalProps) {
               fontWeight: 600, cursor: "pointer", fontSize: "0.95rem",
             }}
           >
-            Cancelar
+            {t("cancel")}
           </button>
           <button
             id="create-space-btn"
@@ -200,7 +202,7 @@ export function CreateSpaceModal({ onClose }: CreateSpaceModalProps) {
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
               </svg>
             )}
-            {loading ? "Creando..." : "Iniciar Space"}
+            {loading ? t("creating") : t("startSpace")}
           </button>
         </div>
       </div>

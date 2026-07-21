@@ -35,6 +35,7 @@ export function SettingsClient() {
         showViews: true,
         showTrends: true,
         showTranslation: true,
+        autoTranslate: true,
         autoplayVideos: true,
         protectedTweets: false,
         sensitiveSearch: false,
@@ -87,6 +88,7 @@ export function SettingsClient() {
             showViews: localStorage.getItem("twtr_show_views") !== "false",
             showTrends: localStorage.getItem("twtr_show_trends") !== "false",
             showTranslation: localStorage.getItem("twtr_show_translation") !== "false",
+            autoTranslate: localStorage.getItem("twtr_auto_translate") !== "false",
             autoplayVideos: localStorage.getItem("twtr_autoplay_videos") !== "false",
             protectedTweets: localStorage.getItem("twtr_protected_tweets") === "true",
             sensitiveSearch: localStorage.getItem("twtr_sensitive_search") === "true",
@@ -104,10 +106,11 @@ export function SettingsClient() {
         getUserSettings().then(dbSettings => {
             if (dbSettings) {
                 setFeatures(prev => {
-                    const merged = { ...prev };
+                    const merged = { ...prev } as any;
                     if (dbSettings.showViews !== undefined) { merged.showViews = dbSettings.showViews === "true"; localStorage.setItem("twtr_show_views", dbSettings.showViews); }
                     if (dbSettings.showTrends !== undefined) { merged.showTrends = dbSettings.showTrends === "true"; localStorage.setItem("twtr_show_trends", dbSettings.showTrends); }
                     if (dbSettings.showTranslation !== undefined) { merged.showTranslation = dbSettings.showTranslation === "true"; localStorage.setItem("twtr_show_translation", dbSettings.showTranslation); }
+                    if (dbSettings.autoTranslate !== undefined) { merged.autoTranslate = dbSettings.autoTranslate === "true"; localStorage.setItem("twtr_auto_translate", dbSettings.autoTranslate); }
                     if (dbSettings.autoplayVideos !== undefined) { merged.autoplayVideos = dbSettings.autoplayVideos === "true"; localStorage.setItem("twtr_autoplay_videos", dbSettings.autoplayVideos); }
                     if (dbSettings.protectedTweets !== undefined) { merged.protectedTweets = dbSettings.protectedTweets === "true"; localStorage.setItem("twtr_protected_tweets", dbSettings.protectedTweets); }
                     if (dbSettings.sensitiveSearch !== undefined) { merged.sensitiveSearch = dbSettings.sensitiveSearch === "true"; localStorage.setItem("twtr_sensitive_search", dbSettings.sensitiveSearch); }
@@ -555,6 +558,15 @@ export function SettingsClient() {
                         </div>
                         <div className={`${styles.switch} ${features.showTranslation ? styles.on : ''}`} />
                     </div>
+                    {features.showTranslation && (
+                        <div className={styles.settingsRow} onClick={() => toggleFeature("autoTranslate")}>
+                            <div style={{ paddingLeft: "20px" }} className={styles.rowContent}>
+                                <span className={styles.rowLabel}>{t("autoTranslate")}</span>
+                                <span className={styles.rowDesc}>{t("autoTranslateDesc")}</span>
+                            </div>
+                            <div className={`${styles.switch} ${features.autoTranslate ? styles.on : ''}`} />
+                        </div>
+                    )}
                     <div className={styles.settingsRow} onClick={() => toggleFeature("autoplayVideos")}>
                         <div className={styles.rowContent}>
                             <span className={styles.rowLabel}>{t("autoplayVideos")}</span>

@@ -17,9 +17,11 @@ import Script from "next/script";
 export async function generateMetadata() {
   const cookieStore = await cookies();
   const locale = cookieStore.get("language")?.value || "en";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   if (locale === 'es') {
     return {
+      metadataBase: new URL(baseUrl),
       title: "Pulso",
       description: "Una red social completa construida con Next.js",
       manifest: "/manifest.json",
@@ -35,6 +37,7 @@ export async function generateMetadata() {
   }
 
   return {
+    metadataBase: new URL(baseUrl),
     title: "Pulso",
     description: "A fully-featured social network built with Next.js",
     manifest: "/manifest.json",
