@@ -72,6 +72,7 @@ model User {
   conversations          Conversation[]        @relation("ConversationParticipants")
   hostedSpaces           VoiceSpace[]          @relation("SpaceHost")
   spaceParticipations    VoiceSpaceParticipant[]
+  spaceMessages          VoiceSpaceMessage[]
   badges                 UserBadge[]
 }
 
@@ -515,6 +516,7 @@ model VoiceSpace {
   createdAt    DateTime                @default(now())
   host         User                    @relation("SpaceHost", fields: [hostId], references: [id], onDelete: Cascade)
   participants VoiceSpaceParticipant[]
+  messages     VoiceSpaceMessage[]
 
   @@index([status])
   @@index([hostId])
@@ -554,3 +556,16 @@ model UserBadge {
 
   @@unique([userId, badgeId])
 }
+
+model VoiceSpaceMessage {
+  id        String     @id @default(cuid())
+  spaceId   String
+  userId    String
+  content   String
+  createdAt DateTime   @default(now())
+  space     VoiceSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId])
+}
+

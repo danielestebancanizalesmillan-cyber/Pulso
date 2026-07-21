@@ -27,7 +27,7 @@ export function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
                 ))}
             </div>
             
-            <style jsx>{`
+            <style>{`
                 .emoji-btn:hover {
                     background: var(--bg-hover);
                 }

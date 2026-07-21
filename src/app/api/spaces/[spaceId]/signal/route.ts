@@ -14,6 +14,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ spaceId
     const { spaceId } = await params;
     const body = await req.json();
 
+    if (body.type === "mute_changed") {
+      try {
+        await prisma.voiceSpaceParticipant.update({
+          where: { spaceId_userId: { spaceId, userId: session.user.id } },
+          data: { isMuted: body.isMuted }
+        });
+      } catch (dbErr) {
+        console.error("Failed to update participant mute state in DB:", dbErr);
+      }
+    }
+
     await pusherServer.trigger(`space-${spaceId}`, "space-signal", {
       ...body,
       senderId: session.user.id,

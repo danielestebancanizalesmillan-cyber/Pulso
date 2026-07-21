@@ -6,7 +6,7 @@ export default function ProfileLoading() {
     const { t } = useTranslation();
 
     return (
-        <>
+        <div className="profile-loading-skeleton">
             <div className="column-header">
                 <div className="back-btn" style={{ cursor: "default", opacity: 0.5 }}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -67,15 +67,15 @@ export default function ProfileLoading() {
                 ))}
             </div>
 
-            <style jsx>{`
-                @keyframes pulse {
+            <style>{`
+                @keyframes profilePulse {
                     0%, 100% { opacity: 1; }
                     50% { opacity: .5; }
                 }
-                div {
-                    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+                .profile-loading-skeleton div {
+                    animation: profilePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
                 }
             `}</style>
-        </>
+        </div>
     );
 }

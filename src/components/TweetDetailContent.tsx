@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { PostContentTranslator } from "@/components/PostContentTranslator";
 import { BackButton } from "@/components/BackButton";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { ViewCounter } from "@/components/ViewCounter";
 import { TweetActionBar } from "@/components/TweetActionBar";
 import { ComposeTweet } from "@/components/ComposeTweet";
@@ -146,7 +147,14 @@ export function TweetDetailContent({ tweet: initialTweet, userId }: { tweet: any
                         onClick={(e) => e.stopPropagation()}
                         style={{ textDecoration: "none", color: "inherit" }}
                     >
-                        <div style={{ fontWeight: 700 }}>{(detailedTweet as any).author?.name}</div>
+                        <div style={{ fontWeight: 700, display: "flex", alignItems: "center", gap: "4px" }}>
+                            {(detailedTweet as any).author?.name}
+                            <VerifiedBadge 
+                                isVerified={(detailedTweet as any).author?.isVerified} 
+                                type={(detailedTweet as any).author?.verificationType} 
+                                customBadges={(detailedTweet as any).author?.badges}
+                            />
+                        </div>
                         <div style={{ color: "var(--text-secondary)", fontSize: "0.88rem" }}>@{(detailedTweet as any).author?.username}</div>
                     </Link>
                 </div>
