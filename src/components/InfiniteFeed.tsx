@@ -129,7 +129,7 @@ export function InfiniteFeed({ initialTweets = EMPTY_ARRAY, endpoint, currentUse
             const data = await res.json();
             const newTweets = data.tweets || [];
             setTweets(newTweets);
-            newTweets.forEach(t => seenTweetIds.current.add(t.id));
+            newTweets.forEach((t: any) => seenTweetIds.current.add(t.id));
             setPage(1);
             setHasMore(true);
         } catch (err) {
