@@ -33,8 +33,14 @@ export async function GET(req: NextRequest) {
     const hashtagSearch = cleanQ.replace(/^#/, '').toLowerCase();
 
     if (cleanQ) {
+        const words = cleanQ.split(/\s+/).filter(w => w.length > 0);
+        const wordConditions = words.map(word => ({
+            content: { contains: word, mode: "insensitive" } as any
+        }));
+
         tweetWhere.OR = [
             { content: { contains: cleanQ, mode: "insensitive" } },
+            { AND: wordConditions },
             { hashtags: { some: { text: { contains: hashtagSearch, mode: "insensitive" } } } }
         ];
     }

@@ -110,20 +110,23 @@ ${tweetTexts}
         if (trendingWords.length === 0) {
             const STOP_WORDS = new Set([
                 "la", "el", "en", "que", "de", "los", "las", "un", "una", "y", "con", "por", "para", "como", "esta", "esto", "este", "pero", "mas", "sus", "si", "del", "lo", "mi", "me", "su",
-                "the", "and", "for", "with", "that", "this", "from", "your", "was", "are", "have", "you", "not", "his", "they", "but", "what", "all", "were", "when", "can", "said"
+                "the", "and", "for", "with", "that", "this", "from", "your", "was", "are", "have", "you", "not", "his", "they", "but", "what", "all", "were", "when", "can", "said",
+                "para", "cómo", "esta", "está", "este", "esto", "aquí", "allí", "todo", "toda", "todos", "todas"
             ]);
 
             const wordCounts: Record<string, number> = {};
             recentTweets.forEach(t => {
-                const tokens = t.content.toLowerCase().split(/\s+/);
+                // Split by whitespace but keep casing and details
+                const tokens = t.content.split(/\s+/);
                 for (let i = 0; i < tokens.length; i++) {
-                    const w1 = tokens[i].replace(/[^a-záéíóúñ]/g, "");
-                    if (w1.length >= 4 && !STOP_WORDS.has(w1)) {
+                    // Strip leading/trailing punctuation but keep internal characters/casing
+                    const w1 = tokens[i].replace(/^[.,\/#!$%\^&\*;:{}=\-_`~()?"'¡¿]+|[.,\/#!$%\^&\*;:{}=\-_`~()?"'¡¿]+$/g, "");
+                    if (w1.length >= 4 && !STOP_WORDS.has(w1.toLowerCase())) {
                         wordCounts[w1] = (wordCounts[w1] || 0) + 1;
                         
                         if (i + 1 < tokens.length) {
-                            const w2 = tokens[i+1].replace(/[^a-záéíóúñ]/g, "");
-                            if (w2.length >= 4 && !STOP_WORDS.has(w2)) {
+                            const w2 = tokens[i+1].replace(/^[.,\/#!$%\^&\*;:{}=\-_`~()?"'¡¿]+|[.,\/#!$%\^&\*;:{}=\-_`~()?"'¡¿]+$/g, "");
+                            if (w2.length >= 3 && !STOP_WORDS.has(w2.toLowerCase())) {
                                 const bigram = `${w1} ${w2}`;
                                 wordCounts[bigram] = (wordCounts[bigram] || 0) + 1;
                             }
