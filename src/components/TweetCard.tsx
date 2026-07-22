@@ -16,8 +16,15 @@ import { translateText } from "@/app/actions/translate";
 import { MediaLightbox } from "./MediaLightbox";
 import { LocationMap } from "./LocationMap";
 import { MapPin } from "lucide-react";
+import { LinkPreview } from "./LinkPreview";
 
 import { motion, AnimatePresence } from "framer-motion";
+
+function getYouTubeEmbedUrl(url: string): string | null {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+}
 
 const DeleteConfirmModal = ({ show, onConfirm, onCancel, isDeleting, t }: any) => {
     if (!show) return null;
@@ -760,6 +767,29 @@ export function TweetCard({ tweet, currentUserId, showThread }: TweetCardProps) 
                                 </button>
                             </div>
                         )}
+
+                        {(() => {
+                            const urls = (tweet.content || "").match(/https?:\/\/[^\s]+/g) || [];
+                            const firstUrl = urls[0];
+                            const ytEmbedUrl = firstUrl ? getYouTubeEmbedUrl(firstUrl) : null;
+                            if (!firstUrl) return null;
+                            return (
+                                <div style={{ marginTop: 8, marginBottom: 8 }} onClick={(e) => e.stopPropagation()}>
+                                    {ytEmbedUrl ? (
+                                        <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", borderRadius: "16px", border: "1px solid var(--border-light, rgba(255,255,255,0.08))" }}>
+                                            <iframe
+                                                src={ytEmbedUrl}
+                                                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            />
+                                        </div>
+                                    ) : (
+                                        <LinkPreview url={firstUrl} />
+                                    )}
+                                </div>
+                            );
+                        })()}
 
                         {aiSources.length > 0 && (
                             <SourceBubbles sources={aiSources} />
