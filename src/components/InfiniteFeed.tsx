@@ -38,6 +38,8 @@ export function InfiniteFeed({ initialTweets = EMPTY_ARRAY, endpoint, currentUse
     const hasMoreRef = useRef(true);
     const [pullDistance, setPullDistance] = useState(0);
     const touchStartRef = useRef<number | null>(null);
+    // Track already-seen tweet IDs so we only slide-in truly new tweets
+    const seenTweetIds = useRef<Set<string>>(new Set());
 
     // Sync ref with state
     useEffect(() => {
@@ -96,7 +98,10 @@ export function InfiniteFeed({ initialTweets = EMPTY_ARRAY, endpoint, currentUse
                         hasMoreRef.current = false;
                         return prev;
                     }
-                    return [...prev, ...filtered];
+                    const combined = [...prev, ...filtered];
+                    // Mark all loaded tweets as "seen" (no animation for them)
+                    combined.forEach(t => seenTweetIds.current.add(t.id));
+                    return combined;
                 });
                 setPage((p) => p + 1);
             }
@@ -122,7 +127,9 @@ export function InfiniteFeed({ initialTweets = EMPTY_ARRAY, endpoint, currentUse
             if (countryCode) url += `&countryCode=${countryCode}`;
             const res = await fetch(url);
             const data = await res.json();
-            setTweets(data.tweets || []);
+            const newTweets = data.tweets || [];
+            setTweets(newTweets);
+            newTweets.forEach(t => seenTweetIds.current.add(t.id));
             setPage(1);
             setHasMore(true);
         } catch (err) {
@@ -144,13 +151,11 @@ export function InfiniteFeed({ initialTweets = EMPTY_ARRAY, endpoint, currentUse
             const globalChannel = pusher.subscribe("global-feed");
             globalChannel.bind("new-tweet", (newTweet: any) => {
                 if (newTweet.authorId === currentUserId) {
-                    // Own tweet: prepend immediately (X-style instant appearance)
                     setTweets((prev) => {
                         if (prev.find(t => t.id === newTweet.id)) return prev;
                         return [newTweet, ...prev];
                     });
                 } else {
-                    // Other users' tweets: show the "X new posts" button
                     setNewTweetsArrived((prev) => {
                         if (prev.find(t => t.id === newTweet.id) || tweetsRef.current.find(t => t.id === newTweet.id)) return prev;
                         return [newTweet, ...prev];
@@ -326,22 +331,25 @@ export function InfiniteFeed({ initialTweets = EMPTY_ARRAY, endpoint, currentUse
                 ))
             ) : (
                 <AnimatePresence initial={false}>
-                    {tweets.map((t) => (
-                        <motion.div
-                            key={t.id}
-                            initial={{ opacity: 0, y: -20, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.25, ease: "easeOut" }}
-                            layout
-                        >
-                            {t.isAd && !hideSocial ? (
-                                <AdPostCard ad={t} />
-                            ) : !t.isAd ? (
-                                <TweetCard tweet={t} currentUserId={currentUserId} />
-                            ) : null}
-                        </motion.div>
-                    ))}
+                    {tweets.map((t) => {
+                        const isNew = !seenTweetIds.current.has(t.id);
+                        if (isNew) seenTweetIds.current.add(t.id);
+                        return (
+                            <motion.div
+                                key={t.id}
+                                initial={isNew ? { opacity: 0, y: -24, scale: 0.97 } : false}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.28, ease: "easeOut" }}
+                            >
+                                {t.isAd && !hideSocial ? (
+                                    <AdPostCard ad={t} />
+                                ) : !t.isAd ? (
+                                    <TweetCard tweet={t} currentUserId={currentUserId} />
+                                ) : null}
+                            </motion.div>
+                        );
+                    })}
                 </AnimatePresence>
             )}
 
