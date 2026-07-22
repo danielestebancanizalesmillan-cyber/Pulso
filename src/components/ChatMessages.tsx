@@ -54,30 +54,30 @@ function CustomAudioPlayer({ src, isMe }: { src: string, isMe: boolean }) {
                 {isPlaying ? "⏸" : "▶"}
             </button>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
-                <input 
-                    type="range" 
+                <input
+                    type="range"
                     step="any"
-                    value={progress} 
-                    max={duration || 100} 
+                    value={progress}
+                    max={duration || 100}
                     onChange={(e) => {
                         const val = parseFloat(e.target.value);
                         if (audioRef.current) audioRef.current.currentTime = val;
                         setProgress(val);
                     }}
-                    style={{ flex: 1, accentColor: accentColor, height: "4px", cursor: "pointer" }} 
+                    style={{ flex: 1, accentColor: accentColor, height: "4px", cursor: "pointer" }}
                 />
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: textColor }}>
                     <span>{Math.floor(progress / 60)}:{(Math.floor(progress % 60)).toString().padStart(2, '0')}</span>
                     <span>{Math.floor(duration / 60)}:{(Math.floor(duration % 60)).toString().padStart(2, '0')}</span>
                 </div>
             </div>
-            <audio 
-                ref={audioRef} 
-                src={src} 
-                onTimeUpdate={() => setProgress(audioRef.current?.currentTime || 0)} 
-                onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)} 
-                onEnded={() => setIsPlaying(false)} 
-                style={{ display: "none" }} 
+            <audio
+                ref={audioRef}
+                src={src}
+                onTimeUpdate={() => setProgress(audioRef.current?.currentTime || 0)}
+                onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+                onEnded={() => setIsPlaying(false)}
+                style={{ display: "none" }}
             />
         </div>
     );
@@ -94,13 +94,13 @@ function MessageItem({ msg, userId, t, setMessages, onMediaClick, isE2eReady }: 
 
     useEffect(() => {
         if (!msg.isEncrypted) return;
-        
+
         async function decrypt() {
             try {
                 const privateKey = localStorage.getItem("e2ee_private_key");
                 if (privateKey) {
                     const { decryptContent } = await import("@/lib/e2ee");
-                    
+
                     let ciphertext = msg.content;
                     try {
                         const parsed = JSON.parse(msg.content);
@@ -132,7 +132,7 @@ function MessageItem({ msg, userId, t, setMessages, onMediaClick, isE2eReady }: 
 
 
 
-        const handleToggleReaction = async (emoji: string) => {
+    const handleToggleReaction = async (emoji: string) => {
         await toggleMessageReaction(msg.id, emoji);
         setShowReactions(false);
     };
@@ -149,22 +149,22 @@ function MessageItem({ msg, userId, t, setMessages, onMediaClick, isE2eReady }: 
         } catch (err) {
             alert("Error al borrar: " + (err instanceof Error ? err.message : String(err)));
             // Revert state
-            setMessages((prev: any[]) => [...prev, msg].sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
+            setMessages((prev: any[]) => [...prev, msg].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
         }
     };
 
     return (
-        <div 
-            className="message-row" 
+        <div
+            className="message-row"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => { setIsHovered(false); setShowReactions(false); }}
-            style={{ 
-                display: "flex", 
-                flexDirection: isMe ? "row-reverse" : "row", 
-                gap: "8px", 
-                alignItems: "flex-end", 
-                position: "relative", 
-                marginBottom: msg.reactions?.length > 0 ? "12px" : "0" 
+            style={{
+                display: "flex",
+                flexDirection: isMe ? "row-reverse" : "row",
+                gap: "8px",
+                alignItems: "flex-end",
+                position: "relative",
+                marginBottom: msg.reactions?.length > 0 ? "12px" : "0"
             }}
         >
             {!isMe && <Avatar user={msg.sender} size="sm" />}
@@ -194,9 +194,9 @@ function MessageItem({ msg, userId, t, setMessages, onMediaClick, isE2eReady }: 
 
                 {/* Reactions Display */}
                 {msg.reactions?.length > 0 && (
-                    <div style={{ 
-                        position: "absolute", 
-                        bottom: "-12px", 
+                    <div style={{
+                        position: "absolute",
+                        bottom: "-12px",
                         [isMe ? "right" : "left"]: "12px",
                         background: "var(--bg-main)",
                         border: "1px solid var(--border)",
@@ -224,33 +224,33 @@ function MessageItem({ msg, userId, t, setMessages, onMediaClick, isE2eReady }: 
             </div>
 
             {/* Actions Button */}
-            <div className="message-actions" style={{ 
-                opacity: isHovered || showReactions || showDeleteMenu ? 1 : 0, 
-                transition: "opacity 0.2s", 
-                display: "flex", 
-                gap: "4px", 
-                alignItems: "center", 
-                position: "relative" 
+            <div className="message-actions" style={{
+                opacity: isHovered || showReactions || showDeleteMenu ? 1 : 0,
+                transition: "opacity 0.2s",
+                display: "flex",
+                gap: "4px",
+                alignItems: "center",
+                position: "relative"
             }}>
                 {showReactions && (
-                    <div style={{ 
-                        position: "absolute", 
-                        bottom: "35px", 
-                        [isMe ? "right" : "left"]: 0, 
-                        display: "flex", 
-                        gap: "8px", 
-                        background: "var(--bg-main)", 
-                        padding: "8px 12px", 
-                        borderRadius: "24px", 
-                        boxShadow: "0 8px 32px rgba(0,0,0,0.25)", 
-                        zIndex: 10000, 
+                    <div style={{
+                        position: "absolute",
+                        bottom: "35px",
+                        [isMe ? "right" : "left"]: 0,
+                        display: "flex",
+                        gap: "8px",
+                        background: "var(--bg-main)",
+                        padding: "8px 12px",
+                        borderRadius: "24px",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
+                        zIndex: 10000,
                         border: "1px solid var(--border)",
                         animation: "fadeIn 0.2s ease"
                     }}>
                         {COMMON_EMOJIS.map(e => (
-                            <span 
-                                key={e} 
-                                onClick={() => handleToggleReaction(e)} 
+                            <span
+                                key={e}
+                                onClick={() => handleToggleReaction(e)}
                                 style={{ cursor: "pointer", fontSize: "1.3rem", transition: "transform 0.1s" }}
                                 onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.25)")}
                                 onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
@@ -260,34 +260,34 @@ function MessageItem({ msg, userId, t, setMessages, onMediaClick, isE2eReady }: 
                         ))}
                     </div>
                 )}
-                <button 
+                <button
                     onClick={() => setShowReactions(!showReactions)}
                     style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)" }}
                     title="React"
                 >
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" /></svg>
                 </button>
-                <button 
+                <button
                     onClick={() => setShowDeleteMenu(!showDeleteMenu)}
                     style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary)" }}
                     title="Delete Options"
                 >
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
                 </button>
                 {showDeleteMenu && (
-                    <div style={{ 
-                        position: "absolute", 
-                        bottom: "35px", 
-                        [isMe ? "right" : "left"]: 0, 
-                        background: "var(--bg-main)", 
-                        padding: "6px", 
-                        borderRadius: "12px", 
-                        boxShadow: "0 8px 32px rgba(0,0,0,0.25)", 
-                        zIndex: 10001, 
-                        border: "1px solid var(--border)", 
-                        display: "flex", 
-                        flexDirection: "column", 
-                        gap: "2px", 
+                    <div style={{
+                        position: "absolute",
+                        bottom: "35px",
+                        [isMe ? "right" : "left"]: 0,
+                        background: "var(--bg-main)",
+                        padding: "6px",
+                        borderRadius: "12px",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
+                        zIndex: 10001,
+                        border: "1px solid var(--border)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "2px",
                         minWidth: "160px",
                         animation: "fadeIn 0.15s ease"
                     }}>
@@ -348,7 +348,7 @@ export function ChatMessages({ initialMessages, conversationId, userId, optimist
                         const keys = await generateKeypair();
                         localStorage.setItem("e2ee_private_key", keys.privateKey);
                         localStorage.setItem("e2ee_public_key", keys.publicKey);
-                        
+
                         await updateE2EKeys(keys.publicKey, keys.privateKey);
                     }
                 }
@@ -399,7 +399,7 @@ export function ChatMessages({ initialMessages, conversationId, userId, optimist
             }));
         });
 
-                channel.bind("delete-message-for-me", (data: { messageId: string, userId: string }) => {
+        channel.bind("delete-message-for-me", (data: { messageId: string, userId: string }) => {
             if (data.userId === userId) {
                 setMessages((prev) => prev.filter((m) => m.id !== data.messageId));
             }
@@ -472,7 +472,7 @@ export function ChatMessages({ initialMessages, conversationId, userId, optimist
 
             {/* Sentinel div to anchor bottom scroll */}
             <div ref={bottomRef} style={{ height: 1, flexShrink: 0 }} />
-            
+
             {isTyping && (
                 <div style={{ display: "flex", alignItems: "center", padding: "10px 16px", background: "var(--bg-hover)", borderRadius: "18px", borderBottomLeftRadius: "4px", alignSelf: "flex-start", maxWidth: "max-content", marginBottom: "8px", animation: "fadeIn 0.2s" }}>
                     <img src="/typing.svg" alt="Escribiendo..." style={{ height: "12px", display: "block" }} />
@@ -481,16 +481,16 @@ export function ChatMessages({ initialMessages, conversationId, userId, optimist
 
             {/* Lightbox Modal Overlay */}
             {selectedMedia && (
-                <div 
-                    onClick={() => setSelectedMedia(null)} 
+                <div
+                    onClick={() => setSelectedMedia(null)}
                     style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.85)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", animation: "fadeIn 0.15s ease-in-out" }}
                 >
                     <button style={{ position: "absolute", top: "24px", right: "24px", background: "none", border: "none", color: "white", fontSize: "1.8rem", cursor: "pointer", opacity: 0.8 }} onClick={() => setSelectedMedia(null)}>✕</button>
-                    <img 
-                        src={selectedMedia} 
-                        alt="Preview" 
-                        style={{ maxHeight: "90vh", maxWidth: "90vw", borderRadius: "12px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)", objectFit: "contain" }} 
-                        onClick={(e) => e.stopPropagation()} 
+                    <img
+                        src={selectedMedia}
+                        alt="Preview"
+                        style={{ maxHeight: "90vh", maxWidth: "90vw", borderRadius: "12px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)", objectFit: "contain" }}
+                        onClick={(e) => e.stopPropagation()}
                     />
                 </div>
             )}

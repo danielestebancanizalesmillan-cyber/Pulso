@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { ChatView } from "@/components/ChatView";
 import { ChatHeaderClient } from "@/components/ChatHeaderClient";
@@ -31,7 +30,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         },
     });
 
-    if (!conversation) notFound();
+    if (!conversation) return notFound();
 
     // Verify user is part of the conversation
     const isParticipant = conversation.participants.some((p: any) => p.id === userId);
@@ -50,8 +49,8 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
                 <div style={{ padding: "32px 16px", display: "flex", flexDirection: "column", alignItems: "center", borderBottom: "1px solid var(--border)", marginBottom: "16px", position: "relative", zIndex: 1 }}>
                     <Avatar user={partner} size="lg" />
                     <div style={{ fontWeight: 700, fontSize: "1.1rem", marginTop: 8 }}>{partner.name}</div>
-                    <div style={{ color: "var(--text-secondary)", fontSize: "0.95rem" }}>@{partner.username}</div>
-                    <p style={{ marginTop: 8, color: "var(--text-primary)", textAlign: "center" }}>{partner.bio || "Joined Pulso"}</p>
+                    <div style={{ color: "var(--text-secondary)", fontSize: "0.95rem" }}>@{(partner as any).username}</div>
+                    <p style={{ marginTop: 8, color: "var(--text-primary)", textAlign: "center" }}>{(partner as any).bio || "Joined Pulso"}</p>
                 </div>
 
                 {/* Messages + Input (ChatView manages optimistic state) */}
@@ -64,6 +63,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
                     />
                 </div>
 
+            </div>
         </div>
     );
 }
