@@ -313,6 +313,8 @@ export function ChatMessages({ initialMessages, conversationId, userId }: ChatMe
     const [isE2eReady, setIsE2eReady] = useState(false);
     const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const bottomRef = useRef<HTMLDivElement>(null);
+    const isInitialMount = useRef(true);
 
     useEffect(() => {
         async function setupE2EE() {
@@ -417,10 +419,14 @@ export function ChatMessages({ initialMessages, conversationId, userId }: ChatMe
     }, [conversationId, userId]);
 
     useEffect(() => {
-        scrollRef.current?.scrollTo({
-            top: scrollRef.current.scrollHeight,
-            behavior: "smooth"
-        });
+        if (isInitialMount.current) {
+            // On first render, jump instantly to bottom with no animation
+            bottomRef.current?.scrollIntoView({ behavior: "instant" as ScrollBehavior });
+            isInitialMount.current = false;
+        } else {
+            // On new incoming messages, scroll smoothly
+            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
     }, [messages]);
 
     return (
@@ -433,6 +439,9 @@ export function ChatMessages({ initialMessages, conversationId, userId }: ChatMe
                 ))
 
             )}
+
+            {/* Sentinel div to anchor bottom scroll */}
+            <div ref={bottomRef} style={{ height: 1, flexShrink: 0 }} />
             
             {isTyping && (
                 <div style={{ display: "flex", alignItems: "center", padding: "10px 16px", background: "var(--bg-hover)", borderRadius: "18px", borderBottomLeftRadius: "4px", alignSelf: "flex-start", maxWidth: "max-content", marginBottom: "8px", animation: "fadeIn 0.2s" }}>
