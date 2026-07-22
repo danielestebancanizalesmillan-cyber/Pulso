@@ -58,6 +58,9 @@ export async function generateMetadata() {
 import { cookies, headers } from "next/headers";
 
 import { CookieBanner } from "@/components/CookieBanner";
+import { TwemojiProvider } from "@/components/TwemojiProvider";
+import { PostingProvider } from "@/components/PostingContext";
+import { TopProgressBar } from "@/components/TopProgressBar";
 
 export default async function RootLayout({
   children,
@@ -71,9 +74,13 @@ export default async function RootLayout({
     <html lang={locale} suppressHydrationWarning>
       <body className={locale === 'es' ? 'lang-es' : 'lang-en'} suppressHydrationWarning>
         <Providers>
-          {children}
-          <CookieBanner />
-          <RealtimeProvider />
+          <PostingProvider>
+            <TopProgressBar />
+            <TwemojiProvider />
+            {children}
+            <CookieBanner />
+            <RealtimeProvider />
+          </PostingProvider>
         </Providers>
         <Script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" strategy="lazyOnload" />
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossOrigin="" />

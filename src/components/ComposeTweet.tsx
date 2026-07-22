@@ -10,6 +10,7 @@ import { EmojiPicker } from "./EmojiPicker";
 import { improveTweetWithAI } from "@/app/actions/ai";
 import { GifPicker } from "./GifPicker";
 import { MapPin, X } from "lucide-react";
+import { usePosting } from "./PostingContext";
 
 // import { upload } from "@vercel/blob/client";
 
@@ -28,6 +29,7 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
     const { data: session } = useSession();
     const { addToast } = useToast();
     const { t } = useTranslation();
+    const { startPosting, finishPosting } = usePosting();
     const isVerified = (session?.user as any)?.isVerified;
     const MAX = isVerified ? 2000 : 280;
     const activePlaceholder = placeholder || t("whatsHappening");
@@ -269,46 +271,52 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
     };
 
     const executeSubmit = async () => {
+        // ✦ Clear form immediately for X-style instant feedback
+        const capturedContent = content.trim();
+        const capturedFiles = [...filesToUpload];
+        const capturedMedia = [...mediaPayloads];
+        const capturedPoll = showPoll && isPollValid;
+        const capturedLocation = location;
+        const capturedSensitive = isSensitive;
+        const capturedCommunityId = initialCommunityId || selectedCommunityId;
+
+        setContent("");
+        capturedMedia.forEach(p => { if (p.url.startsWith('blob:')) URL.revokeObjectURL(p.url); });
+        setMediaPayloads([]);
+        setFilesToUpload([]);
+        setShowPoll(false);
+        setPollOptions(["", ""]);
+        setIsSensitive(false);
+        setError("");
+        localStorage.removeItem("tweet-draft");
+        if (fileInputRef.current) fileInputRef.current.value = "";
+
+        // Start progress bar animation
+        startPosting();
+
         startTransition(async () => {
             try {
                 let uploadedMedia: { url: string, type: string }[] = [];
-                const hotlinkedMedia = mediaPayloads.filter((p: any) => p.isHotlinked).map(p => ({ url: p.url, type: p.type }));
+                const hotlinkedMedia = capturedMedia.filter((p: any) => p.isHotlinked).map(p => ({ url: p.url, type: p.type }));
 
-                if (filesToUpload.length > 0) {
-                    console.log(">> ComposeTweet: Starting upload of", filesToUpload.length, "files");
+                if (capturedFiles.length > 0) {
                     try {
-                        const uploadPromises = filesToUpload.map(async (item, i) => {
-                            // Sanitize filename: remove special characters and spaces
-                            const sanitizedName = item.file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-                            console.log(`>> ComposeTweet: Uploading file ${i+1}/${filesToUpload.length}: ${sanitizedName} (original: ${item.file.name})`);
+                        const uploadPromises = capturedFiles.map(async (item) => {
                             const formData = new FormData();
                             formData.append("file", item.file);
-                            
-                            const uploadRes = await fetch('/api/upload', {
-                                method: 'POST',
-                                body: formData
-                            });
-                            
-                            if (!uploadRes.ok) {
-                                throw new Error("Upload failed");
-                            }
-                            
+                            const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+                            if (!uploadRes.ok) throw new Error("Upload failed");
                             const newBlob = await uploadRes.json();
-                            console.log(`>> ComposeTweet: File ${i+1} uploaded successfully:`, newBlob.url);
                             return { url: newBlob.url, type: item.type };
                         });
                         uploadedMedia = await Promise.all(uploadPromises);
-                        console.log(">> ComposeTweet: All uploads completed. Media count:", uploadedMedia.length);
                     } catch (uploadErr: any) {
-                        console.error("ComposeTweet: Vercel Blob Upload Error:", uploadErr);
                         throw new Error(t("uploadFailed"));
                     }
                 }
-                
-                console.log(">> ComposeTweet: Sending tweet content:", content.trim());
-                
+
                 let pollData = undefined;
-                if (showPoll && isPollValid) {
+                if (capturedPoll) {
                     const expiresAt = new Date();
                     expiresAt.setHours(expiresAt.getHours() + (pollDays * 24) + pollHours);
                     expiresAt.setMinutes(expiresAt.getMinutes() + pollMinutes);
@@ -318,25 +326,17 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                     };
                 }
 
-                const finalCommunityId = initialCommunityId || selectedCommunityId;
-                const res = await createTweet(content.trim(), parentId, [...uploadedMedia, ...hotlinkedMedia], quoteOfId, pollData, finalCommunityId, isSensitive, location || undefined);
-                setContent("");
-                mediaPayloads.forEach(p => {
-                    if (p.url.startsWith('blob:')) URL.revokeObjectURL(p.url);
-                });
-                setMediaPayloads([]);
-                setFilesToUpload([]);
-                setShowPoll(false);
-                setPollOptions(["", ""]);
-                setIsSensitive(false);
-                setError("");
-                localStorage.removeItem("tweet-draft");
-                if (fileInputRef.current) fileInputRef.current.value = "";
+                await createTweet(capturedContent, parentId, [...uploadedMedia, ...hotlinkedMedia], quoteOfId, pollData, capturedCommunityId, capturedSensitive, capturedLocation || undefined);
+                
+                finishPosting(true);
                 onSuccess?.();
                 addToast(t("tweetSent"), "success");
             } catch (e: any) {
+                finishPosting(false);
                 setError(e.message || t("failedToPost"));
                 addToast(e.message || t("failedToPost"), "error");
+                // Restore content on error
+                setContent(capturedContent);
             }
         });
     };
@@ -428,7 +428,24 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                 />
 
                 {showSuggestions && (suggestions.users.length > 0 || suggestions.hashtags.length > 0) && (
-                    <div className="suggestions-list" style={{ position: "absolute", zIndex: 40, background: "var(--bg-main)", border: "1px solid var(--border)", borderRadius: "12px", boxShadow: "0 4px 16px rgba(0,0,0,0.2)", width: "260px", top: "100%", left: 0, overflowY: "auto", maxHeight: "200px", marginTop: "4px" }}>
+                    <div
+                        className="suggestions-list"
+                        style={{
+                            position: "absolute",
+                            zIndex: 40,
+                            background: "var(--bg-main)",
+                            border: "1px solid var(--border)",
+                            borderRadius: "12px",
+                            boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+                            width: "260px",
+                            // Smart: prefer top, fallback to bottom depending on available space
+                            bottom: "calc(100% + 4px)",
+                            left: "clamp(0px, 0px, calc(100vw - 268px))",
+                            overflowY: "auto",
+                            maxHeight: "220px",
+                            animation: "fadeIn 0.15s ease",
+                        }}
+                    >
                         {activeTrigger === "@" && suggestions.users.map(u => (
                             <div key={u.id} onClick={() => insertSuggestion(`@${u.username} `)} style={{ padding: "8px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", borderBottom: "1px solid var(--border)" }} onMouseEnter={(e) => e.currentTarget.style.background = "var(--bg-hover)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
                                 <Avatar user={u} size="sm" />

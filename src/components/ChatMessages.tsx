@@ -45,32 +45,115 @@ function CustomAudioPlayer({ src, isMe }: { src: string, isMe: boolean }) {
         setIsPlaying(!isPlaying);
     };
 
-    const accentColor = isMe ? "white" : "var(--blue)";
-    const textColor = isMe ? "rgba(255,255,255,0.8)" : "var(--text-secondary)";
+    const pct = duration > 0 ? (progress / duration) * 100 : 0;
+    const fmt = (s: number) => `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, "0")}`;
+
+    const trackColor = isMe ? "rgba(255,255,255,0.25)" : "var(--border)";
+    const fillColor = isMe ? "white" : "var(--blue)";
+    const textColor = isMe ? "rgba(255,255,255,0.75)" : "var(--text-secondary)";
+
+    // Waveform bars heights (decorative)
+    const BARS = [3, 6, 10, 14, 10, 7, 12, 8, 14, 6, 10, 8, 12, 5, 9, 13, 7, 11, 6, 10];
 
     return (
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 14px", background: isMe ? "rgba(255,255,255,0.1)" : "var(--bg-main)", border: isMe ? "none" : "1px solid var(--border)", borderRadius: "20px", minWidth: "220px", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-            <button onClick={togglePlay} style={{ background: isMe ? "white" : "var(--blue)", color: isMe ? "var(--blue)" : "white", border: "none", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.8rem", transition: "transform 0.1s" }}>
-                {isPlaying ? "⏸" : "▶"}
+        <div style={{
+            display: "flex", alignItems: "center", gap: "10px",
+            padding: "10px 14px",
+            background: isMe ? "rgba(255,255,255,0.08)" : "var(--bg-secondary)",
+            border: isMe ? "none" : "1px solid var(--border)",
+            borderRadius: "20px",
+            minWidth: "240px",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.08)"
+        }}>
+            {/* Play/Pause SVG button */}
+            <button
+                onClick={togglePlay}
+                style={{
+                    background: isMe ? "white" : "var(--blue)",
+                    color: isMe ? "var(--blue)" : "white",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: "34px",
+                    height: "34px",
+                    minWidth: "34px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    transition: "transform 0.15s, box-shadow 0.15s",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.1)")}
+                onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
+            >
+                {isPlaying ? (
+                    /* Pause icon */
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                        <rect x="6" y="4" width="4" height="16" rx="1"/>
+                        <rect x="14" y="4" width="4" height="16" rx="1"/>
+                    </svg>
+                ) : (
+                    /* Play icon */
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                        <polygon points="5,3 19,12 5,21"/>
+                    </svg>
+                )}
             </button>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
-                <input
-                    type="range"
-                    step="any"
-                    value={progress}
-                    max={duration || 100}
-                    onChange={(e) => {
-                        const val = parseFloat(e.target.value);
-                        if (audioRef.current) audioRef.current.currentTime = val;
-                        setProgress(val);
-                    }}
-                    style={{ flex: 1, accentColor: accentColor, height: "4px", cursor: "pointer" }}
-                />
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: textColor }}>
-                    <span>{Math.floor(progress / 60)}:{(Math.floor(progress % 60)).toString().padStart(2, '0')}</span>
-                    <span>{Math.floor(duration / 60)}:{(Math.floor(duration % 60)).toString().padStart(2, '0')}</span>
+
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
+                {/* Waveform + progress track */}
+                <div style={{ position: "relative", height: "28px", display: "flex", alignItems: "center" }}>
+                    {/* Decorative waveform bars */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "2px", width: "100%", height: "100%", position: "absolute", left: 0, top: 0, pointerEvents: "none" }}>
+                        {BARS.map((h, i) => {
+                            const barPct = (i / BARS.length) * 100;
+                            const isActive = barPct <= pct;
+                            return (
+                                <div
+                                    key={i}
+                                    style={{
+                                        flex: 1,
+                                        height: `${h}px`,
+                                        borderRadius: "2px",
+                                        background: isActive ? fillColor : trackColor,
+                                        transition: "background 0.1s, transform 0.15s",
+                                        transform: isPlaying && isActive ? "scaleY(1.15)" : "scaleY(1)",
+                                        animation: isPlaying && isActive ? `wave-${i % 4} 0.8s ease-in-out infinite alternate` : "none",
+                                    }}
+                                />
+                            );
+                        })}
+                    </div>
+                    {/* Invisible scrub input on top */}
+                    <input
+                        type="range"
+                        step="any"
+                        value={progress}
+                        max={duration || 100}
+                        onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            if (audioRef.current) audioRef.current.currentTime = val;
+                            setProgress(val);
+                        }}
+                        style={{
+                            position: "absolute",
+                            width: "100%",
+                            height: "100%",
+                            opacity: 0,
+                            cursor: "pointer",
+                            zIndex: 2,
+                            margin: 0,
+                        }}
+                    />
+                </div>
+
+                {/* Time display */}
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", color: textColor, fontVariantNumeric: "tabular-nums" }}>
+                    <span>{fmt(progress)}</span>
+                    <span>{fmt(duration)}</span>
                 </div>
             </div>
+
             <audio
                 ref={audioRef}
                 src={src}
@@ -79,6 +162,13 @@ function CustomAudioPlayer({ src, isMe }: { src: string, isMe: boolean }) {
                 onEnded={() => setIsPlaying(false)}
                 style={{ display: "none" }}
             />
+
+            <style>{`
+                @keyframes wave-0 { from { transform: scaleY(1); } to { transform: scaleY(1.3); } }
+                @keyframes wave-1 { from { transform: scaleY(0.85); } to { transform: scaleY(1.2); } }
+                @keyframes wave-2 { from { transform: scaleY(1.1); } to { transform: scaleY(0.75); } }
+                @keyframes wave-3 { from { transform: scaleY(0.9); } to { transform: scaleY(1.25); } }
+            `}</style>
         </div>
     );
 }
