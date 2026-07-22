@@ -29,6 +29,8 @@ interface ChatMessagesProps {
     initialMessages: Message[];
     conversationId: string;
     userId: string;
+    optimisticMessages?: Message[];
+    onRealMessageArrived?: () => void;
 }
 
 function CustomAudioPlayer({ src, isMe }: { src: string, isMe: boolean }) {
@@ -306,7 +308,7 @@ function MessageItem({ msg, userId, t, setMessages, onMediaClick, isE2eReady }: 
     );
 }
 
-export function ChatMessages({ initialMessages, conversationId, userId }: ChatMessagesProps) {
+export function ChatMessages({ initialMessages, conversationId, userId, optimisticMessages = [], onRealMessageArrived }: ChatMessagesProps) {
     const { t } = useTranslation();
     const [messages, setMessages] = useState<Message[]>(initialMessages);
     const [isTyping, setIsTyping] = useState(false);
@@ -374,6 +376,8 @@ export function ChatMessages({ initialMessages, conversationId, userId }: ChatMe
                 if (prev.find((m) => m.id === newMessage.id)) return prev;
                 return [...prev, newMessage];
             });
+            // Clear any optimistic copies now that the real message arrived
+            onRealMessageArrived?.();
             if (newMessage.senderId !== userId) {
                 markMessagesAsRead(conversationId).catch(console.error);
             }
@@ -420,24 +424,50 @@ export function ChatMessages({ initialMessages, conversationId, userId }: ChatMe
 
     useEffect(() => {
         if (isInitialMount.current) {
-            // On first render, jump instantly to bottom with no animation
             bottomRef.current?.scrollIntoView({ behavior: "instant" as ScrollBehavior });
             isInitialMount.current = false;
         } else {
-            // On new incoming messages, scroll smoothly
             bottomRef.current?.scrollIntoView({ behavior: "smooth" });
         }
-    }, [messages]);
+    }, [messages, optimisticMessages]);
 
     return (
         <div ref={scrollRef} className="message-container" style={{ flex: 1, overflowY: "auto", padding: "80px 16px 16px 16px", display: "flex", flexDirection: "column", gap: "12px", background: "var(--bg-main)", position: "relative" }}>
-            {messages.length === 0 ? (
+            {messages.length === 0 && optimisticMessages.length === 0 ? (
                 <div className="empty-state">{t("noMessagesYet")}</div>
             ) : (
-                messages.map((msg) => (
-                    <MessageItem key={msg.id} msg={msg} userId={userId} t={t} setMessages={setMessages} onMediaClick={setSelectedMedia} isE2eReady={isE2eReady} />
-                ))
-
+                <>
+                    {messages.map((msg) => (
+                        <MessageItem key={msg.id} msg={msg} userId={userId} t={t} setMessages={setMessages} onMediaClick={setSelectedMedia} isE2eReady={isE2eReady} />
+                    ))}
+                    {/* Optimistic messages — shown instantly, replaced when Pusher confirms */}
+                    {optimisticMessages.map((msg) => (
+                        <div
+                            key={msg.id}
+                            style={{
+                                display: "flex",
+                                flexDirection: "row-reverse",
+                                gap: "8px",
+                                alignItems: "flex-end",
+                                opacity: 0.6,
+                                animation: "fadeIn 0.15s ease"
+                            }}
+                        >
+                            <div style={{
+                                maxWidth: "70%",
+                                padding: "10px 14px",
+                                borderRadius: "18px",
+                                background: "var(--blue)",
+                                color: "white",
+                                fontSize: "0.95rem",
+                                lineHeight: "1.4",
+                                borderBottomRightRadius: "4px",
+                            }}>
+                                {msg.content}
+                            </div>
+                        </div>
+                    ))}
+                </>
             )}
 
             {/* Sentinel div to anchor bottom scroll */}

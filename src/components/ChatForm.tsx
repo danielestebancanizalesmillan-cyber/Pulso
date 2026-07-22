@@ -8,7 +8,7 @@ import { useTranslation } from "@/lib/i18n";
 
 import { encryptContent } from "@/lib/e2ee";
 
-export function ChatForm({ conversationId, userId, recipientPublicKey }: { conversationId: string, userId: string, recipientPublicKey?: string }) {
+export function ChatForm({ conversationId, userId, recipientPublicKey, onOptimisticSend }: { conversationId: string, userId: string, recipientPublicKey?: string, onOptimisticSend?: (content: string) => void }) {
     const { t } = useTranslation();
     const [content, setContent] = useState("");
 
@@ -150,6 +150,9 @@ export function ChatForm({ conversationId, userId, recipientPublicKey }: { conve
         const text = content.trim();
         setContent("");
 
+        // Show message immediately (optimistic UI) before server responds
+        onOptimisticSend?.(text);
+
         startTransition(async () => {
             try {
                 let finalContent = text;
@@ -168,8 +171,8 @@ export function ChatForm({ conversationId, userId, recipientPublicKey }: { conve
                 await sendMessage(conversationId, finalContent, "text", undefined, isEncrypted);
             } catch (err: any) {
                 console.error("SendMessage Error:", err);
-                alert(err && err.message ? err.message : "Error al enviar mensaje (cooldown o límite)");
-                setContent(text); // Restore content
+                alert(err && err.message ? err.message : "Error al enviar mensaje");
+                setContent(text); // Restore content on error
             }
         });
     };

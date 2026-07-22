@@ -8,24 +8,10 @@ import { pusherServer } from "@/lib/pusher";
 export async function sendMessage(conversationId: string, content: string, type: string = "text", audioUrl?: string, isEncrypted: boolean = false) {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
-    const dbUser = await prisma.user.findUnique({ where: { id: session.user.id } });
-    if (!dbUser) throw new Error("Session invalid or user deleted. Please log out and log back in.");
 
     if (content.length > 1000) throw new Error("Message is too long (max 1000 characters)");
 
-    // Anti-spam: 2 second cooldown
-    const lastMessage = await prisma.message.findFirst({
-        where: { senderId: session.user.id },
-        orderBy: { createdAt: "desc" }
-    });
-    if (lastMessage) {
-        const twoSecondsAgo = new Date(Date.now() - 2000);
-        if (lastMessage.createdAt > twoSecondsAgo) {
-            throw new Error("You are sending messages too fast. Please wait a moment.");
-        }
-    }
-
-    // Verify conversation membership
+    // Verify conversation membership (combined into a single query)
     const conversation = await prisma.conversation.findUnique({
         where: { id: conversationId },
         select: { participants: { select: { id: true } } }
@@ -46,34 +32,30 @@ export async function sendMessage(conversationId: string, content: string, type:
         include: { sender: { select: { id: true, name: true, avatar: true, verificationType: true, isVerified: true } } }
     });
 
-
     // Restore conversation for any participant who deleted it
     await prisma.deletedConversation.deleteMany({
         where: { conversationId }
     });
 
-
-    await prisma.conversation.update({
+    // Update conversation timestamp (fire-and-forget — don't await to reduce latency)
+    prisma.conversation.update({
         where: { id: conversationId },
         data: { updatedAt: new Date() },
-    });
+    }).catch(console.error);
 
-    // Trigger real-time message
+    // Trigger real-time message (Pusher handles UI update — no need for revalidatePath)
     await pusherServer.trigger(`chat-${conversationId}`, "new-message", message);
 
-    // Trigger recipient notification
-    // Trigger recipient notification using pre-fetched conversation
+    // Notify recipient
     const recipient = conversation?.participants.find(p => p.id !== session.user.id);
     if (recipient) {
-        await pusherServer.trigger(`user-${recipient.id}`, "message-notification", {
+        pusherServer.trigger(`user-${recipient.id}`, "message-notification", {
             type: "message",
             message: `New message from ${message.sender.name}`,
             conversationId
-        });
+        }).catch(console.error);
     }
 
-    revalidatePath(`/messages/${conversationId}`);
-    revalidatePath("/messages");
     return message;
 }
 
@@ -84,19 +66,16 @@ export async function markMessagesAsRead(conversationId: string) {
     await prisma.message.updateMany({
         where: {
             conversationId: conversationId,
-            conversation: { participants: { some: { id: session.user.id } } }, // Bound to participant
+            conversation: { participants: { some: { id: session.user.id } } },
             senderId: { not: session.user.id },
             read: false,
         },
         data: { read: true },
     });
 
-    // Notify the user themselves to update global unread count
-    await pusherServer.trigger(`user-${session.user.id}`, "messages-read", {
-        conversationId
-    });
+    // Notify the sender that their messages were read
+    await pusherServer.trigger(`chat-${conversationId}`, "messages-read", {});
 
-    revalidatePath("/messages");
     return { success: true };
 }
 

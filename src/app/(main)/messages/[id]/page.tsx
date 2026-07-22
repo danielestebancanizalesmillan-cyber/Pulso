@@ -3,9 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
-import { ChatForm } from "@/components/ChatForm";
-
-import { ChatMessages } from "@/components/ChatMessages";
+import { ChatView } from "@/components/ChatView";
 import { ChatHeaderClient } from "@/components/ChatHeaderClient";
 
 
@@ -56,18 +54,15 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
                     <p style={{ marginTop: 8, color: "var(--text-primary)", textAlign: "center" }}>{partner.bio || "Joined Pulso"}</p>
                 </div>
 
-                {/* Messages container with Real-time */}
+                {/* Messages + Input (ChatView manages optimistic state) */}
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative", zIndex: 10 }}>
-                    <ChatMessages
+                    <ChatView
                         initialMessages={conversation.messages as any}
                         conversationId={conversation.id}
                         userId={userId}
+                        recipientPublicKey={(partner as any).publicKey}
                     />
                 </div>
-            </div>
-
-            {/* Chat Input */}
-            <ChatForm conversationId={conversation.id} userId={userId} recipientPublicKey={(partner as any).publicKey} />
 
         </div>
     );
