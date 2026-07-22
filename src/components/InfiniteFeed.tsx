@@ -4,8 +4,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import React from "react";
 import { TweetCard } from "./TweetCard";
 import PusherClient from "pusher-js";
-import { StatusCarousel } from "./StatusCarousel";
 import { motion, AnimatePresence } from "framer-motion";
+import { StatusCarousel } from "./StatusCarousel";
 import { TweetSkeleton } from "./TweetSkeleton";
 import { useTranslation } from "@/lib/i18n";
 import { useSession } from "next-auth/react";
@@ -143,7 +143,14 @@ export function InfiniteFeed({ initialTweets = EMPTY_ARRAY, endpoint, currentUse
         if (endpoint === "/api/feed") {
             const globalChannel = pusher.subscribe("global-feed");
             globalChannel.bind("new-tweet", (newTweet: any) => {
-                if (newTweet.authorId !== currentUserId) {
+                if (newTweet.authorId === currentUserId) {
+                    // Own tweet: prepend immediately (X-style instant appearance)
+                    setTweets((prev) => {
+                        if (prev.find(t => t.id === newTweet.id)) return prev;
+                        return [newTweet, ...prev];
+                    });
+                } else {
+                    // Other users' tweets: show the "X new posts" button
                     setNewTweetsArrived((prev) => {
                         if (prev.find(t => t.id === newTweet.id) || tweetsRef.current.find(t => t.id === newTweet.id)) return prev;
                         return [newTweet, ...prev];
@@ -319,14 +326,21 @@ export function InfiniteFeed({ initialTweets = EMPTY_ARRAY, endpoint, currentUse
                 ))
             ) : (
                 <AnimatePresence initial={false}>
-                    {tweets.map((t, index) => (
-                        <React.Fragment key={t.id}>
+                    {tweets.map((t) => (
+                        <motion.div
+                            key={t.id}
+                            initial={{ opacity: 0, y: -20, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.25, ease: "easeOut" }}
+                            layout
+                        >
                             {t.isAd && !hideSocial ? (
                                 <AdPostCard ad={t} />
                             ) : !t.isAd ? (
                                 <TweetCard tweet={t} currentUserId={currentUserId} />
                             ) : null}
-                        </React.Fragment>
+                        </motion.div>
                     ))}
                 </AnimatePresence>
             )}
