@@ -271,7 +271,7 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
     };
 
     const executeSubmit = async () => {
-        // ✦ Clear form immediately for X-style instant feedback
+        // Capture current state before clearing form
         const capturedContent = content.trim();
         const capturedFiles = [...filesToUpload];
         const capturedMedia = [...mediaPayloads];
@@ -280,8 +280,9 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
         const capturedSensitive = isSensitive;
         const capturedCommunityId = initialCommunityId || selectedCommunityId;
 
+        // ✦ Clear form immediately for X-style instant feedback
+        // NOTE: Do NOT revoke blob URLs here — we still need the File objects for upload
         setContent("");
-        capturedMedia.forEach(p => { if (p.url.startsWith('blob:')) URL.revokeObjectURL(p.url); });
         setMediaPayloads([]);
         setFilesToUpload([]);
         setShowPoll(false);
@@ -315,6 +316,11 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                     }
                 }
 
+                // Revoke blob URLs only after successful upload
+                capturedMedia.forEach(p => {
+                    if (p.url.startsWith('blob:')) URL.revokeObjectURL(p.url);
+                });
+
                 let pollData = undefined;
                 if (capturedPoll) {
                     const expiresAt = new Date();
@@ -335,11 +341,14 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                 finishPosting(false);
                 setError(e.message || t("failedToPost"));
                 addToast(e.message || t("failedToPost"), "error");
-                // Restore content on error
+                // Restore everything on error
                 setContent(capturedContent);
+                setMediaPayloads(capturedMedia);
+                setFilesToUpload(capturedFiles);
             }
         });
     };
+
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canPost) {
