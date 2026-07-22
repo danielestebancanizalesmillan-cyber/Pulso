@@ -322,5 +322,20 @@
     "failedToCreate": "Failed to create",
     "networkError": "Network error",
     "startSpace": "Start Space",
-    "creating": "Creating..."
+    "creating": "Creating...",
+    "analyticsTitle": "Creator Analytics",
+    "analyticsSub": "Summary of your performance on the social network.",
+    "analyticsLoading": "Loading analytics...",
+    "analyticsError": "Error loading analytics",
+    "analyticsImpressions": "Impressions (Views)",
+    "analyticsLikes": "Likes",
+    "analyticsReplies": "Replies",
+    "analyticsRetweets": "Retweets / Quotes",
+    "analyticsBookmarks": "Bookmarks",
+    "analyticsTotalTweets": "Total Posts",
+    "analyticsTopPosts": "Top Posts",
+    "analyticsNoTweets": "Not enough posts to analyze.",
+    "analyticsNoText": "No text (Media/Retweet)",
+    "analyticsView": "View",
+    "analytics": "Analytics"
 }

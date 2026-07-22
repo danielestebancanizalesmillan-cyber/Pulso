@@ -322,5 +322,20 @@
     "failedToCreate": "Error al crear",
     "networkError": "Error de red",
     "startSpace": "Iniciar Space",
-    "creating": "Creando..."
+    "creating": "Creando...",
+    "analyticsTitle": "Analíticas de Creador",
+    "analyticsSub": "Resumen de tu rendimiento en la red social.",
+    "analyticsLoading": "Cargando analíticas...",
+    "analyticsError": "Error al cargar analíticas",
+    "analyticsImpressions": "Impresiones (Vistas)",
+    "analyticsLikes": "Me Gusta",
+    "analyticsReplies": "Respuestas",
+    "analyticsRetweets": "Retweets / Citas",
+    "analyticsBookmarks": "Marcadores",
+    "analyticsTotalTweets": "Publicaciones Totales",
+    "analyticsTopPosts": "Publicaciones Más Destacadas",
+    "analyticsNoTweets": "No hay tweets suficientes para analizar.",
+    "analyticsNoText": "Sin texto (Multimedia/Retweet)",
+    "analyticsView": "Ver",
+    "analytics": "Analíticas"
 }

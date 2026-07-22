@@ -36,26 +36,26 @@ export default function AnalyticsPage() {
             .finally(() => setLoading(false));
     }, []);
 
-    if (loading) return <div className="skeleton-container" style={{ padding: '20px' }}>Cargando analíticas...</div>;
-    if (!data) return <div style={{ padding: '20px' }}>Error al cargar analíticas</div>;
+    if (loading) return <div className="skeleton-container" style={{ padding: '20px' }}>{t("analyticsLoading")}</div>;
+    if (!data) return <div style={{ padding: '20px' }}>{t("analyticsError")}</div>;
 
     const stats = [
-        { label: "Impresiones (Vistas)", value: data.totalViews, icon: "👁️", color: "#1d9bf0" },
-        { label: "Me Gusta", value: data.totalLikes, icon: "❤️", color: "#f91880" },
-        { label: "Respuestas", value: data.totalReplies, icon: "💬", color: "#00ba7c" },
-        { label: "Retweets/Citas", value: data.totalRetweets, icon: "🔁", color: "#00ba7c" },
-        { label: "Marcadores", value: data.totalBookmarks, icon: "🔖", color: "#ffd400" },
-        { label: "Tweets Totales", value: data.totalTweets, icon: "✍️", color: "#1d9bf0" },
+        { label: t("analyticsImpressions"), value: data.totalViews, icon: "👁️", color: "#1d9bf0" },
+        { label: t("analyticsLikes"), value: data.totalLikes, icon: "❤️", color: "#f91880" },
+        { label: t("analyticsReplies"), value: data.totalReplies, icon: "💬", color: "#00ba7c" },
+        { label: t("analyticsRetweets"), value: data.totalRetweets, icon: "🔁", color: "#00ba7c" },
+        { label: t("analyticsBookmarks"), value: data.totalBookmarks, icon: "🔖", color: "#ffd400" },
+        { label: t("analyticsTotalTweets"), value: data.totalTweets, icon: "✍️", color: "#1d9bf0" },
     ];
 
     return (
         <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', color: 'var(--text)' }}>
             <header style={{ marginBottom: '30px' }}>
-                <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Analíticas de Creador</h1>
-                <p style={{ color: 'var(--text-secondary)' }}>Resumen de tu rendimiento en la red social.</p>
+                <h1 style={{ fontSize: '24px', fontWeight: 800 }}>{t("analyticsTitle")}</h1>
+                <p style={{ color: 'var(--text-secondary)' }}>{t("analyticsSub")}</p>
             </header>
 
-            {/* Grid de Cards */}
+            {/* Stats Grid */}
             <div style={{ 
                 display: 'grid', 
                 gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', 
@@ -91,16 +91,16 @@ export default function AnalyticsPage() {
                 ))}
             </div>
 
-            {/* Top Tweets */}
+            {/* Top Posts */}
             <section style={{ marginBottom: '40px' }}>
-                <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '16px' }}>Publicaciones Más Destacadas</h2>
+                <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '16px' }}>{t("analyticsTopPosts")}</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {data.topTweets.length === 0 ? (
-                        <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>No hay tweets suficientes para analizar.</p>
+                        <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>{t("analyticsNoTweets")}</p>
                     ) : (
-                        data.topTweets.map((t, i) => (
+                        data.topTweets.map((tweet, i) => (
                             <motion.div
-                                key={t.id}
+                                key={tweet.id}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.3 + i * 0.05 }}
@@ -125,20 +125,20 @@ export default function AnalyticsPage() {
                                         WebkitLineClamp: 2,
                                         WebkitBoxOrient: 'vertical'
                                     }}>
-                                        {t.content || <span style={{ fontStyle: 'italic', color: 'var(--text-secondary)' }}>Sin texto (Multimedia/Retweet)</span>}
+                                        {tweet.content || <span style={{ fontStyle: 'italic', color: 'var(--text-secondary)' }}>{t("analyticsNoText")}</span>}
                                     </p>
                                     <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                                        {new Date(t.createdAt).toLocaleDateString()}
+                                        {new Date(tweet.createdAt).toLocaleDateString()}
                                     </span>
                                 </div>
                                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', fontSize: '14px', color: 'var(--text-secondary)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <span>👁️</span> {t.views || 0}
+                                        <span>👁️</span> {tweet.views || 0}
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <span>❤️</span> {t._count.likes || 0}
+                                        <span>❤️</span> {tweet._count.likes || 0}
                                     </div>
-                                    <Link href={`/tweet/${t.id}`} style={{
+                                    <Link href={`/tweet/${tweet.id}`} style={{
                                         padding: '6px 12px', 
                                         borderRadius: '20px', 
                                         background: 'var(--blue)', 
@@ -147,7 +147,7 @@ export default function AnalyticsPage() {
                                         fontWeight: 600, 
                                         textDecoration: 'none'
                                     }}>
-                                        Ver
+                                        {t("analyticsView")}
                                     </Link>
                                 </div>
                             </motion.div>
