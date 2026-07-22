@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { USER_SELECT } from "@/lib/constants";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { TweetCard } from "@/components/TweetCard";
 import { ComposeTweet } from "@/components/ComposeTweet";
 import { TweetActionBar } from "@/components/TweetActionBar";
@@ -99,13 +100,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     if (!tweet) return { title: "Tweet no encontrado" };
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const headersList = await headers();
+    const host = headersList.get("host") || "pulso-tdch.vercel.app";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const baseUrl = `${protocol}://${host}`;
     const ogImageUrl = `${baseUrl}/api/og?id=${resolvedParams.id}`;
 
     const ogImages: any[] = [{ url: ogImageUrl, width: 1200, height: 600 }];
     if (tweet.images && tweet.images.length > 0) {
+        let imageUrl = tweet.images[0].url;
+        if (!imageUrl.startsWith("http")) {
+            imageUrl = `${baseUrl}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
+        }
         ogImages.unshift({
-            url: tweet.images[0].url,
+            url: imageUrl,
             alt: tweet.content ? tweet.content.substring(0, 100) : "Pulso Media"
         });
     }

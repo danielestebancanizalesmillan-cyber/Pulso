@@ -17,7 +17,10 @@ import Script from "next/script";
 export async function generateMetadata() {
   const cookieStore = await cookies();
   const locale = cookieStore.get("language")?.value || "en";
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const headersList = await headers();
+  const host = headersList.get("host") || "pulso-tdch.vercel.app";
+  const protocol = host.includes("localhost") ? "http" : "https";
+  const baseUrl = `${protocol}://${host}`;
 
   if (locale === 'es') {
     return {
@@ -52,7 +55,7 @@ export async function generateMetadata() {
   };
 }
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 import { CookieBanner } from "@/components/CookieBanner";
 

@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { USER_SELECT } from "@/lib/constants";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { TweetCard } from "@/components/TweetCard";
 import { Avatar } from "@/components/Avatar";
 import { FollowButton } from "@/components/FollowButton";
@@ -71,7 +72,15 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
 
     if (!user) return { title: "Usuario no encontrado" };
 
-    const avatarUrl = user.avatar || user.image || "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png";
+    const headersList = await headers();
+    const host = headersList.get("host") || "pulso-tdch.vercel.app";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const baseUrl = `${protocol}://${host}`;
+
+    let avatarUrl = user.avatar || user.image || "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png";
+    if (!avatarUrl.startsWith("http")) {
+        avatarUrl = `${baseUrl}${avatarUrl.startsWith("/") ? "" : "/"}${avatarUrl}`;
+    }
 
     return {
         title: `${user.name} (@${user.username}) en Pulso`,
