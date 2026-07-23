@@ -35,6 +35,7 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
     const activePlaceholder = placeholder || t("whatsHappening");
     
     const [content, setContent] = useState("");
+    const [cursorPos, setCursorPos] = useState(0);
     const [mediaPayloads, setMediaPayloads] = useState<{ url: string, type: string }[]>([]);
     const [isPending, startTransition] = useTransition();
 
@@ -428,24 +429,49 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                         zIndex: 1,
                     }}
                     dangerouslySetInnerHTML={{
-                        __html: content
-                            .replace(/&/g, "&amp;")
-                            .replace(/</g, "&lt;")
-                            .replace(/>/g, "&gt;")
-                            .replace(/([@#][\w\u00C0-\u024F]+)/g, '<span style="color:var(--blue)">$1</span>')
-                            + "<span>\u200B</span>"
+                        __html: (() => {
+                            if (!content) {
+                                return `<span style="color:var(--text-secondary)">${activePlaceholder}</span>`;
+                            }
+                            const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                            
+                            const textBeforeCursor = content.substring(0, cursorPos);
+                            const match = textBeforeCursor.match(/[@#][\w\u00C0-\u024F]*$/);
+                            const activeWordIndex = match ? match.index : -1;
+
+                            let result = "";
+                            let lastIndex = 0;
+                            const regex = /([@#][\w\u00C0-\u024F]+)/g;
+                            let m;
+                            while ((m = regex.exec(content)) !== null) {
+                                const offset = m.index;
+                                const matchStr = m[0];
+                                
+                                result += escapeHtml(content.substring(lastIndex, offset));
+                                
+                                // Only highlight if it's NOT the word currently being typed
+                                if (offset === activeWordIndex) {
+                                    result += escapeHtml(matchStr);
+                                } else {
+                                    result += `<span style="color:var(--blue)">${escapeHtml(matchStr)}</span>`;
+                                }
+                                lastIndex = offset + matchStr.length;
+                            }
+                            result += escapeHtml(content.substring(lastIndex));
+                            return result + "<span>\u200B</span>";
+                        })()
                     }}
                 />
                 <textarea
                     ref={textareaRef}
                     className="compose-textarea"
-                    placeholder={activePlaceholder}
                     value={content}
                     onChange={(e) => {
                         const val = e.target.value;
-                        setContent(val);
-                        
                         const cursor = e.target.selectionStart || 0;
+                        setContent(val);
+                        setCursorPos(cursor);
+                        
                         const textBeforeCursor = val.substring(0, cursor);
                         const words = textBeforeCursor.split(" ");
                         const lastWord = words[words.length - 1];
@@ -459,6 +485,8 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                             setActiveTrigger(null);
                         }
                     }}
+                    onKeyUp={(e) => setCursorPos(e.currentTarget.selectionStart || 0)}
+                    onClick={(e) => setCursorPos(e.currentTarget.selectionStart || 0)}
                     onKeyDown={handleKeyDown}
                     rows={3}
                     disabled={isPending}
