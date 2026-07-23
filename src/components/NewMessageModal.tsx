@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { startConversation } from "@/app/actions/message";
 import { Avatar } from "@/components/Avatar";
 import { useTranslation } from "@/lib/i18n";
+import { createPortal } from "react-dom";
 
 interface UserSuggestion {
     id: string;
@@ -21,6 +22,9 @@ export function NewMessageModal({ onClose }: { onClose: () => void }) {
     const [results, setResults] = useState<UserSuggestion[]>([]);
     const [loading, setLoading] = useState(false);
     const [starting, setStarting] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => setMounted(true), []);
 
     useEffect(() => {
         if (!query.trim()) {
@@ -62,8 +66,10 @@ export function NewMessageModal({ onClose }: { onClose: () => void }) {
         }
     };
 
-    return (
-        <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000 }}>
+    if (!mounted) return null;
+
+    return createPortal(
+        <div className="modal-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
             <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 500, height: 600, display: "flex", flexDirection: "column" }}>
                 <div className="modal-header">
                     <button onClick={onClose} className="icon-btn" aria-label="Close">
@@ -119,6 +125,7 @@ export function NewMessageModal({ onClose }: { onClose: () => void }) {
                     ))}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
