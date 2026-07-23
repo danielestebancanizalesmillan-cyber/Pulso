@@ -407,6 +407,35 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                     </div>
                 )}
                 <div style={{ position: "relative", width: "100%" }}>
+                {/* Highlight overlay — renders @mentions and #hashtags in blue */}
+                <div
+                    aria-hidden="true"
+                    style={{
+                        position: "absolute",
+                        top: 0, left: 0, right: 0,
+                        pointerEvents: "none",
+                        fontSize: "1.15rem",
+                        fontFamily: "inherit",
+                        lineHeight: "1.5",
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word",
+                        overflowWrap: "break-word",
+                        color: "var(--text-primary)",
+                        padding: 0,
+                        margin: 0,
+                        minHeight: "4.5rem",
+                        zIndex: 1,
+                    }}
+                    dangerouslySetInnerHTML={{
+                        __html: content
+                            .replace(/&/g, "&amp;")
+                            .replace(/</g, "&lt;")
+                            .replace(/>/g, "&gt;")
+                            .replace(/([@#][\w\u00C0-\u024F]+)/g, '<span style="color:var(--blue)">$1</span>')
+                            // Invisible trailing space to preserve height when content ends with newline
+                            + "<span>\u200B</span>"
+                    }}
+                />
                 <textarea
                     ref={textareaRef}
                     className="compose-textarea"
@@ -433,8 +462,23 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                     onKeyDown={handleKeyDown}
                     rows={3}
                     disabled={isPending}
-                    style={{ width: "100%", background: "transparent", border: "none", outline: "none", resize: "none", fontSize: "1.15rem", color: "var(--text-primary)", fontFamily: "inherit", lineHeight: "1.5" }}
+                    style={{
+                        position: "relative",
+                        zIndex: 2,
+                        width: "100%",
+                        background: "transparent",
+                        border: "none",
+                        outline: "none",
+                        resize: "none",
+                        fontSize: "1.15rem",
+                        // Transparent text so the overlay shows through; caret stays visible
+                        color: "transparent",
+                        caretColor: "var(--text-primary)",
+                        fontFamily: "inherit",
+                        lineHeight: "1.5",
+                    }}
                 />
+
 
                 {showSuggestions && (suggestions.users.length > 0 || suggestions.hashtags.length > 0) && (
                     <div
