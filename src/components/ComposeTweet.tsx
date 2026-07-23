@@ -407,23 +407,24 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                     </div>
                 )}
                 <div style={{ position: "relative", width: "100%" }}>
-                {/* Highlight overlay — renders @mentions and #hashtags in blue */}
+                {/* Highlight overlay — renders @mentions and #hashtags in blue.
+                    MUST match textarea font-size, padding, line-height exactly. */}
                 <div
                     aria-hidden="true"
                     style={{
                         position: "absolute",
                         top: 0, left: 0, right: 0,
                         pointerEvents: "none",
-                        fontSize: "1.15rem",
-                        fontFamily: "inherit",
+                        // Must match .compose-textarea CSS exactly:
+                        fontSize: "1.25rem",
+                        padding: "8px 0",
                         lineHeight: "1.5",
+                        fontFamily: "inherit",
                         whiteSpace: "pre-wrap",
                         wordBreak: "break-word",
                         overflowWrap: "break-word",
                         color: "var(--text-primary)",
-                        padding: 0,
                         margin: 0,
-                        minHeight: "4.5rem",
                         zIndex: 1,
                     }}
                     dangerouslySetInnerHTML={{
@@ -432,7 +433,6 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                             .replace(/</g, "&lt;")
                             .replace(/>/g, "&gt;")
                             .replace(/([@#][\w\u00C0-\u024F]+)/g, '<span style="color:var(--blue)">$1</span>')
-                            // Invisible trailing space to preserve height when content ends with newline
                             + "<span>\u200B</span>"
                     }}
                 />
@@ -470,14 +470,18 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                         border: "none",
                         outline: "none",
                         resize: "none",
-                        fontSize: "1.15rem",
-                        // Transparent text so the overlay shows through; caret stays visible
+                        // Match .compose-textarea exactly so caret aligns with overlay
+                        fontSize: "1.25rem",
+                        padding: "8px 0",
+                        lineHeight: "1.5",
+                        // Hide text but keep caret visible
                         color: "transparent",
+                        WebkitTextFillColor: "transparent",
                         caretColor: "var(--text-primary)",
                         fontFamily: "inherit",
-                        lineHeight: "1.5",
                     }}
                 />
+
 
 
                 {showSuggestions && (suggestions.users.length > 0 || suggestions.hashtags.length > 0) && (
