@@ -441,15 +441,14 @@ export function ComposeTweet({ placeholder, parentId, quoteOfId, onSuccess, auto
                         className="suggestions-list"
                         style={{
                             position: "absolute",
-                            zIndex: 40,
+                            zIndex: 9999,
                             background: "var(--bg-main)",
                             border: "1px solid var(--border)",
                             borderRadius: "12px",
-                            boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+                            boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
                             width: "260px",
-                            // Smart: prefer top, fallback to bottom depending on available space
-                            bottom: "calc(100% + 4px)",
-                            left: "clamp(0px, 0px, calc(100vw - 268px))",
+                            top: "calc(100% + 4px)",
+                            left: 0,
                             overflowY: "auto",
                             maxHeight: "220px",
                             animation: "fadeIn 0.15s ease",
