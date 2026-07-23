@@ -414,7 +414,7 @@ export function ProfileContent({
                     <span>{t("highlights") || "Highlights"}</span>
                 </Link>
                 <Link href={`/${user.username}?tab=likes`} className={`profile-tab ${tab === "likes" ? "active" : ""}`} style={{ flex: 1, textAlign: "center", textDecoration: "none", display: "flex", justifyContent: "center", alignItems: "center", gap: "8px" }}>
-                    <span>{t("like")}s</span>
+                    <span>{t("likes")}</span>
                 </Link>
             </div>
 

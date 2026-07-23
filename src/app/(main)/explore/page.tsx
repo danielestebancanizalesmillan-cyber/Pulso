@@ -193,8 +193,8 @@ export default function ExplorePage() {
 
             {query && (
                 <div className="tabs">
-                    <button className={`tab ${tab === "tweets" ? "active" : ""}`} onClick={() => setTab("tweets")}>{t("tweet")}s</button>
-                    <button className={`tab ${tab === "users" ? "active" : ""}`} onClick={() => setTab("users")}>{t("people") || "People"}</button>
+                    <button className={`tab ${tab === "tweets" ? "active" : ""}`} onClick={() => setTab("tweets")} style={{ textTransform: "capitalize" }}>{t("posts")}</button>
+                    <button className={`tab ${tab === "users" ? "active" : ""}`} onClick={() => setTab("users")} style={{ textTransform: "capitalize" }}>{t("people") || "People"}</button>
                 </div>
             )}
 

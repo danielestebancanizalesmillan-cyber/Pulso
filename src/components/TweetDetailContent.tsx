@@ -333,13 +333,13 @@ export function TweetDetailContent({ tweet: initialTweet, userId }: { tweet: any
                         </div>
                     )}
                     <div className="focused-stat" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                        <strong style={{ display: "inline-flex", alignItems: "center" }}><CountWithAnimation count={retweetCount} /></strong> <span>{t("retweet")}s</span>
+                        <strong style={{ display: "inline-flex", alignItems: "center" }}><CountWithAnimation count={retweetCount} /></strong> <span>{t("retweets") || "Retweets"}</span>
                     </div>
                     <div className="focused-stat" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                        <strong style={{ display: "inline-flex", alignItems: "center" }}><CountWithAnimation count={likeCount} /></strong> <span>{t("like")}s</span>
+                        <strong style={{ display: "inline-flex", alignItems: "center" }}><CountWithAnimation count={likeCount} /></strong> <span>{t("likes")}</span>
                     </div>
-                    <div className="focused-stat" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                        <strong style={{ display: "inline-flex", alignItems: "center" }}><CountWithAnimation count={replyCount} /></strong> <span>{t("reply")}s</span>
+                    <div className="stat-item">
+                        <strong style={{ display: "inline-flex", alignItems: "center" }}><CountWithAnimation count={replyCount} /></strong> <span>{t("replies")}</span>
                     </div>
                 </div>
 
