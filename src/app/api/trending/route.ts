@@ -77,8 +77,11 @@ export async function GET(req: Request) {
 
                 const tweetTexts = recentTweets.map(t => t.content).join("\n---\n");
                 const prompt = `
-Analiza el contenido de estos tweets (2026) y extrae las **5 frases cortas, palabras o hashtags EXACTOS** más repetidos.
-IMPORTANTE: NO inventes temas ni resumas conceptualmente. Debes extraer palabras o frases que aparezcan literalmente en el texto de los tweets, para que al buscarlas se encuentren resultados reales. El 'count' debe reflejar la cantidad real de tweets que contienen esa palabra o frase.
+Analiza el contenido de estos tweets (2026) y extrae los **5 conceptos, sustantivos, nombres propios o hashtags EXACTOS** más relevantes y repetidos.
+IMPORTANTE: 
+1. IGNORA por completo palabras comunes, conectores, artículos, preposiciones, pronombres, saludos o verbos simples (ej: "de", "a", "la", "el", "está", "se", "hola", "que", "en").
+2. NO inventes temas ni resumas conceptualmente. Debes extraer palabras o frases significativas que aparezcan literalmente en el texto de los tweets, para que al buscarlas se encuentren resultados reales.
+3. El 'count' debe reflejar la cantidad real de tweets que contienen esa palabra o frase.
 Responde **ÚNICAMENTE** en formato JSON como un array de objetos: [ { "name": "palabra o frase exacta", "count": 10, "categoryKey": "trendTech" } ]
 
 Tweets:
