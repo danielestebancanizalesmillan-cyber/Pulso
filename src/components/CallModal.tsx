@@ -79,6 +79,7 @@ export function CallModal({ isOpen, onClose, isIncoming = false, callerName = "U
     const { t } = useTranslation();
     const [status, setStatus] = useState<"idle" | "calling" | "connected" | "ended">(isIncoming ? "idle" : "calling");
     const [mounted, setMounted] = useState(false);
+    const [callDuration, setCallDuration] = useState(0);
     
     // Feature States
     const [isLocalReady, setIsLocalReady] = useState(false);
@@ -232,8 +233,19 @@ export function CallModal({ isOpen, onClose, isIncoming = false, callerName = "U
             if (remoteAudioRef.current && remoteStream) {
                 remoteAudioRef.current.srcObject = remoteStream;
             }
+
+            const interval = setInterval(() => {
+                setCallDuration(prev => prev + 1);
+            }, 1000);
+            return () => clearInterval(interval);
         }
     }, [status, remoteStream]);
+
+    const formatDuration = (seconds: number) => {
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    };
 
     const acceptCall = async () => {
         ringtoneRef.current?.stop();
@@ -342,7 +354,7 @@ export function CallModal({ isOpen, onClose, isIncoming = false, callerName = "U
                             {callerName}
                         </div>
                         <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "1rem" }}>
-                            00:00 {/* Could implement a real timer later */}
+                            {formatDuration(callDuration)}
                         </div>
 
                         {/* Hidden audio elements for connection */}
