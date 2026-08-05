@@ -129,11 +129,6 @@ export function CallModal({ isOpen, onClose, isIncoming = false, callerName = "U
 
                 stream.getTracks().forEach(track => currentPeer.addTrack(track, stream));
                 setIsLocalReady(true);
-
-                // Caller generates offer immediately
-                const offer = await currentPeer.createOffer();
-                await currentPeer.setLocalDescription(offer);
-                sendCallSignal(conversationId, { type: "offer", sdp: offer });
             } catch (err) {
                 console.error("Media error:", err);
                 setStatus("ended");
@@ -147,6 +142,9 @@ export function CallModal({ isOpen, onClose, isIncoming = false, callerName = "U
 
         if (!isIncoming) {
             initCaller();
+        } else {
+            // Signal to caller that we are ringing and ready to receive offer
+            sendCallSignal(conversationId, { type: "ringing" });
         }
 
         currentPeer.ontrack = (event) => {
@@ -172,7 +170,14 @@ export function CallModal({ isOpen, onClose, isIncoming = false, callerName = "U
             if (currentPeer.connectionState === "closed") return;
 
             try {
-                if (data.type === "offer") {
+                if (data.type === "ringing") {
+                    if (!isIncoming) {
+                        // Receiver is ringing, we can now send the offer
+                        const offer = await currentPeer.createOffer();
+                        await currentPeer.setLocalDescription(offer);
+                        sendCallSignal(conversationId, { type: "offer", sdp: offer });
+                    }
+                } else if (data.type === "offer") {
                     if (isIncoming && status === "idle") {
                         // Store offer until user accepts
                         pendingOfferRef.current = data.sdp;

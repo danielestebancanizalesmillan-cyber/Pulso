@@ -78,15 +78,17 @@ export function ChatHeaderClient({ partner, conversationId, userId }: ChatHeader
                 </div>
             </div>
 
-            <CallModal 
-                isOpen={isCallOpen} 
-                onClose={() => setIsCallOpen(false)} 
-                isIncoming={isIncoming}
-                isAudioOnly={isAudioOnly}
-                callerName={partner.name}
-                conversationId={conversationId}
-                userId={userId}
-            />
+            {isCallOpen && (
+                <CallModal 
+                    isOpen={isCallOpen} 
+                    onClose={() => setIsCallOpen(false)} 
+                    isIncoming={isIncoming}
+                    isAudioOnly={isAudioOnly}
+                    callerName={partner.name}
+                    conversationId={conversationId}
+                    userId={userId}
+                />
+            )}
         </>
     );
 }
