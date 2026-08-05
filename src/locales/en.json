@@ -338,5 +338,14 @@
     "analyticsNoTweets": "Not enough posts to analyze.",
     "analyticsNoText": "No text (Media/Retweet)",
     "analyticsView": "View",
-    "analytics": "Analytics"
+    "analytics": "Analytics",
+    "callAudioOnly": "Audio Only",
+    "callingUser": "Calling {name}...",
+    "incomingCallFrom": "Incoming call from {name}",
+    "connectingCall": "Connecting call from {name}...",
+    "callEnded": "Call ended",
+    "joinSpace": "Join Space",
+    "spaceNotFound": "Space not found",
+    "spaceEnded": "This Space has ended",
+    "chat": "Chat"
 }

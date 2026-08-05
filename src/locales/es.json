@@ -338,5 +338,14 @@
     "analyticsNoTweets": "No hay tweets suficientes para analizar.",
     "analyticsNoText": "Sin texto (Multimedia/Retweet)",
     "analyticsView": "Ver",
-    "analytics": "Analíticas"
+    "analytics": "Analíticas",
+    "callAudioOnly": "Solo Audio",
+    "callingUser": "Llamando a {name}...",
+    "incomingCallFrom": "Llamada entrante de {name}",
+    "connectingCall": "Conectando llamada de {name}...",
+    "callEnded": "Llamada finalizada",
+    "joinSpace": "Unirse al Space",
+    "spaceNotFound": "Space no encontrado",
+    "spaceEnded": "Este Space ha terminado",
+    "chat": "Chat"
 }

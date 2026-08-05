@@ -59,7 +59,7 @@ export function VoiceSpaceRoom({ space: initialSpace, currentUserId }: VoiceSpac
   const [chatInput, setChatInput] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
-
+  const [hasClickedJoin, setHasClickedJoin] = useState(false);
   const localStreamRef = useRef<MediaStream | null>(null);
   const peersRef = useRef<PeerMap>(new Map());
   const remoteAudioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
@@ -172,6 +172,8 @@ export function VoiceSpaceRoom({ space: initialSpace, currentUserId }: VoiceSpac
 
   // ── Setup Pusher & WebRTC ────────────────────────────────────────
   useEffect(() => {
+    if (!hasClickedJoin) return;
+    
     joinSpace();
 
     if (myRole === "HOST" || myRole === "SPEAKER") {
@@ -377,7 +379,7 @@ export function VoiceSpaceRoom({ space: initialSpace, currentUserId }: VoiceSpac
       localStreamRef.current?.getTracks().forEach(t => t.stop());
       remoteAudioRefs.current.forEach(a => { a.pause(); a.srcObject = null; });
     };
-  }, [space.id, currentUserId]);
+  }, [space.id, currentUserId, hasClickedJoin]);
 
   // ── Mute / Unmute ────────────────────────────────────────────────
   const toggleMute = () => {
@@ -465,6 +467,44 @@ export function VoiceSpaceRoom({ space: initialSpace, currentUserId }: VoiceSpac
     }
   };
 
+  if (!hasClickedJoin) {
+    return (
+      <div style={{
+        minHeight: "100vh", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center", gap: 24,
+        background: "linear-gradient(160deg, #0f0a1e 0%, #120d24 40%, #0a0f1e 100%)",
+        color: "white", textAlign: "center", padding: 24,
+      }}>
+        <div style={{
+          width: 80, height: 80, borderRadius: "50%",
+          background: "linear-gradient(135deg, #7c3aed, #4f46e5)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: "2.5rem", boxShadow: "0 8px 32px rgba(124,58,237,0.4)"
+        }}>
+          🎙️
+        </div>
+        <div>
+          <h2 style={{ margin: 0, fontSize: "1.8rem", fontWeight: 700 }}>{space.title}</h2>
+          <p style={{ margin: "8px 0 0", color: "rgba(255,255,255,0.6)" }}>
+            {space.description || t("liveAudioRoom")}
+          </p>
+        </div>
+        <button
+          onClick={() => setHasClickedJoin(true)}
+          style={{
+            background: "linear-gradient(135deg, #10b981, #059669)",
+            color: "white", border: "none", borderRadius: "30px",
+            padding: "16px 36px", fontSize: "1.1rem", fontWeight: 700,
+            cursor: "pointer", boxShadow: "0 8px 24px rgba(16,185,129,0.3)",
+            transition: "all 0.2s"
+          }}
+        >
+          {t("joinSpace")}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       minHeight: "100vh",
@@ -541,7 +581,7 @@ export function VoiceSpaceRoom({ space: initialSpace, currentUserId }: VoiceSpac
             }}
           >
             <span>💬</span>
-            <span>Chat</span>
+            <span>{t("chat")}</span>
           </button>
         </div>
       </div>
