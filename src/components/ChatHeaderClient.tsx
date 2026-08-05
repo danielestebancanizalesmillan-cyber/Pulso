@@ -18,6 +18,7 @@ export function ChatHeaderClient({ partner, conversationId, userId }: ChatHeader
     const [isCallOpen, setIsCallOpen] = useState(false);
     const [isIncoming, setIsIncoming] = useState(false);
     const [isAudioOnly, setIsAudioOnly] = useState(false);
+    const [callKey, setCallKey] = useState(0);
 
     useEffect(() => {
         const pusher = new PusherClient(process.env.NEXT_PUBLIC_PUSHER_APP_KEY!, {
@@ -27,9 +28,10 @@ export function ChatHeaderClient({ partner, conversationId, userId }: ChatHeader
         const channel = pusher.subscribe(`chat-${conversationId}`);
 
         channel.bind("incoming-call", (data: any) => {
-            if (data.senderId !== userId && !isCallOpen) {
+            if (data.senderId !== userId) {
                 setIsIncoming(true);
                 setIsAudioOnly(data.isAudioOnly || false);
+                setCallKey(prev => prev + 1); // Force remount
                 setIsCallOpen(true);
             }
         });
@@ -42,6 +44,7 @@ export function ChatHeaderClient({ partner, conversationId, userId }: ChatHeader
     const handleStartCall = async (audioOnly: boolean = false) => {
         setIsIncoming(false);
         setIsAudioOnly(audioOnly);
+        setCallKey(prev => prev + 1); // Force remount
         setIsCallOpen(true);
         
         try {
@@ -80,7 +83,8 @@ export function ChatHeaderClient({ partner, conversationId, userId }: ChatHeader
 
             {isCallOpen && (
                 <CallModal 
-                    isOpen={isCallOpen} 
+                    key={callKey}
+                    isOpen={isCallOpen}  
                     onClose={() => setIsCallOpen(false)} 
                     isIncoming={isIncoming}
                     isAudioOnly={isAudioOnly}

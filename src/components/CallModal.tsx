@@ -132,6 +132,7 @@ export function CallModal({ isOpen, onClose, isIncoming = false, callerName = "U
             } catch (err) {
                 console.error("Media error:", err);
                 setStatus("ended");
+                setTimeout(() => onClose(), 2000);
             }
         };
 
@@ -206,6 +207,7 @@ export function CallModal({ isOpen, onClose, isIncoming = false, callerName = "U
                     currentPeer.close();
                     ringtoneRef.current?.stop();
                     setStatus("ended");
+                    setTimeout(() => onClose(), 2000);
                 }
             } catch (err) {
                 console.error("Signal Handling Error:", err);
@@ -260,6 +262,7 @@ export function CallModal({ isOpen, onClose, isIncoming = false, callerName = "U
         } catch (err) {
             console.error("Accept Error:", err);
             setStatus("ended");
+            setTimeout(() => onClose(), 2000);
         }
     };
 
