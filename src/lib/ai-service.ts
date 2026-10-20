@@ -398,6 +398,45 @@ export async function runPulsAIEngine(
         ...otherMessages
     ];
 
+    // Si es chat conversacional o se provee onChunk en modo chat privado (sin ser feed ni requerir investigación profunda),
+    // procedemos directamente a síntesis con streaming para evitar el timeout 524 de Cloudflare (100 segundos sin bytes)
+    if ((isConversational || (!isFeed && !isResearchQuery)) && onChunk) {
+        if (onStep) onStep("Generando respuesta...");
+        const chatMessages = [
+            { role: "system", content: `${corePrompt}\n\nIdentifícate como PulsAI. Responde en prosa elegante, directa y sofisticada usando formato Markdown (**negritas**, listas, etc.). Muestra tu proceso de pensamiento natural. NO uses formato JSON.` },
+            { role: "system", content: `CONTEXTO TEMPORAL: Hoy es ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}. Hora: ${new Date().toLocaleTimeString('es-ES')}.` },
+            ...existingSystemMessages,
+            ...otherMessages
+        ];
+
+        const streamResponse = await getOllamaResponse(chatMessages, false, MODEL_NAME, onChunk);
+        let thinkingText: string | undefined = undefined;
+        let finalResponse = streamResponse;
+
+        const thoughtMatch = String(streamResponse).match(/<(?:thought|thinking)>([\s\S]*?)<\/(?:thought|thinking)>/i);
+        if (thoughtMatch && thoughtMatch[1]) {
+            thinkingText = thoughtMatch[1].trim();
+        }
+
+        let cleaned = String(finalResponse)
+            .replace(/<(?:thought|thinking)>[\s\S]*?<\/(?:thought|thinking)>/gi, "")
+            .replace(/```json/gi, "")
+            .replace(/```/g, "")
+            .replace(/\{\s*"action"\s*:[^}]+\}\s*/gi, "")
+            .replace(/^\{\s*"answer":\s*"/, "")
+            .replace(/^\{\s*"respond":\s*"/, "")
+            .replace(/^Eres PulsAI,\s*/i, "Soy PulsAI, ")
+            .replace(/^Como una IA de élite,\s*/i, "")
+            .trim()
+            .replace(/["\}]+$/, "");
+
+        return {
+            response: cleaned || streamResponse,
+            thinking: thinkingText,
+            sources: []
+        };
+    }
+
     while (loopCount < maxLoops) {
         loopCount++;
         

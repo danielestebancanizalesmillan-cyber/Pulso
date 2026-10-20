@@ -5,6 +5,9 @@ import { getOllamaResponse, PULSAI_SYSTEM_PROMPT, searchInternet, runPulsAIEngin
 import { pusherServer } from "../../../../lib/pusher";
 
 
+export const maxDuration = 300; // Permitir hasta 5 minutos en Vercel Pro/local para inferencia LLM
+export const dynamic = "force-dynamic";
+
 // 🕐 Caché para el contexto diario
 let cachedDailyContext: { data: string; timestamp: number } | null = null;
 const CACHE_DURATION = 1000 * 60 * 60; // 1 hora
