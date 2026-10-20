@@ -17,11 +17,13 @@ export function BottomNav() {
     { href: "/home", icon: Home, label: "Inicio" },
     { href: "/explore", icon: Search, label: "Buscar" },
     { href: "/spaces", icon: Mic, label: "Espacios" },
-    { href: "/communities", icon: Users, label: "Comunidad" },
     { href: "/notifications", icon: Bell, label: "Avisos" },
     { href: "/messages", icon: Mail, label: "Mensajes" },
-    { href: "/settings", icon: Settings, label: "Ajustes" },
   ];
+
+  const handleOpenDrawer = () => {
+    window.dispatchEvent(new CustomEvent("open-mobile-drawer"));
+  };
 
   return (
     <motion.div 
@@ -31,7 +33,7 @@ export function BottomNav() {
       className="bottom-nav"
     >
       {links.map((link) => {
-        const isActive = pathname === link.href || (link.href === "/settings" && pathname.startsWith("/settings"));
+        const isActive = pathname === link.href;
         const Icon = link.icon;
         
         return (
@@ -50,6 +52,19 @@ export function BottomNav() {
           </Link>
         );
       })}
+
+      {/* Botón de Menú lateral derecho */}
+      <button 
+        onClick={handleOpenDrawer}
+        className="bottom-nav-item"
+        style={{ background: "none", border: "none", cursor: "pointer" }}
+        aria-label="Abrir menú lateral"
+      >
+        <div style={{ position: "relative" }}>
+          <Users size={24} strokeWidth={2} />
+        </div>
+        <span className="bottom-nav-label">Menú</span>
+      </button>
     </motion.div>
   );
 }
