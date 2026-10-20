@@ -25,7 +25,10 @@ export async function GET() {
 
             if (listRes.ok) {
                 const listData = await listRes.json();
-                const blobs = listData?.blobs || [];
+                const blobs: any[] = listData?.blobs || [];
+                // Ordenar por fecha de subida descendente para tomar el más reciente
+                blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+
                 if (blobs.length > 0 && blobs[0].url) {
                     const blobRes = await fetch(blobs[0].url, {
                         cache: "no-store",
