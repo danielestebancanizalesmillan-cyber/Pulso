@@ -1,8 +1,58 @@
 import { prisma } from "./prisma";
 
-const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://127.0.0.1:11435";
 const MODEL_NAME = process.env.OLLAMA_MODEL || "gemma4:e2b";
 const OLLAMA_AUTH_TOKEN = process.env.OLLAMA_AUTH_TOKEN || process.env.PULSAI_GATEWAY_TOKEN || "";
+const OLLAMA_HOST_FALLBACK = process.env.OLLAMA_HOST || "http://127.0.0.1:11435";
+
+// ── URL dinámica del túnel (se actualiza automáticamente) ──────────────────
+let _tunnelUrlCache: { url: string; fetchedAt: number } | null = null;
+const TUNNEL_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+async function resolveGatewayUrl(): Promise<string> {
+  const now = Date.now();
+
+  // Usar caché si está fresca
+  if (_tunnelUrlCache && now - _tunnelUrlCache.fetchedAt < TUNNEL_CACHE_TTL) {
+    return _tunnelUrlCache.url;
+  }
+
+  const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+  if (blobToken) {
+    try {
+      // Listar blobs con prefijo "pulsai-tunnel-url" para encontrar el archivo actual
+      const listRes = await fetch("https://blob.vercel-storage.com?prefix=pulsai-tunnel-url&limit=1", {
+        headers: { Authorization: `Bearer ${blobToken}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(4000),
+      } as any);
+
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        const blobs = listData?.blobs || [];
+        if (blobs.length > 0 && blobs[0].url) {
+          // Leer el contenido del blob encontrado
+          const blobRes = await fetch(blobs[0].url, {
+            cache: "no-store",
+            signal: AbortSignal.timeout(4000),
+          } as any);
+          if (blobRes.ok) {
+            const data = await blobRes.json();
+            if (data?.url && typeof data.url === "string" && data.url.startsWith("https://")) {
+              _tunnelUrlCache = { url: data.url, fetchedAt: now };
+              console.log(`[PulsAI] Gateway URL dinámica: ${data.url}`);
+              return data.url;
+            }
+          }
+        }
+      }
+    } catch (e: any) {
+      console.warn("[PulsAI] No se pudo leer la URL del túnel desde Blob:", e.message);
+    }
+  }
+
+  // Fallback: usar la variable de entorno
+  return OLLAMA_HOST_FALLBACK;
+}
 
 /**
  * REGLAS CORE DE PulsAI
@@ -66,6 +116,8 @@ export async function getOllamaResponse(messages: any[], formatJson: boolean = t
         const enforceJson = formatJson && !targetModel.includes('0.5b');
         
         let response;
+        // Resolver URL dinámica del túnel una vez por llamada (usa caché interna)
+        const gatewayUrl = await resolveGatewayUrl();
         for (let attempt = 1; attempt <= 3; attempt++) {
             try {
                 const headers: Record<string, string> = {
@@ -75,7 +127,7 @@ export async function getOllamaResponse(messages: any[], formatJson: boolean = t
                 if (OLLAMA_AUTH_TOKEN) {
                     headers["Authorization"] = `Bearer ${OLLAMA_AUTH_TOKEN}`;
                 }
-                response = await fetch(`${OLLAMA_HOST}/api/chat`, {
+                response = await fetch(`${gatewayUrl}/api/chat`, {
                     method: "POST",
                     headers,
                     body: JSON.stringify({
