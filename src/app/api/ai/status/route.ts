@@ -1,46 +1,74 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 
-const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://127.0.0.1:11435";
-const OLLAMA_AUTH_TOKEN = process.env.OLLAMA_AUTH_TOKEN || process.env.PULSAI_GATEWAY_TOKEN || "";
-const TIMEOUT_MS = 5000; // 5 segundos max para no bloquear la UI
+const TIMEOUT_MS = 5000;
 
+/**
+ * GET /api/ai/status
+ * Comprueba si el gateway de PulsAI está disponible.
+ * El frontend lo llama cada 15s para mostrar el indicador de estado.
+ * Usa la URL dinámica del túnel (desde Vercel Blob) con fallback a OLLAMA_HOST.
+ */
 export async function GET() {
+    const token = process.env.PULSAI_GATEWAY_TOKEN || process.env.OLLAMA_AUTH_TOKEN || "";
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+    const fallbackHost = process.env.OLLAMA_HOST || "http://127.0.0.1:11435";
+
+    // 1. Resolver URL activa del gateway (Vercel Blob → fallback env)
+    let gatewayUrl = fallbackHost;
+    if (blobToken) {
+        try {
+            const listRes = await fetch("https://blob.vercel-storage.com?prefix=pulsai-tunnel-url&limit=1", {
+                headers: { Authorization: `Bearer ${blobToken}` },
+                cache: "no-store",
+                signal: AbortSignal.timeout(3000),
+            } as any);
+
+            if (listRes.ok) {
+                const listData = await listRes.json();
+                const blobs = listData?.blobs || [];
+                if (blobs.length > 0 && blobs[0].url) {
+                    const blobRes = await fetch(blobs[0].url, {
+                        cache: "no-store",
+                        signal: AbortSignal.timeout(3000),
+                    } as any);
+                    if (blobRes.ok) {
+                        const data = await blobRes.json();
+                        if (data?.url && typeof data.url === "string" && data.url.startsWith("https://")) {
+                            gatewayUrl = data.url;
+                        }
+                    }
+                }
+            }
+        } catch {
+            // Blob no disponible — usar fallback
+        }
+    }
+
+    // 2. Consultar /api/health del gateway
     try {
-        const session = await auth();
-        if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const headers: Record<string, string> = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
 
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-        const headers: Record<string, string> = {
-            "Content-Type": "application/json"
-        };
-        if (OLLAMA_AUTH_TOKEN) {
-            headers["Authorization"] = `Bearer ${OLLAMA_AUTH_TOKEN}`;
-        }
-
-        const res = await fetch(`${OLLAMA_HOST}/api/health`, {
-            method: "GET",
+        const res = await fetch(`${gatewayUrl}/api/health`, {
             headers,
-            signal: controller.signal
-        });
-
-        clearTimeout(timer);
+            cache: "no-store",
+            signal: AbortSignal.timeout(TIMEOUT_MS),
+        } as any);
 
         if (!res.ok) {
-            return NextResponse.json({ status: "offline" });
+            return NextResponse.json({ status: "offline", reason: `Gateway HTTP ${res.status}` }, { status: 200 });
         }
 
-        const data = await res.json().catch(() => ({}));
-        if (data.status === "online") {
-            return NextResponse.json({ status: "online" });
+        const data = await res.json();
+        if (data?.status === "online") {
+            return NextResponse.json({ status: "online", model: data.model || "gemma4:e2b", gateway: gatewayUrl });
         }
 
-        return NextResponse.json({ status: "offline" });
-    } catch {
-        return NextResponse.json({ status: "offline" });
+        return NextResponse.json({ status: "offline", reason: data?.reason || "Gateway no disponible" });
+    } catch (e: any) {
+        return NextResponse.json(
+            { status: "offline", reason: e.message || "No se puede conectar al gateway" },
+            { status: 200 }
+        );
     }
 }
