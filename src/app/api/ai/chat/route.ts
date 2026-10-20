@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         ];
 
         // Usar el motor unificado de PulsAI con actualizaciones en tiempo real via Pusher
-        const { response: finalResponse, sources: usedSources } = await runPulsAIEngine(
+        const { response: finalResponse, thinking: finalThinking, sources: usedSources } = await runPulsAIEngine(
             messages, 
             false, 
             async (stepText) => {
@@ -67,9 +67,12 @@ export async function POST(req: NextRequest) {
         if (chatId) {
             const chatExists = await prisma.aIChat.findUnique({ where: { id: chatId } });
             if (chatExists) {
-                const dbContent = (usedSources && usedSources.length > 0) 
-                    ? JSON.stringify({ type: "rich_message", text: finalResponse || "No pude generar una respuesta.", sources: usedSources })
-                    : (finalResponse || "No pude generar una respuesta.");
+                const dbContent = JSON.stringify({ 
+                    type: "rich_message", 
+                    text: finalResponse || "No pude generar una respuesta.", 
+                    thinking: finalThinking,
+                    sources: usedSources 
+                });
                     
                 await prisma.aIMessage.create({ 
                     data: { 
@@ -81,7 +84,11 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        return NextResponse.json({ response: finalResponse, sources: usedSources });
+        return NextResponse.json({ 
+            response: finalResponse, 
+            thinking: finalThinking,
+            sources: usedSources 
+        });
 
 
     } catch (error: any) {

@@ -518,10 +518,18 @@ export async function runPulsAIEngine(messages: any[], isFeed: boolean = false, 
                  finalResponse = answer;
             }
 
+            let thinkingText: string | undefined = undefined;
             if (finalResponse) {
-                // Limpieza agresiva de restos JSON y prefijos de instrucción de modelos pequeños
+                // Extraer el proceso de pensamiento si el modelo lo generó (<thought>, <thinking>, o secciones de razonamiento)
+                const thoughtMatch = String(finalResponse).match(/<(?:thought|thinking)>([\s\S]*?)<\/(?:thought|thinking)>/i);
+                if (thoughtMatch && thoughtMatch[1]) {
+                    thinkingText = thoughtMatch[1].trim();
+                }
+
+                // Limpieza de restos JSON y prefijos de instrucción
                 let cleaned = String(finalResponse);
                 cleaned = cleaned
+                    .replace(/<(?:thought|thinking)>[\s\S]*?<\/(?:thought|thinking)>/gi, "")
                     .replace(/```json/gi, "")
                     .replace(/```/g, "")
                     .replace(/\{\s*"action"\s*:[^}]+\}\s*/gi, "")
@@ -532,7 +540,6 @@ export async function runPulsAIEngine(messages: any[], isFeed: boolean = false, 
                     .replace(/^Como una IA de élite,\s*/i, "")
                     .replace(/\\n/g, "\n")
                     .replace(/\\"/g, '"')
-                    .replace(/<thinking>[\s\S]*?<\/thinking>/gi, "")
                     .replace(/["\}]+$/, "") // Limpiar basura al final
                     .trim();
 
@@ -555,6 +562,7 @@ export async function runPulsAIEngine(messages: any[], isFeed: boolean = false, 
                 
                 if (finalResponse) {
                     finalResponse = String(finalResponse)
+                        .replace(/<(?:thought|thinking)>[\s\S]*?<\/(?:thought|thinking)>/gi, "")
                         .replace(/```json/gi, "")
                         .replace(/```/g, "")
                         .replace(/\{\s*"action"\s*:[^}]+\}\s*/gi, "")
@@ -578,7 +586,11 @@ export async function runPulsAIEngine(messages: any[], isFeed: boolean = false, 
                 continue;
             }
 
-            return { response: finalResponse, sources: Array.from(sourcesMap.values()) };
+            return { 
+                response: finalResponse, 
+                thinking: thinkingText,
+                sources: Array.from(sourcesMap.values()) 
+            };
         }
 
         // Ejecución de Herramientas

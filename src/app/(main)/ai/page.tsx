@@ -2,13 +2,18 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Plus, MessageSquare, Trash2, ChevronLeft, Sparkles, Bot, Wifi, WifiOff, Loader2 } from "lucide-react";
+import { Send, Plus, MessageSquare, Trash2, ChevronLeft, Sparkles, Bot, Wifi, WifiOff, Loader2, Brain, ChevronDown, ChevronRight } from "lucide-react";
 import { useSession } from "next-auth/react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+import { pusherClient } from "@/lib/pusher-client";
 
 interface Message {
     id?: string;
     role: "user" | "assistant";
     content: string;
+    thinking?: string;
     sender?: "user" | "pulsai";
     text?: string;
 }
@@ -29,6 +34,8 @@ export default function PulsAIPage() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState("");
     const [loading, setLoading] = useState(false);
+    const [currentStep, setCurrentStep] = useState<string | null>(null);
+    const [openThinkingMap, setOpenThinkingMap] = useState<Record<number, boolean>>({});
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
     const [status, setStatus] = useState<ServiceStatus>("checking");
@@ -97,10 +104,29 @@ export default function PulsAIPage() {
         loadChats();
     }, [session]);
 
+    // Suscribirse a los pasos de pensamiento en tiempo real de Pusher
+    useEffect(() => {
+        if (!currentChatId) return;
+
+        const channelName = `ai-chat-${currentChatId}`;
+        const channel = pusherClient.subscribe(channelName);
+
+        channel.bind("ai-step", (data: { step: string }) => {
+            if (data?.step) {
+                setCurrentStep(data.step);
+            }
+        });
+
+        return () => {
+            channel.unbind("ai-step");
+            pusherClient.unsubscribe(channelName);
+        };
+    }, [currentChatId]);
+
     // Auto scroll
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+    }, [messages, currentStep]);
 
     // Crear nuevo chat
     const createNewChat = async () => {
@@ -136,18 +162,26 @@ export default function PulsAIPage() {
                 const data = await res.json();
                 const formattedMessages = data.messages.map((m: any) => {
                     let content = m.content;
+                    let thinking: string | undefined = undefined;
                     try {
                         const parsed = JSON.parse(m.content);
                         if (parsed.type === "rich_message") {
                             content = parsed.text;
+                            thinking = parsed.thinking;
                         }
                     } catch {
-                        // No es JSON
+                        // Si viene en texto plano pero contiene tags <thought> o <thinking>
+                        const thoughtMatch = String(content).match(/<(?:thought|thinking)>([\s\S]*?)<\/(?:thought|thinking)>/i);
+                        if (thoughtMatch && thoughtMatch[1]) {
+                            thinking = thoughtMatch[1].trim();
+                            content = content.replace(/<(?:thought|thinking)>[\s\S]*?<\/(?:thought|thinking)>/gi, "").trim();
+                        }
                     }
                     return {
                         id: m.id,
                         role: m.role,
-                        content: content
+                        content: content,
+                        thinking: thinking
                     };
                 });
                 setMessages(formattedMessages);
@@ -203,7 +237,8 @@ export default function PulsAIPage() {
                 const data = await res.json();
                 const assistantMessage: Message = {
                     role: "assistant",
-                    content: data.response || "No pude generar una respuesta."
+                    content: data.response || "No pude generar una respuesta.",
+                    thinking: data.thinking
                 };
                 setMessages(prev => [...prev, assistantMessage]);
             } else {
@@ -235,6 +270,7 @@ export default function PulsAIPage() {
             checkStatus();
         } finally {
             setLoading(false);
+            setCurrentStep(null);
         }
     };
 
@@ -646,12 +682,70 @@ export default function PulsAIPage() {
                                     fontSize: "0.95rem",
                                     border: msg.role === "assistant" ? "1px solid var(--border-color)" : "none"
                                 }}>
-                                    {msg.content.split('\n').map((line, i) => (
-                                        <span key={i}>
-                                            {line}
-                                            {i !== msg.content.split('\n').length - 1 && <br />}
-                                        </span>
-                                    ))}
+                                    {/* Proceso de Pensamiento Desplegable (si el modelo pensó) */}
+                                    {msg.role === "assistant" && msg.thinking && (
+                                        <div style={{
+                                            marginBottom: "12px",
+                                            background: "rgba(255, 255, 255, 0.04)",
+                                            border: "1px solid var(--border-color)",
+                                            borderRadius: "10px",
+                                            overflow: "hidden"
+                                        }}>
+                                            <button
+                                                onClick={() => setOpenThinkingMap(prev => ({ ...prev, [index]: !prev[index] }))}
+                                                style={{
+                                                    width: "100%",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "space-between",
+                                                    padding: "8px 12px",
+                                                    background: "transparent",
+                                                    border: "none",
+                                                    color: "var(--text-secondary)",
+                                                    fontSize: "0.8rem",
+                                                    fontWeight: 600,
+                                                    cursor: "pointer"
+                                                }}
+                                            >
+                                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                                    <Brain size={14} color="var(--blue)" />
+                                                    <span>Proceso de pensamiento</span>
+                                                </div>
+                                                {openThinkingMap[index] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                            </button>
+                                            {openThinkingMap[index] && (
+                                                <div style={{
+                                                    padding: "10px 12px",
+                                                    borderTop: "1px solid var(--border-color)",
+                                                    fontSize: "0.82rem",
+                                                    color: "var(--text-secondary)",
+                                                    whiteSpace: "pre-wrap",
+                                                    fontFamily: "monospace",
+                                                    background: "rgba(0, 0, 0, 0.2)",
+                                                    maxHeight: "220px",
+                                                    overflowY: "auto"
+                                                }}>
+                                                    {msg.thinking}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Contenido con soporte Markdown (negrita **, cursiva *, listas, etc.) */}
+                                    {msg.role === "user" ? (
+                                        msg.content.split('\n').map((line, i) => (
+                                            <span key={i}>
+                                                {line}
+                                                {i !== msg.content.split('\n').length - 1 && <br />}
+                                            </span>
+                                        ))
+                                    ) : (
+                                        <div className="pulsai-markdown">
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                {msg.content}
+                                            </ReactMarkdown>
+                                        </div>
+                                    )}
                                 </div>
                             </motion.div>
                         ))}
@@ -680,26 +774,32 @@ export default function PulsAIPage() {
                                 <Bot size={20} color="var(--blue)" />
                             </div>
                             <div style={{
-                                padding: "16px 20px",
+                                padding: "12px 18px",
                                 borderRadius: "20px 20px 20px 4px",
                                 background: "var(--bg-secondary)",
                                 border: "1px solid var(--border-color)",
                                 display: "flex",
-                                gap: "6px"
+                                flexDirection: "column",
+                                gap: "8px"
                             }}>
-                                {[0, 1, 2].map((i) => (
-                                    <motion.div
-                                        key={i}
-                                        animate={{ y: [0, -6, 0], opacity: [0.3, 1, 0.3] }}
-                                        transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }}
-                                        style={{
-                                            width: "8px",
-                                            height: "8px",
-                                            borderRadius: "50%",
-                                            background: "var(--blue)"
-                                        }}
-                                    />
-                                ))}
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    {[0, 1, 2].map((i) => (
+                                        <motion.div
+                                            key={i}
+                                            animate={{ y: [0, -6, 0], opacity: [0.3, 1, 0.3] }}
+                                            transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }}
+                                            style={{
+                                                width: "8px",
+                                                height: "8px",
+                                                borderRadius: "50%",
+                                                background: "var(--blue)"
+                                            }}
+                                        />
+                                    ))}
+                                    <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)", fontWeight: 500 }}>
+                                        {currentStep || "Pensando..."}
+                                    </span>
+                                </div>
                             </div>
                         </motion.div>
                     )}
