@@ -17,7 +17,7 @@ export async function GET() {
     let gatewayUrl = fallbackHost;
     if (blobToken) {
         try {
-            const listRes = await fetch("https://blob.vercel-storage.com?prefix=pulsai-tunnel-url&limit=1", {
+            const listRes = await fetch("https://blob.vercel-storage.com?prefix=pulsai-tunnel-url&limit=100", {
                 headers: { Authorization: `Bearer ${blobToken}` },
                 cache: "no-store",
                 signal: AbortSignal.timeout(3000),

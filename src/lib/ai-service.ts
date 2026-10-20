@@ -20,7 +20,7 @@ async function resolveGatewayUrl(): Promise<string> {
   if (blobToken) {
     try {
       // Listar blobs con prefijo "pulsai-tunnel-url" para encontrar el archivo actual
-      const listRes = await fetch("https://blob.vercel-storage.com?prefix=pulsai-tunnel-url&limit=1", {
+      const listRes = await fetch("https://blob.vercel-storage.com?prefix=pulsai-tunnel-url&limit=100", {
         headers: { Authorization: `Bearer ${blobToken}` },
         cache: "no-store",
         signal: AbortSignal.timeout(4000),
