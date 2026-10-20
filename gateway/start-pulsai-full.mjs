@@ -81,16 +81,33 @@ async function publishTunnelUrl(tunnelUrl) {
 // ── 2.5 Limpiar puerto si está ocupado ──────────────────────────────────────
 async function freePort(port) {
   return new Promise((resolve) => {
-    // netstat para encontrar el PID que usa el puerto
-    const ns = spawn("cmd", ["/c", `for /f "tokens=5" %a in ('netstat -aon ^| findstr ":${port} "') do taskkill /F /PID %a`], {
-      stdio: "ignore",
-      shell: false,
-    });
-    ns.on("exit", () => {
-      setTimeout(resolve, 500); // breve pausa para que el OS libere el socket
-    });
+    // Usar shell:true para que 'for /f' funcione correctamente en Windows
+    const ns = spawn(
+      `for /f "tokens=5" %a in ('netstat -aon ^| findstr ":${port} "') do taskkill /F /PID %a`,
+      [],
+      { stdio: "ignore", shell: true }
+    );
+    ns.on("exit", () => setTimeout(resolve, 800));
     ns.on("error", () => resolve());
   });
+}
+
+// Verificar si el gateway ya está respondiendo en el puerto dado
+async function isGatewayAlive(port) {
+  const token = process.env.PULSAI_GATEWAY_TOKEN || "pulsai-local-secret-key-2026";
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/health`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(2000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.status === "online";
+    }
+  } catch {
+    // silencioso
+  }
+  return false;
 }
 
 // ── 3. Arrancar el gateway local ─────────────────────────────────────────────
@@ -106,12 +123,20 @@ function startGateway() {
   child.stdin.write(gatewayCode);
   child.stdin.end();
 
-  child.on("exit", (code) => {
+  child.on("exit", async (code) => {
+    if (code === 1) {
+      // Puede ser EADDRINUSE — verificar si ya hay un gateway vivo
+      const alive = await isGatewayAlive(11435);
+      if (alive) {
+        console.log("[PulsAI Gateway] Puerto ocupado por un gateway ya activo. No se reinicia.");
+        return; // Salir sin reiniciar — el gateway existente está bien
+      }
+    }
     console.error(`[PulsAI Gateway] Proceso terminó con código ${code}. Reiniciando en 3s...`);
     setTimeout(startGateway, 3000);
   });
 
-  console.log("[PulsAI Gateway] Iniciado en http://127.0.0.1:11435 ✓");
+  console.log("[PulsAI Gateway] Proceso iniciado en http://127.0.0.1:11435");
   return child;
 }
 
@@ -177,15 +202,21 @@ async function main() {
     console.warn("[PulsAI] ⚠️  Ollama no responde en 11434. Asegúrate de que esté corriendo.");
   }
 
-  // Liberar el puerto 11435 si ya está en uso
-  console.log("[PulsAI] Liberando puerto 11435...");
-  await freePort(11435);
+  // Verificar si ya hay un gateway activo antes de intentar liberar el puerto
+  const alreadyRunning = await isGatewayAlive(11435);
+  if (alreadyRunning) {
+    console.log("[PulsAI Gateway] ✅ Gateway ya activo — reutilizando instancia existente.");
+  } else {
+    // Liberar el puerto 11435 si hay un proceso zombie/muerto ocupándolo
+    console.log("[PulsAI] Liberando puerto 11435...");
+    await freePort(11435);
 
-  // Arrancar gateway
-  startGateway();
+    // Arrancar gateway fresco
+    startGateway();
 
-  // Esperar un momento para que el gateway inicie
-  await new Promise((r) => setTimeout(r, 1500));
+    // Esperar a que el gateway inicie
+    await new Promise((r) => setTimeout(r, 2000));
+  }
 
   // Verificar gateway
   try {
