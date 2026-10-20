@@ -139,11 +139,10 @@ export async function getOllamaResponse(messages: any[], formatJson: boolean = t
                         format: enforceJson ? "json" : undefined,
                         stream: false,
                         options: {
-                            temperature: 0.5,
-                            num_predict: 1024, // Reducido para mayor velocidad y estabilidad
-                            top_k: 40,
-                            top_p: 0.9,
-                            num_ctx: 4096 // Reducido para evitar errores 500 en hardware con poca RAM
+                            temperature: 0.7,
+                            num_predict: 512,
+                            num_ctx: 2048,
+                            num_thread: 4
                         }
                     }),
                     signal: AbortSignal.timeout(600000) // 10 minutos para hardware lento
