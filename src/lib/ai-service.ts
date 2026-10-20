@@ -6,7 +6,7 @@ const OLLAMA_HOST_FALLBACK = process.env.OLLAMA_HOST || "http://127.0.0.1:11435"
 
 // ── URL dinámica del túnel (se actualiza automáticamente) ──────────────────
 let _tunnelUrlCache: { url: string; fetchedAt: number } | null = null;
-const TUNNEL_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+const TUNNEL_CACHE_TTL = 30 * 1000; // 30 segundos (refresco rápido si el túnel cambia)
 
 async function resolveGatewayUrl(): Promise<string> {
   const now = Date.now();
@@ -398,9 +398,10 @@ export async function runPulsAIEngine(
         ...otherMessages
     ];
 
-    // Si es chat conversacional o se provee onChunk en modo chat privado (sin ser feed ni requerir investigación profunda),
-    // procedemos directamente a síntesis con streaming para evitar el timeout 524 de Cloudflare (100 segundos sin bytes)
-    if ((isConversational || (!isFeed && !isResearchQuery)) && onChunk) {
+    // Si es modo chat privado (no es feed) y tenemos callback de streaming,
+    // procedemos directamente con streaming de tokens en tiempo real hacia Pusher.
+    // Esto evita bloqueos de llamadas síncronas múltiples en CPU que causan timeouts.
+    if (!isFeed && onChunk) {
         if (onStep) onStep("Generando respuesta...");
         const chatMessages = [
             { role: "system", content: `${corePrompt}\n\nIdentifícate como PulsAI. Responde en prosa elegante, directa y sofisticada usando formato Markdown (**negritas**, listas, etc.). Muestra tu proceso de pensamiento natural. NO uses formato JSON.` },
