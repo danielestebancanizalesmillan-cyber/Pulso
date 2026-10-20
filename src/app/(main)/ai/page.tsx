@@ -104,7 +104,7 @@ export default function PulsAIPage() {
         loadChats();
     }, [session]);
 
-    // Suscribirse a los pasos de pensamiento en tiempo real de Pusher
+    // Suscribirse a los pasos de pensamiento y streaming en tiempo real de Pusher
     useEffect(() => {
         if (!currentChatId) return;
 
@@ -117,8 +117,28 @@ export default function PulsAIPage() {
             }
         });
 
+        channel.bind("ai-chunk", (data: { chunk: string }) => {
+            if (data?.chunk) {
+                setMessages(prev => {
+                    const last = prev[prev.length - 1];
+                    if (last && last.role === "assistant") {
+                        return [
+                            ...prev.slice(0, -1),
+                            { ...last, content: last.content + data.chunk }
+                        ];
+                    } else {
+                        return [
+                            ...prev,
+                            { role: "assistant", content: data.chunk }
+                        ];
+                    }
+                });
+            }
+        });
+
         return () => {
             channel.unbind("ai-step");
+            channel.unbind("ai-chunk");
             pusherClient.unsubscribe(channelName);
         };
     }, [currentChatId]);
@@ -240,7 +260,13 @@ export default function PulsAIPage() {
                     content: data.response || "No pude generar una respuesta.",
                     thinking: data.thinking
                 };
-                setMessages(prev => [...prev, assistantMessage]);
+                setMessages(prev => {
+                    const last = prev[prev.length - 1];
+                    if (last && last.role === "assistant") {
+                        return [...prev.slice(0, -1), assistantMessage];
+                    }
+                    return [...prev, assistantMessage];
+                });
             } else {
                 const errorData = await res.json().catch(() => ({}));
                 

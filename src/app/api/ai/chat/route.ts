@@ -61,6 +61,13 @@ export async function POST(req: NextRequest) {
                         console.error("Pusher trigger error:", e);
                     }
                 }
+            },
+            async (chunk) => {
+                if (chatId) {
+                    try {
+                        await pusherServer.trigger(`ai-chat-${chatId}`, "ai-chunk", { chunk });
+                    } catch (e) {}
+                }
             }
         );
 

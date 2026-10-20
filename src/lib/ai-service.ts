@@ -112,11 +112,17 @@ Cita fuentes siempre que des datos específicos.
 
 
 
-export async function getOllamaResponse(messages: any[], formatJson: boolean = true, modelOverride?: string) {
+export async function getOllamaResponse(
+    messages: any[], 
+    formatJson: boolean = true, 
+    modelOverride?: string, 
+    onChunk?: (tokenText: string) => void
+) {
     try {
         const targetModel = modelOverride || MODEL_NAME;
         // Qwen 2.5 1.5B y modelos superiores manejan JSON bien si se les pide explícitamente.
         const enforceJson = formatJson && !targetModel.includes('0.5b');
+        const isStreaming = Boolean(onChunk);
         
         let response;
         // Resolver URL dinámica del túnel una vez por llamada (usa caché interna)
@@ -124,8 +130,7 @@ export async function getOllamaResponse(messages: any[], formatJson: boolean = t
         for (let attempt = 1; attempt <= 3; attempt++) {
             try {
                 const headers: Record<string, string> = {
-                    "Content-Type": "application/json",
-                    "Connection": "close"
+                    "Content-Type": "application/json"
                 };
                 if (OLLAMA_AUTH_TOKEN) {
                     headers["Authorization"] = `Bearer ${OLLAMA_AUTH_TOKEN}`;
@@ -137,15 +142,15 @@ export async function getOllamaResponse(messages: any[], formatJson: boolean = t
                         model: targetModel,
                         messages,
                         format: enforceJson ? "json" : undefined,
-                        stream: false,
+                        stream: isStreaming,
                         options: {
                             temperature: 0.7,
-                            num_predict: 192,
-                            num_ctx: 1024,
+                            num_predict: 1024,
+                            num_ctx: 8192,
                             num_thread: 4
                         }
                     }),
-                    signal: AbortSignal.timeout(600000) // 10 minutos para hardware lento
+                    signal: AbortSignal.timeout(600000) // 10 minutos
                 });
                 break; // Salió bien, rompemos el bucle
             } catch(fetchErr: any) {
@@ -163,6 +168,51 @@ export async function getOllamaResponse(messages: any[], formatJson: boolean = t
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Ollama API Error (${response.status}): ${errorText || response.statusText}`);
+        }
+
+        // Si se solicitó streaming, leemos chunks NDJSON
+        if (isStreaming && response.body) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let accumulatedContent = "";
+            let buffer = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop() || "";
+
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed) continue;
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        const chunkToken = parsed.message?.content || "";
+                        if (chunkToken) {
+                            accumulatedContent += chunkToken;
+                            onChunk!(chunkToken);
+                        }
+                    } catch {
+                        // ignora líneas intermedias no JSON
+                    }
+                }
+            }
+
+            if (buffer.trim()) {
+                try {
+                    const parsed = JSON.parse(buffer.trim());
+                    const chunkToken = parsed.message?.content || "";
+                    if (chunkToken) {
+                        accumulatedContent += chunkToken;
+                        onChunk!(chunkToken);
+                    }
+                } catch {}
+            }
+
+            return accumulatedContent;
         }
 
         const data = await response.json();
@@ -249,7 +299,12 @@ export async function getThreadContext(tweetId: string) {
  * MOTOR UNIFICADO DE PulsAI
  * Ejecuta el bucle de herramientas (search_internet, etc.) y devuelve la respuesta final.
  */
-export async function runPulsAIEngine(messages: any[], isFeed: boolean = false, onStep?: (step: string) => void) {
+export async function runPulsAIEngine(
+    messages: any[], 
+    isFeed: boolean = false, 
+    onStep?: (step: string) => void,
+    onChunk?: (chunk: string) => void
+) {
     const AI_STEPS = {
         search_internet: [
             "Investigando en internet...",
@@ -505,7 +560,7 @@ export async function runPulsAIEngine(messages: any[], isFeed: boolean = false, 
                     { role: "user", content: lastUserText }
                  ];
 
-                 const synthesisResponse = await getOllamaResponse(synthesisMessages, false, MODEL_NAME);
+                 const synthesisResponse = await getOllamaResponse(synthesisMessages, false, MODEL_NAME, onChunk);
                  
                  try {
                     const cleanSynth = synthesisResponse.replace(/```json|```/g, "").trim();
