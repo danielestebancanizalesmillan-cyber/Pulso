@@ -190,10 +190,15 @@ export async function getOllamaResponse(
                     if (!trimmed) continue;
                     try {
                         const parsed = JSON.parse(trimmed);
-                        const chunkToken = parsed.message?.content || "";
-                        if (chunkToken) {
-                            accumulatedContent += chunkToken;
-                            onChunk!(chunkToken);
+                        const thinkingToken = parsed.message?.thinking || "";
+                        const contentToken = parsed.message?.content || "";
+                        if (thinkingToken) {
+                            accumulatedContent += `<thought>${thinkingToken}</thought>`;
+                            onChunk!(thinkingToken);
+                        }
+                        if (contentToken) {
+                            accumulatedContent += contentToken;
+                            onChunk!(contentToken);
                         }
                     } catch {
                         // ignora líneas intermedias no JSON
@@ -204,10 +209,15 @@ export async function getOllamaResponse(
             if (buffer.trim()) {
                 try {
                     const parsed = JSON.parse(buffer.trim());
-                    const chunkToken = parsed.message?.content || "";
-                    if (chunkToken) {
-                        accumulatedContent += chunkToken;
-                        onChunk!(chunkToken);
+                    const thinkingToken = parsed.message?.thinking || "";
+                    const contentToken = parsed.message?.content || "";
+                    if (thinkingToken) {
+                        accumulatedContent += `<thought>${thinkingToken}</thought>`;
+                        onChunk!(thinkingToken);
+                    }
+                    if (contentToken) {
+                        accumulatedContent += contentToken;
+                        onChunk!(contentToken);
                     }
                 } catch {}
             }
@@ -368,41 +378,15 @@ export async function runPulsAIEngine(
     if (onStep && !isConversational) {
         onStep("Analizando petición...");
     }
-    // ── RAZONAMIENTO INTERNO (Chain of Thought - PulsAI 5.0) ───────────────
-    let reasoningContext = "";
-    if (isResearchQuery) {
-        try {
-            const reasoningMessages = [
-                { role: "system", content: "Eres el núcleo de razonamiento de PulsAI. Tu misión es generar una consulta de búsqueda OPTIMIZADA. Ignora las menciones (como @PulsAI) y NO incluyas el nombre del usuario que pregunta en la búsqueda a menos que la pregunta sea específicamente SOBRE esa persona. Responde solo con el texto de la búsqueda." },
-                { role: "user", content: lastUserText }
-            ];
-            reasoningContext = await getOllamaResponse(reasoningMessages, false, MODEL_NAME);
-            // Limpieza extra: quitar comillas y menciones si el modelo las incluyó
-            reasoningContext = reasoningContext.replace(/["']/g, "").replace(/@\w+/g, "").trim();
-            console.log(`[PulsAI CoT Search Query] ${reasoningContext}`);
-        } catch (e) {
-            console.warn("[PulsAI CoT] Falló el razonamiento previo, continuando normal.");
-        }
-    }
-    // ───────────────────────────────────────────────────────────────────────
 
-    const existingSystemMessages = messages.filter(m => m.role === "system");
-    const otherMessages = messages.filter(m => m.role !== "system");
-    
-    const activeMessages = [
-        { role: "system", content: corePrompt },
-        { role: "system", content: `CONTEXTO TEMPORAL: Hoy es ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}. Hora: ${new Date().toLocaleTimeString('es-ES')}.` },
-        ...(reasoningContext ? [{ role: "system", content: `ANÁLISIS DE MISIÓN: ${reasoningContext}` }] : []),
-        ...(isConversational ? [{ role: "system", content: "MODO CONVERSACIONAL: Identifícate como PulsAI en primera persona. Sé breve, elegante y directo. DEBES RESPONDER EN FORMATO JSON EXACTO: {\"action\":\"respond\", \"answer\":\"Tu respuesta aquí\"}. NO realices investigación." }] : []),
-        ...existingSystemMessages,
-        ...otherMessages
-    ];
-
-    // Si es modo chat privado (no es feed) y tenemos callback de streaming,
-    // procedemos directamente con streaming de tokens en tiempo real hacia Pusher.
-    // Esto evita bloqueos de llamadas síncronas múltiples en CPU que causan timeouts.
+    // ── MODO CHAT PRIVADO DIRECTO (STREAMING INMEDIATO) ────────────────────
+    // En conversaciones de chat privadas (onChunk presente), transmitimos directamente
+    // con streaming para evitar la latencia síncrona de 100s que provoca el corte 524 de Cloudflare.
     if (!isFeed && onChunk) {
         if (onStep) onStep("Generando respuesta...");
+        const existingSystemMessages = messages.filter(m => m.role === "system");
+        const otherMessages = messages.filter(m => m.role !== "system");
+
         const chatMessages = [
             { role: "system", content: `${corePrompt}\n\nIdentifícate como PulsAI. Responde en prosa elegante, directa y sofisticada usando formato Markdown (**negritas**, listas, etc.). Muestra tu proceso de pensamiento natural. NO uses formato JSON.` },
             { role: "system", content: `CONTEXTO TEMPORAL: Hoy es ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}. Hora: ${new Date().toLocaleTimeString('es-ES')}.` },
@@ -437,6 +421,36 @@ export async function runPulsAIEngine(
             sources: []
         };
     }
+
+    // ── RAZONAMIENTO INTERNO (Chain of Thought - PulsAI 5.0) ───────────────
+    let reasoningContext = "";
+    if (isResearchQuery) {
+        try {
+            const reasoningMessages = [
+                { role: "system", content: "Eres el núcleo de razonamiento de PulsAI. Tu misión es generar una consulta de búsqueda OPTIMIZADA. Ignora las menciones (como @PulsAI) y NO incluyas el nombre del usuario que pregunta en la búsqueda a menos que la pregunta sea específicamente SOBRE esa persona. Responde solo con el texto de la búsqueda." },
+                { role: "user", content: lastUserText }
+            ];
+            reasoningContext = await getOllamaResponse(reasoningMessages, false, MODEL_NAME);
+            // Limpieza extra: quitar comillas y menciones si el modelo las incluyó
+            reasoningContext = reasoningContext.replace(/["']/g, "").replace(/@\w+/g, "").trim();
+            console.log(`[PulsAI CoT Search Query] ${reasoningContext}`);
+        } catch (e) {
+            console.warn("[PulsAI CoT] Falló el razonamiento previo, continuando normal.");
+        }
+    }
+    // ───────────────────────────────────────────────────────────────────────
+
+    const existingSystemMessages = messages.filter(m => m.role === "system");
+    const otherMessages = messages.filter(m => m.role !== "system");
+    
+    const activeMessages = [
+        { role: "system", content: corePrompt },
+        { role: "system", content: `CONTEXTO TEMPORAL: Hoy es ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}. Hora: ${new Date().toLocaleTimeString('es-ES')}.` },
+        ...(reasoningContext ? [{ role: "system", content: `ANÁLISIS DE MISIÓN: ${reasoningContext}` }] : []),
+        ...(isConversational ? [{ role: "system", content: "MODO CONVERSACIONAL: Identifícate como PulsAI en primera persona. Sé breve, elegante y directo. DEBES RESPONDER EN FORMATO JSON EXACTO: {\"action\":\"respond\", \"answer\":\"Tu respuesta aquí\"}. NO realices investigación." }] : []),
+        ...existingSystemMessages,
+        ...otherMessages
+    ];
 
     while (loopCount < maxLoops) {
         loopCount++;

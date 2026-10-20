@@ -103,8 +103,10 @@ const server = http.createServer((req, res) => {
             return res.end(JSON.stringify({ error: "Bad Request: 'model' and 'messages' array required" }));
         }
 
-        // Enforzar estrictamente gemma4:e2b
+        // Enforzar estrictamente gemma4:e2b y mantener cargado en memoria RAM (keep_alive: -1)
+        // para que no tarde 120s en recargarse del disco en cada petición
         parsed.model = "gemma4:e2b";
+        parsed.keep_alive = -1;
         const isStreaming = Boolean(parsed.stream);
         const forwardBody = JSON.stringify(parsed);
 
