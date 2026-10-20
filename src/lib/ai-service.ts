@@ -140,8 +140,8 @@ export async function getOllamaResponse(messages: any[], formatJson: boolean = t
                         stream: false,
                         options: {
                             temperature: 0.7,
-                            num_predict: 512,
-                            num_ctx: 2048,
+                            num_predict: 192,
+                            num_ctx: 1024,
                             num_thread: 4
                         }
                     }),
