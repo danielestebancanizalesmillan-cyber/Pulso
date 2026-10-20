@@ -72,4 +72,4 @@ compile.log
 compile_auth.log
 *.mjs
 *.tsbuildinfo
-
+cloudflared.exe

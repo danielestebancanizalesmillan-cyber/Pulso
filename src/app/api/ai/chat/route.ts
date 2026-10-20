@@ -86,10 +86,15 @@ export async function POST(req: NextRequest) {
 
     } catch (error: any) {
         console.error("[PulsAI Chat Error]:", error);
+        const isOffline = error.message?.includes("fetch failed") || error.message?.includes("ECONNREFUSED") || error.message?.includes("Gateway Timeout");
+        const userFriendlyMessage = isOffline
+            ? "El servicio local de PulsAI no responde o el ordenador está apagado/desconectado."
+            : `Error en PulsAI: ${error.message}`;
+
         return NextResponse.json({ 
-            error: "Error en PulsAI",
+            error: userFriendlyMessage,
             details: error.message 
-        }, { status: 500 });
+        }, { status: 503 });
     }
 }
 

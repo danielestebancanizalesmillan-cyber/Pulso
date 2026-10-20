@@ -1,7 +1,8 @@
 import { prisma } from "./prisma";
 
-const OLLAMA_HOST = process.env.OLLAMA_HOST || "https://jeopardous-phuong-temptedly.ngrok-free.dev";
-const MODEL_NAME = process.env.OLLAMA_MODEL || "gemma2:2b";
+const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://127.0.0.1:11435";
+const MODEL_NAME = process.env.OLLAMA_MODEL || "gemma4:e2b";
+const OLLAMA_AUTH_TOKEN = process.env.OLLAMA_AUTH_TOKEN || process.env.PULSAI_GATEWAY_TOKEN || "";
 
 /**
  * REGLAS CORE DE PulsAI
@@ -67,13 +68,16 @@ export async function getOllamaResponse(messages: any[], formatJson: boolean = t
         let response;
         for (let attempt = 1; attempt <= 3; attempt++) {
             try {
+                const headers: Record<string, string> = {
+                    "Content-Type": "application/json",
+                    "Connection": "close"
+                };
+                if (OLLAMA_AUTH_TOKEN) {
+                    headers["Authorization"] = `Bearer ${OLLAMA_AUTH_TOKEN}`;
+                }
                 response = await fetch(`${OLLAMA_HOST}/api/chat`, {
                     method: "POST",
-                    headers: { 
-                        "Content-Type": "application/json",
-                        "Connection": "close",
-                        "ngrok-skip-browser-warning": "true"
-                    },
+                    headers,
                     body: JSON.stringify({
                         model: targetModel,
                         messages,
