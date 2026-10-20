@@ -314,6 +314,10 @@ img {
   }
 }
 
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
 @keyframes heartBeat {
   0% {
     transform: scale(1);

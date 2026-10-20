@@ -116,7 +116,8 @@ export async function getOllamaResponse(
     messages: any[], 
     formatJson: boolean = true, 
     modelOverride?: string, 
-    onChunk?: (tokenText: string) => void
+    onChunk?: (tokenText: string) => void,
+    onThinkingChunk?: (tokenText: string) => void
 ) {
     try {
         const targetModel = modelOverride || MODEL_NAME;
@@ -194,7 +195,9 @@ export async function getOllamaResponse(
                         const contentToken = parsed.message?.content || "";
                         if (thinkingToken) {
                             accumulatedContent += `<thought>${thinkingToken}</thought>`;
-                            onChunk!(thinkingToken);
+                            if (onThinkingChunk) {
+                                onThinkingChunk(thinkingToken);
+                            }
                         }
                         if (contentToken) {
                             accumulatedContent += contentToken;
@@ -213,7 +216,9 @@ export async function getOllamaResponse(
                     const contentToken = parsed.message?.content || "";
                     if (thinkingToken) {
                         accumulatedContent += `<thought>${thinkingToken}</thought>`;
-                        onChunk!(thinkingToken);
+                        if (onThinkingChunk) {
+                            onThinkingChunk(thinkingToken);
+                        }
                     }
                     if (contentToken) {
                         accumulatedContent += contentToken;
@@ -313,7 +318,8 @@ export async function runPulsAIEngine(
     messages: any[], 
     isFeed: boolean = false, 
     onStep?: (step: string) => void,
-    onChunk?: (chunk: string) => void
+    onChunk?: (chunk: string) => void,
+    onThinkingChunk?: (chunk: string) => void
 ) {
     const AI_STEPS = {
         search_internet: [
@@ -394,7 +400,7 @@ export async function runPulsAIEngine(
             ...otherMessages
         ];
 
-        const streamResponse = await getOllamaResponse(chatMessages, false, MODEL_NAME, onChunk);
+        const streamResponse = await getOllamaResponse(chatMessages, false, MODEL_NAME, onChunk, onThinkingChunk);
         let thinkingText: string | undefined = undefined;
         let finalResponse = streamResponse;
 

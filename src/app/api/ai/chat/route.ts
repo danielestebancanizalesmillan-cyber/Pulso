@@ -71,6 +71,13 @@ export async function POST(req: NextRequest) {
                         await pusherServer.trigger(`ai-chat-${chatId}`, "ai-chunk", { chunk });
                     } catch (e) {}
                 }
+            },
+            async (thinkingChunk) => {
+                if (chatId) {
+                    try {
+                        await pusherServer.trigger(`ai-chat-${chatId}`, "ai-thinking-chunk", { chunk: thinkingChunk });
+                    } catch (e) {}
+                }
             }
         );
 

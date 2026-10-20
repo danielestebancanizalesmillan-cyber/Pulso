@@ -136,9 +136,30 @@ export default function PulsAIPage() {
             }
         });
 
+        // Thinking tokens llegan por un canal separado para no mezclarse con el contenido
+        channel.bind("ai-thinking-chunk", (data: { chunk: string }) => {
+            if (data?.chunk) {
+                setMessages(prev => {
+                    const last = prev[prev.length - 1];
+                    if (last && last.role === "assistant") {
+                        return [
+                            ...prev.slice(0, -1),
+                            { ...last, thinking: (last.thinking || "") + data.chunk }
+                        ];
+                    } else {
+                        return [
+                            ...prev,
+                            { role: "assistant", content: "", thinking: data.chunk }
+                        ];
+                    }
+                });
+            }
+        });
+
         return () => {
             channel.unbind("ai-step");
             channel.unbind("ai-chunk");
+            channel.unbind("ai-thinking-chunk");
             pusherClient.unsubscribe(channelName);
         };
     }, [currentChatId]);
@@ -709,53 +730,81 @@ export default function PulsAIPage() {
                                     border: msg.role === "assistant" ? "1px solid var(--border-color)" : "none"
                                 }}>
                                     {/* Proceso de Pensamiento Desplegable (si el modelo pensó) */}
-                                    {msg.role === "assistant" && msg.thinking && (
-                                        <div style={{
-                                            marginBottom: "12px",
-                                            background: "rgba(255, 255, 255, 0.04)",
-                                            border: "1px solid var(--border-color)",
-                                            borderRadius: "10px",
-                                            overflow: "hidden"
-                                        }}>
-                                            <button
-                                                onClick={() => setOpenThinkingMap(prev => ({ ...prev, [index]: !prev[index] }))}
-                                                style={{
-                                                    width: "100%",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "space-between",
-                                                    padding: "8px 12px",
-                                                    background: "transparent",
-                                                    border: "none",
-                                                    color: "var(--text-secondary)",
-                                                    fontSize: "0.8rem",
-                                                    fontWeight: 600,
-                                                    cursor: "pointer"
-                                                }}
-                                            >
-                                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                                    <Brain size={14} color="var(--blue)" />
-                                                    <span>Proceso de pensamiento</span>
-                                                </div>
-                                                {openThinkingMap[index] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                                            </button>
-                                            {openThinkingMap[index] && (
-                                                <div style={{
-                                                    padding: "10px 12px",
-                                                    borderTop: "1px solid var(--border-color)",
-                                                    fontSize: "0.82rem",
-                                                    color: "var(--text-secondary)",
-                                                    whiteSpace: "pre-wrap",
-                                                    fontFamily: "monospace",
-                                                    background: "rgba(0, 0, 0, 0.2)",
-                                                    maxHeight: "220px",
-                                                    overflowY: "auto"
-                                                }}>
-                                                    {msg.thinking}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
+                                    {msg.role === "assistant" && msg.thinking && (() => {
+                                        const isCurrentlyThinking = loading && index === messages.length - 1 && !msg.content;
+                                        const isOpen = openThinkingMap[index] ?? isCurrentlyThinking;
+                                        return (
+                                            <div style={{
+                                                marginBottom: msg.content ? "12px" : "0",
+                                                background: isCurrentlyThinking 
+                                                    ? "linear-gradient(135deg, rgba(29, 155, 240, 0.06), rgba(139, 92, 246, 0.06))"
+                                                    : "rgba(255, 255, 255, 0.04)",
+                                                border: `1px solid ${isCurrentlyThinking ? "rgba(29, 155, 240, 0.2)" : "var(--border-color)"}`,
+                                                borderRadius: "10px",
+                                                overflow: "hidden",
+                                                transition: "all 0.3s ease"
+                                            }}>
+                                                <button
+                                                    onClick={() => setOpenThinkingMap(prev => ({ ...prev, [index]: !isOpen }))}
+                                                    style={{
+                                                        width: "100%",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "space-between",
+                                                        padding: "8px 12px",
+                                                        background: "transparent",
+                                                        border: "none",
+                                                        color: isCurrentlyThinking ? "var(--blue)" : "var(--text-secondary)",
+                                                        fontSize: "0.8rem",
+                                                        fontWeight: 600,
+                                                        cursor: "pointer"
+                                                    }}
+                                                >
+                                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                                        <Brain 
+                                                            size={14} 
+                                                            color="var(--blue)" 
+                                                            style={isCurrentlyThinking ? {
+                                                                animation: "pulse 1.5s ease-in-out infinite"
+                                                            } : undefined}
+                                                        />
+                                                        <span>{isCurrentlyThinking ? "Pensando en tiempo real..." : "Proceso de pensamiento"}</span>
+                                                    </div>
+                                                    {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                                </button>
+                                                {isOpen && (
+                                                    <div style={{
+                                                        padding: "10px 12px",
+                                                        borderTop: `1px solid ${isCurrentlyThinking ? "rgba(29, 155, 240, 0.15)" : "var(--border-color)"}`,
+                                                        fontSize: "0.82rem",
+                                                        color: "var(--text-secondary)",
+                                                        whiteSpace: "pre-wrap",
+                                                        fontFamily: "'SF Mono', 'Fira Code', monospace",
+                                                        background: isCurrentlyThinking 
+                                                            ? "rgba(29, 155, 240, 0.03)"
+                                                            : "rgba(0, 0, 0, 0.2)",
+                                                        maxHeight: "280px",
+                                                        overflowY: "auto",
+                                                        lineHeight: "1.5"
+                                                    }}>
+                                                        {msg.thinking}
+                                                        {isCurrentlyThinking && (
+                                                            <span style={{ 
+                                                                display: "inline-block",
+                                                                width: "6px",
+                                                                height: "14px",
+                                                                background: "var(--blue)",
+                                                                marginLeft: "2px",
+                                                                animation: "blink 1s step-end infinite",
+                                                                verticalAlign: "middle",
+                                                                borderRadius: "1px"
+                                                            }} />
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* Contenido con soporte Markdown (negrita **, cursiva *, listas, etc.) */}
                                     {msg.role === "user" ? (
