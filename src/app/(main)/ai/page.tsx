@@ -345,13 +345,18 @@ export default function PulsAIPage() {
     }
 
     return (
-        <div style={{ 
-            display: "flex", 
-            height: "100%",
-            backgroundColor: "var(--bg-main)",
-            overflow: "hidden",
-            position: "relative"
-        }}>
+        <div 
+            className="pulsai-chat-root"
+            style={{ 
+                display: "flex", 
+                height: isMobile ? "calc(100dvh - 60px)" : "100vh",
+                maxHeight: isMobile ? "calc(100dvh - 60px)" : "100vh",
+                backgroundColor: "var(--bg-main)",
+                overflow: "hidden",
+                position: "relative",
+                width: "100%"
+            }}
+        >
             {/* Animated Background Glow */}
             <div style={{
                 position: "absolute",
@@ -884,21 +889,23 @@ export default function PulsAIPage() {
 
                 {/* Input Area */}
                 <div style={{
-                    padding: "20px",
+                    padding: isMobile ? "10px 14px 14px" : "18px 24px 20px",
                     borderTop: "1px solid var(--border-color)",
                     background: "rgba(var(--bg-main-rgb), 0.8)",
                     backdropFilter: "blur(12px)",
-                    zIndex: 2
+                    zIndex: 2,
+                    flexShrink: 0
                 }}>
                     <div style={{
                         display: "flex",
-                        gap: "12px",
-                        maxWidth: "800px",
+                        alignItems: "center",
+                        gap: isMobile ? "8px" : "12px",
+                        maxWidth: "900px",
                         margin: "0 auto",
                         background: "var(--bg-secondary)",
                         border: "1px solid var(--border-color)",
-                        borderRadius: "24px",
-                        padding: "8px",
+                        borderRadius: "28px",
+                        padding: isMobile ? "6px 8px 6px 14px" : "8px 10px 8px 18px",
                         opacity: status !== "online" ? 0.6 : 1,
                         transition: "opacity 0.3s"
                     }}>

@@ -19,7 +19,7 @@ export function MobileTweetFAB() {
         window.dispatchEvent(event);
     };
 
-    if (pathname?.startsWith("/messages")) return null;
+    if (pathname?.startsWith("/messages") || pathname?.startsWith("/ai")) return null;
 
     return (
         <button

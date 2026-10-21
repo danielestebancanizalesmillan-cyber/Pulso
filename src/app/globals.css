@@ -2710,3 +2710,33 @@ body.high-contrast {
   color: var(--text-secondary);
   font-style: italic;
 }
+
+/* ── PulsAI Responsive Layout Full Width & Mobile Optimizations ── */
+.app-layout:has(.pulsai-chat-root) {
+  grid-template-columns: 275px 1fr !important;
+  max-width: 1440px !important;
+}
+
+.app-layout:has(.pulsai-chat-root) .right-panel {
+  display: none !important;
+}
+
+.app-layout:has(.pulsai-chat-root) .main-column {
+  border-right: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 1095px) {
+  .app-layout:has(.pulsai-chat-root) {
+    grid-template-columns: 80px 1fr !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .app-layout:has(.pulsai-chat-root) {
+    padding-bottom: 0 !important;
+  }
+}
+
