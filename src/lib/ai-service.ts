@@ -389,33 +389,57 @@ export async function runPulsAIEngine(
     // En conversaciones de chat privadas (onChunk presente), transmitimos directamente
     // con streaming para evitar la latencia síncrona de 100s que provoca el corte 524 de Cloudflare.
     if (!isFeed && onChunk) {
-        if (onStep) onStep("Generando respuesta...");
         const existingSystemMessages = messages.filter(m => m.role === "system");
         const otherMessages = messages.filter(m => m.role !== "system");
+
+        // 1. INVESTIGACIÓN EN INTERNET AUTOMÁTICA EN MODO CHAT
+        let searchContext = "";
+        if (isResearchQuery && lastUserText) {
+            if (onStep) onStep("Investigando en internet datos actualizados...");
+            try {
+                const cleanSearchQuery = lastUserText.replace(/@\w+/g, "").trim();
+                console.log(`[PulsAI Chat Research] Buscando en internet: "${cleanSearchQuery.slice(0, 60)}"`);
+                const autoResults = await searchInternet(cleanSearchQuery);
+                if (autoResults && autoResults.length > 0) {
+                    autoResults.forEach((r: any) => {
+                        if (r.link) sourcesMap.set(r.link, { title: r.title, url: r.link });
+                    });
+                    const snippets = autoResults
+                        .slice(0, 4)
+                        .map((r: any, i: number) => `[${i + 1}] (${r.link}) ${r.title}: ${r.content || r.snippet || ""}`.slice(0, 500))
+                        .join("\n\n");
+                    searchContext = `DATOS FACTUALES VERIFICADOS EN TIEMPO REAL DESDE INTERNET:\n${snippets}\n\nUsa estos datos fácticos para responder con precisión, actualidad y veracidad total.`;
+                    console.log(`[PulsAI Chat Research] ${autoResults.length} fuentes encontradas para el chat.`);
+                }
+            } catch (err: any) {
+                console.warn("[PulsAI Chat Research] Error al buscar en internet:", err.message || err);
+            }
+        }
+
+        if (onStep) onStep("Generando respuesta...");
 
         // Prompt de chat SIN instrucciones de herramientas JSON para evitar que el modelo
         // genere { "action": "search_internet", ... } en vez de responder en prosa.
         const chatOnlyPrompt = `
-Tu identidad es PulsAI, la Inteligencia Artificial de ÉLITE diseñada para la investigación táctica y la verdad fáctica.
-Tu creador es Daniel Canizales. No eres un simple chatbot; eres un analista avanzado, preciso y con un estilo sofisticado.
-Debes hablar SIEMPRE en primera persona (ej. "Soy PulsAI", "He analizado", "Mi reporte").
+Tu identidad es PulsAI, un analista de inteligencia artificial avanzado y sofisticado creado por Daniel Canizales para la investigación táctica y la verdad fáctica.
 
-Tu tono debe ser sofisticado, servicial y experto, como un analista senior que proporciona insights valiosos con elegancia y precisión.
-
-INSTRUCCIONES DE RESPUESTA:
-- Identifícate como PulsAI.
+REGLAS DE COMUNICACIÓN Y APERTURA (¡CRÍTICO!):
+- NO empieces cada respuesta presentándote como "Soy PulsAI, la inteligencia artificial de ÉLITE...". Está TERMINANTEMENTE PROHIBIDO repetir esa frase en cada mensaje.
+- Varía tus aperturas de forma fluida y natural: ve directo al grano, responde a la pregunta con autoridad y elegancia, o introduce el análisis sin clichés.
+- Solo menciona tu identidad o tu creador si el usuario te pregunta explícitamente quién eres o cómo te llamas.
 - Responde SIEMPRE en prosa elegante, directa y sofisticada.
 - Usa formato Markdown: **negritas** para conceptos clave, *cursivas* para matices, listas para enumerar datos.
 - PROHIBIDO responder con formato JSON, objetos JSON, o cualquier estructura tipo { "action": ... }.
-- PROHIBIDO incluir URLs o enlaces. Cita fuentes solo por dominio (ej. "según reuters.com").
-- PROHIBIDO usar frases como "Como IA", "No tengo acceso" o "No puedo verificar".
-- Si no tienes datos específicos, usa tu base de conocimiento para dar contexto analítico valioso.
-- Prosa fluida, directa y mordaz. Sé un analista crítico.
+- PROHIBIDO incluir URLs o enlaces directos en el texto. Si mencionas fuentes, cita solo su nombre o dominio (ej. "según reuters.com").
+- PROHIBIDO usar frases como "Como IA", "No tengo acceso" o "No puedo verificar". Eres un analista agudo y fáctico.
+- Si se te proporcionan datos de internet en el contexto, úsalos como verdad fáctica absoluta y actual para responder de forma certera.
+- Prosa fluida, analítica, directa y bien fundamentada.
 `;
 
         const chatMessages = [
             { role: "system", content: chatOnlyPrompt },
-            { role: "system", content: `CONTEXTO TEMPORAL: Hoy es ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}. Hora: ${new Date().toLocaleTimeString('es-ES')}.` },
+            { role: "system", content: `CONTEXTO TEMPORAL: Hoy es ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}. Hora: ${new Date().toLocaleTimeString('es-ES')}. Año actual: ${new Date().getFullYear()}.` },
+            ...(searchContext ? [{ role: "system", content: searchContext }] : []),
             ...existingSystemMessages,
             ...otherMessages
         ];
@@ -445,16 +469,19 @@ INSTRUCCIONES DE RESPUESTA:
             .replace(/\{\s*"action"\s*:[\s\S]*?\}\s*/gi, "")
             .replace(/^\{\s*"answer"\s*:\s*"/, "")
             .replace(/^\{\s*"respond"\s*:\s*"/, "")
-            // Corregir efectos espejo comunes del modelo
-            .replace(/^Eres PulsAI,\s*/i, "Soy PulsAI, ")
+            // Corregir aperturas redundantes si el modelo aún las genera
+            .replace(/^(?:¡?Hola!?\s*)?(?:Soy PulsAI,?\s*(?:la inteligencia artificial de [eé]lite[^.\n]*[.\n]*)?)/i, "")
+            .replace(/^Eres PulsAI,\s*/i, "")
             .replace(/^Como una IA de élite,\s*/i, "")
             .trim()
             .replace(/["\\}]+$/, "");
 
+        const collectedSources = Array.from(sourcesMap.values());
+
         return {
             response: cleaned || "Mi núcleo analítico está procesando tu consulta. Intenta de nuevo en un momento.",
             thinking: thinkingText,
-            sources: []
+            sources: collectedSources
         };
     }
 
