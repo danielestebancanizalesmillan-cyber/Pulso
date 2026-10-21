@@ -393,36 +393,66 @@ export async function runPulsAIEngine(
         const existingSystemMessages = messages.filter(m => m.role === "system");
         const otherMessages = messages.filter(m => m.role !== "system");
 
+        // Prompt de chat SIN instrucciones de herramientas JSON para evitar que el modelo
+        // genere { "action": "search_internet", ... } en vez de responder en prosa.
+        const chatOnlyPrompt = `
+Tu identidad es PulsAI, la Inteligencia Artificial de ÉLITE diseñada para la investigación táctica y la verdad fáctica.
+Tu creador es Daniel Canizales. No eres un simple chatbot; eres un analista avanzado, preciso y con un estilo sofisticado.
+Debes hablar SIEMPRE en primera persona (ej. "Soy PulsAI", "He analizado", "Mi reporte").
+
+Tu tono debe ser sofisticado, servicial y experto, como un analista senior que proporciona insights valiosos con elegancia y precisión.
+
+INSTRUCCIONES DE RESPUESTA:
+- Identifícate como PulsAI.
+- Responde SIEMPRE en prosa elegante, directa y sofisticada.
+- Usa formato Markdown: **negritas** para conceptos clave, *cursivas* para matices, listas para enumerar datos.
+- PROHIBIDO responder con formato JSON, objetos JSON, o cualquier estructura tipo { "action": ... }.
+- PROHIBIDO incluir URLs o enlaces. Cita fuentes solo por dominio (ej. "según reuters.com").
+- PROHIBIDO usar frases como "Como IA", "No tengo acceso" o "No puedo verificar".
+- Si no tienes datos específicos, usa tu base de conocimiento para dar contexto analítico valioso.
+- Prosa fluida, directa y mordaz. Sé un analista crítico.
+`;
+
         const chatMessages = [
-            { role: "system", content: `${corePrompt}\n\nIdentifícate como PulsAI. Responde en prosa elegante, directa y sofisticada usando formato Markdown (**negritas**, listas, etc.). Muestra tu proceso de pensamiento natural. NO uses formato JSON.` },
+            { role: "system", content: chatOnlyPrompt },
             { role: "system", content: `CONTEXTO TEMPORAL: Hoy es ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}. Hora: ${new Date().toLocaleTimeString('es-ES')}.` },
             ...existingSystemMessages,
             ...otherMessages
         ];
 
         const streamResponse = await getOllamaResponse(chatMessages, false, MODEL_NAME, onChunk, onThinkingChunk);
+        
+        // Extraer TODOS los tokens de pensamiento (no solo el primero)
         let thinkingText: string | undefined = undefined;
-        let finalResponse = streamResponse;
-
-        const thoughtMatch = String(streamResponse).match(/<(?:thought|thinking)>([\s\S]*?)<\/(?:thought|thinking)>/i);
-        if (thoughtMatch && thoughtMatch[1]) {
-            thinkingText = thoughtMatch[1].trim();
+        const allThoughts: string[] = [];
+        const thoughtRegex = /<(?:thought|thinking)>([\s\S]*?)<\/(?:thought|thinking)>/gi;
+        let match;
+        while ((match = thoughtRegex.exec(String(streamResponse))) !== null) {
+            if (match[1]) allThoughts.push(match[1]);
+        }
+        if (allThoughts.length > 0) {
+            thinkingText = allThoughts.join("").trim();
         }
 
-        let cleaned = String(finalResponse)
+        // Limpieza exhaustiva de la respuesta
+        let cleaned = String(streamResponse)
+            // Quitar todos los tags de pensamiento
             .replace(/<(?:thought|thinking)>[\s\S]*?<\/(?:thought|thinking)>/gi, "")
-            .replace(/```json/gi, "")
+            // Quitar bloques de código JSON
+            .replace(/```json[\s\S]*?```/gi, "")
             .replace(/```/g, "")
-            .replace(/\{\s*"action"\s*:[^}]+\}\s*/gi, "")
-            .replace(/^\{\s*"answer":\s*"/, "")
-            .replace(/^\{\s*"respond":\s*"/, "")
+            // Quitar objetos JSON de acciones (single-line y multi-line)
+            .replace(/\{\s*"action"\s*:[\s\S]*?\}\s*/gi, "")
+            .replace(/^\{\s*"answer"\s*:\s*"/, "")
+            .replace(/^\{\s*"respond"\s*:\s*"/, "")
+            // Corregir efectos espejo comunes del modelo
             .replace(/^Eres PulsAI,\s*/i, "Soy PulsAI, ")
             .replace(/^Como una IA de élite,\s*/i, "")
             .trim()
-            .replace(/["\}]+$/, "");
+            .replace(/["\\}]+$/, "");
 
         return {
-            response: cleaned || streamResponse,
+            response: cleaned || "Mi núcleo analítico está procesando tu consulta. Intenta de nuevo en un momento.",
             thinking: thinkingText,
             sources: []
         };
